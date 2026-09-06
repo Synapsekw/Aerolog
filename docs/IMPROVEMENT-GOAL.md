@@ -51,3 +51,9 @@ local Git. Independently implement product behavior; no AGPL application code co
 - Extended isolated organization API tests with normalized file preview, manager-only enrichment, revision conflict, persisted telemetry and serial, raw source archive, audit and unchanged usage. Test resources (including storage files) are cleaned up.
 - Native Codex file-picker computer use is prohibited by the tool, so full browser file-upload review is not verified. This does not block independent API tests or other work; do not claim that browser workflow passed.
 - Expanded integration run passed all 35 API checks, including the enrichment/archive path. Usage comparison uses the saved value before enrichment, respecting existing three-decimal accounting precision.
+
+### Source retry verification
+
+- Applied migration 014 and updated source archive handling: retrying the same file merges all successfully saved flight IDs under a row lock, preserves prior links and adds an audit entry. Repeated IDs are deduplicated and ownership/organization are checked again in the database.
+- All 38 isolated API checks passed, including partial-batch archive retries. Production build passed.
+- Read-only preservation audit: e& still has 27 flights; Ivan has exactly 20 flights, 29,532 KML positions and 29,599 seconds. His existing KML flights still have no fabricated timed/battery telemetry.

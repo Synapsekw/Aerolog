@@ -68,3 +68,8 @@ identity.
 Migration `202609060013_flight_enrichment.sql` is applied to the connected project.
 The rollback-only database check runs with `node scripts/test-enrichment-db.mjs`
 and requires the existing local pooler URL and server-side database password.
+
+Archive retries merge links to saved flights without removing earlier links.
+Migration `202609060014_source_retry_links.sql` is applied to the connected
+project. Partial batch errors retain successful rows, attempt their source
+archive, refresh the workspace, and explain what was saved before the failure.

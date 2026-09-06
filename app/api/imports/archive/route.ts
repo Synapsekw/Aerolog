@@ -48,7 +48,22 @@ export async function POST(request: Request) {
       .eq('kind', 'attachment')
       .eq('id', id)
       .maybeSingle();
-    if (existing) return Response.json(existing.data);
+    if (existing) {
+      const linked = await admin
+        .rpc('aerolog_link_source', {
+          actor: profile.id,
+          expected_org: profile.organization_id,
+          source_id: id,
+          flight_ids: [...new Set(ids)],
+        })
+        .retry(false);
+      if (linked.error)
+        throw new ApiError(
+          linked.error.message,
+          linked.error.code === 'PT409' ? 409 : 400,
+        );
+      return Response.json(linked.data);
+    }
     const { error: upload } = await admin.storage
       .from('aerolog-files')
       .upload(path, bytes, { contentType: 'application/octet-stream' });

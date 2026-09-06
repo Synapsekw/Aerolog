@@ -190,7 +190,8 @@ try {
     'commands',
   );
   // End-to-end import preview, reviewed enrichment, persistence and raw archive.
-  const usageBeforeEnrichment = store.records.find(r=>r.id===tag+'-A').data.hours;
+  const usageBeforeEnrichment = store.records.find((r) => r.id === tag + '-A')
+    .data.hours;
   const rawLog = JSON.stringify({
     ...flight,
     id: undefined,
@@ -243,6 +244,30 @@ try {
     usageBeforeEnrichment,
   );
   assert(store.audit.some((a) => a.action === 'flight_telemetry_enriched'));
+  const laterFlight = {
+    ...flight,
+    id: tag + '-F-LATER',
+    importHash: tag + '-LATER',
+  };
+  await request(
+    'pilot',
+    {
+      command: 'flight_import',
+      payload: { kind: 'flight', data: laterFlight, revision: 0 },
+    },
+    200,
+    'commands',
+  );
+  const retriedArchive = await upload('archive', [laterFlight.id]);
+  assert.deepEqual(
+    new Set(retriedArchive.flights),
+    new Set([flight.id, laterFlight.id]),
+  );
+  const repeatedArchive = await upload('archive', [
+    laterFlight.id,
+    laterFlight.id,
+  ]);
+  assert.equal(repeatedArchive.flights.length, 2);
   const second = (
     await request('owner', { action: 'create', name: tag + ' second' })
   ).id;

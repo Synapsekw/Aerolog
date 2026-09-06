@@ -9,7 +9,13 @@ export function duplicateMatches(
   existing: Flight[],
 ): DuplicateMatch[] {
   return existing.flatMap<DuplicateMatch>((f) => {
-    if (incoming.importHash && incoming.importHash === f.importHash)
+    if (
+      incoming.importHash &&
+      (incoming.importHash === f.importHash ||
+        (
+          f as Flight & { enrichmentHashes?: string[] }
+        ).enrichmentHashes?.includes(incoming.importHash))
+    )
       return [
         {
           flight: f,

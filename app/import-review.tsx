@@ -6,7 +6,13 @@ export default function ImportReview({
   existing,
   allowNew,
   onAllowNew,
+  enrichmentTargets,
+  onEnrich,
+  canEnrich,
 }: {
+  enrichmentTargets: Record<string, string>;
+  onEnrich: (id: string, target: string) => void;
+  canEnrich: boolean;
   incoming: Flight[];
   existing: Flight[];
   allowNew: Set<string>;
@@ -46,12 +52,38 @@ export default function ImportReview({
                     <span>Review possible duplicate</span>
                     <select
                       aria-label={`Import decision for ${flight.id}`}
-                      value={allowNew.has(flight.id) ? 'new' : 'skip'}
-                      onChange={(e) =>
-                        onAllowNew(flight.id, e.target.value === 'new')
+                      value={
+                        enrichmentTargets[flight.id]
+                          ? 'enrich:' + enrichmentTargets[flight.id]
+                          : allowNew.has(flight.id)
+                            ? 'new'
+                            : 'skip'
                       }
+                      onChange={(e) => {
+                        onAllowNew(flight.id, e.target.value === 'new');
+                        onEnrich(
+                          flight.id,
+                          e.target.value.startsWith('enrich:')
+                            ? e.target.value.slice(7)
+                            : '',
+                        );
+                      }}
                     >
                       <option value="skip">Skip this record</option>
+                      {canEnrich &&
+                        flight.telemetry.length >= 2 &&
+                        matches
+                          .filter((m) =>
+                            existing.some((f) => f.id === m.flight.id),
+                          )
+                          .map((m) => (
+                            <option
+                              key={m.flight.id}
+                              value={'enrich:' + m.flight.id}
+                            >
+                              Same flight — add telemetry to {m.flight.mission}
+                            </option>
+                          ))}
                       <option value="new">
                         This is a different flight — import separately
                       </option>

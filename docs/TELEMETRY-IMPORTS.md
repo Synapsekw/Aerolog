@@ -51,3 +51,20 @@ packs. A real exported Airdata CSV and original DJI TXT supplied by the operator
 are still needed for end-to-end validation of those source formats. Ivan's
 current KML files provide route positions and heights only, so the app must not
 invent their battery measurements or elapsed sample times.
+
+## Reviewed enrichment
+
+Managers and administrators can select “Same flight — add telemetry” for a
+candidate and provide a review reason. The operation retains the recorded
+flight duration, usage counters, KML track, equipment assignments and original
+source hash. It creates an audit entry and retains the additional source hash
+for duplicate detection. Source files are archived through the import workflow.
+If samples already exist, enrichment accepts additional channels on the exact
+same sample grid only. Conflicting readings or different grids are rejected;
+keep both originals for manual comparison. Start-time and aircraft-serial
+conflicts are also rejected. A candidate is a prompt to review, not proof of
+identity.
+
+Migration `202609060013_flight_enrichment.sql` is applied to the connected project.
+The rollback-only database check runs with `node scripts/test-enrichment-db.mjs`
+and requires the existing local pooler URL and server-side database password.

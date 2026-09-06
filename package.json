@@ -53,6 +53,7 @@
     "oxfmt": "0.61.0",
     "oxlint": "1.76.0",
     "oxlint-tsgolint": "7.0.2001",
+    "pg": "8.23.0",
     "tailwindcss": "4.2.1",
     "tsx": "^4.23.13",
     "typescript": "5.9.3"

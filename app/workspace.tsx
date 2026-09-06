@@ -332,6 +332,7 @@ export default function Workspace() {
     [uploading, setUploading] = useState(false),
     [importPreview, setImportPreview] = useState<any>(null),
     [importAllowNew, setImportAllowNew] = useState<Set<string>>(new Set()),
+    [importEnrich, setImportEnrich] = useState<Record<string,string>>({}),
     [importFile, setImportFile] = useState<File | null>(null),
     [accountResult, setAccountResult] = useState<any>(null);
   const record = detail
@@ -2979,6 +2980,8 @@ export default function Workspace() {
                             method: 'POST',
                             body,
                           });
+                          setImportEnrich({});
+                          setNote('');
                           setImportAllowNew(new Set());
                           setImportPreview(result);
                           setImportFile(file);
@@ -3017,7 +3020,8 @@ export default function Workspace() {
                       <FileText size={18} />
                       <div>
                         {importPreview.flights.length} flight record(s) parsed.
-                        <ImportReview incoming={importPreview.flights} existing={flights} allowNew={importAllowNew} onAllowNew={(id,value)=>setImportAllowNew(previous=>{const next=new Set(previous);if(value)next.add(id);else next.delete(id);return next;})}/>
+                        <ImportReview canEnrich={manager} enrichmentTargets={importEnrich} onEnrich={(id,target)=>setImportEnrich(previous=>({...previous,[id]:target}))} incoming={importPreview.flights} existing={flights} allowNew={importAllowNew} onAllowNew={(id,value)=>setImportAllowNew(previous=>{const next=new Set(previous);if(value)next.add(id);else next.delete(id);return next;})}/>
+                        {Object.values(importEnrich).some(Boolean) && <Note label="Why these records are the same flight (minimum 20 characters)" value={note} onChange={setNote}/>}
                         {importPreview.warnings?.map((w: string) => (
                           <p key={w}>{w}</p>
                         ))}
@@ -3184,7 +3188,7 @@ export default function Workspace() {
             <Button
               className="primary wide"
               disabled={
-                busy || uploading || (dialog === 'import' && !importPreview)
+                busy || uploading || (dialog === 'import' && (!importPreview || (Object.values(importEnrich).some(Boolean) && note.trim().length<20)))
               }
               onClick={async () => {
                 setError('');
@@ -3192,13 +3196,18 @@ export default function Workspace() {
                   if (dialog === 'import') {
                     setUploading(true);
                     let count = 0,
-                      skipped = 0;
+                      skipped = 0, enriched = 0;
                     const imported = [...flights];
                     const archiveIds = new Set<string>();
                     for (const [index, f] of importPreview.flights.entries()) {
                       const matches = duplicateMatches(f, [...flights, ...importPreview.flights.slice(0,index)]);
+                      const target = importEnrich[f.id];
+                      if (target) {
+                        await api('imports/enrich',{method:'POST',body:JSON.stringify({targetId:target,revision:app.revision('flight',target),reason:note,incoming:f})});
+                        enriched++; archiveIds.add(target); continue;
+                      }
                       const exact = matches.find(m=>m.kind==='exact');
-                      if (exact) { skipped++; const savedExact=imported.find(x=>x.importHash===f.importHash); if(savedExact)archiveIds.add(savedExact.id); continue; }
+                      if (exact) { skipped++; const savedExact=duplicateMatches(f,imported).find(m=>m.kind==='exact')?.flight; if(savedExact)archiveIds.add(savedExact.id); continue; }
                       if (matches.length && !importAllowNew.has(f.id)) { skipped++; continue; }
                       const saved = {
                         ...f,
@@ -3226,7 +3235,7 @@ export default function Workspace() {
                       count +
                         ' flights imported. ' +
                         skipped +
-                        ' records skipped. Aircraft usage updated for new flights.',
+                        ' records skipped. ' + enriched + ' flights enriched without adding usage.',
                     );
                   } else if (dialog === 'cycle')
                     await save('battery', 'battery_cycle');

@@ -36,3 +36,10 @@ local Git. Independently implement product behavior; no AGPL application code co
 - Exact matches are skipped; other candidates default to skip with an explicit separate-flight choice. Candidates are not automatically merged, deleted or attached to an existing flight. Reviewed new flights alone increment usage.
 - Fixed batch source archive IDs: duplicate rows within an upload reference the actual saved record, not the discarded generated ID. Skipped uncertain matches are excluded from source attachments.
 - 25 unit tests pass. Safe audited enrichment and browser import review QA are still pending; candidate checks supplement existing database hash uniqueness and do not replace server permissions.
+
+### Audited enrichment progress
+
+- Managers/admins can choose an existing duplicate candidate in import review and add a review reason. The endpoint adds telemetry, never duration, track geometry, equipment links, accounting or original import hashes. Existing sample sets accept missing channels only; conflicting values or different sample grids require manual review.
+- Applied migration 013: service-only RPC checks active manager membership, organization and revision under the existing lock order; writes before/after audit data and tracks source hashes. Previously enriched sources are detected on reimport.
+- Database rollback test proved retained duration/KML, unchanged fleet and battery events, audit insertion, stale revision rejection and lack of authenticated direct RPC access. No operational flight was modified. Production build and 28 unit tests passed before the added enrichment-reimport regression test.
+- Browser import/enrichment and final responsive/real-data checks remain pending.

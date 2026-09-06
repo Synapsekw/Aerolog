@@ -55,3 +55,4 @@ test('distinct flight totals are not candidates', () => {
     0,
   );
 });
+test('a previously enriched source is recognized as an exact duplicate',()=>{const enriched={...flight,enrichmentHashes:['different-source']};assert.equal(duplicateMatches({...flight,importHash:'different-source'},[enriched])[0].kind,'exact');});

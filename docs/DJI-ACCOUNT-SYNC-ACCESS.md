@@ -1,6 +1,6 @@
 # DJI personal-account flight synchronization: access request
 
-Status: blocked on a verified account authentication and flight-record retrieval API contract. No personal account connection or flight synchronization has been completed. The existing parsing key and saved test account credentials have not been sent to unverified login endpoints.
+Updated September 6, 2026 after deeper research: Flight Reader publishes a personal DJI account authentication, cloud log enumeration, and original-file download API at https://www.flightreader.com/api/documentation/. FlyFreely publicly confirms using this provider. A Flight Reader API key and a real-account test are now the concrete next dependencies for that intermediary route. The message below remains useful for investigating a direct DJI arrangement, but contacting DJI is not the only route. No personal account connection or flight synchronization has been completed, and no credentials have been sent to Flight Reader. See the research report in output/pdf/dji-account-sync-research.pdf.
 
 ## Message ready to send
 

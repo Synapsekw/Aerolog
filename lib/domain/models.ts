@@ -58,7 +58,13 @@ export const assetSchema = z.object({
   name,
   category: z.enum(['Aircraft', 'Payload', 'Controller', 'Accessory']),
   serial: z.string().max(160),
-  status: z.enum(['Available', 'Checked out', 'Maintenance due', 'Retired', 'Unverified']),
+  status: z.enum([
+    'Available',
+    'Checked out',
+    'Maintenance due',
+    'Retired',
+    'Unverified',
+  ]),
   hours: numeric(0, 100000).nullable(),
   pilot: z.string().default('Unassigned'),
   next: numeric(1, 100000).nullable(),
@@ -73,7 +79,13 @@ export const batterySchema = z.object({
   cycles: numeric(0, 100000).int(),
   health: numeric(0, 100).nullable(),
   temp: numeric(-50, 150).nullable(),
-  status: z.enum(['Healthy', 'Attention required', 'Quarantined', 'Retired', 'Unverified']),
+  status: z.enum([
+    'Healthy',
+    'Attention required',
+    'Quarantined',
+    'Retired',
+    'Unverified',
+  ]),
   serial: z.string().max(160).optional(),
   notes: note,
 });
@@ -105,6 +117,17 @@ export const serviceSchema = z.object({
   signedBy: z.string().optional(),
   completedAt: z.string().optional(),
 });
+export const batteryReadingSchema = z.object({
+  serial: z.string().min(1).max(160),
+  charge: numeric(0, 100).optional(),
+  voltage: numeric(0, 100).optional(),
+  temperature: numeric(-50, 150).optional(),
+  currentAmps: numeric(-500, 500).optional(),
+  remainingCapacityMah: numeric(0, 100000).optional(),
+  fullCapacityMah: numeric(1, 100000).optional(),
+  designCapacityMah: numeric(1, 100000).optional(),
+  cellVoltages: z.array(numeric(0, 10)).min(1).max(24).optional(),
+});
 export const telemetrySchema = z.object({
   time: numeric(0, 86400),
   longitude: numeric(-180, 180),
@@ -114,47 +137,85 @@ export const telemetrySchema = z.object({
   temperature: numeric(-50, 150).optional(),
   voltage: numeric(0, 100).optional(),
   speed: numeric(0, 150).optional(),
+  currentAmps: numeric(-500, 500).optional(),
+  remainingCapacityMah: numeric(0, 100000).optional(),
+  fullCapacityMah: numeric(1, 100000).optional(),
+  designCapacityMah: numeric(1, 100000).optional(),
+  cellVoltages: z.array(numeric(0, 10)).min(1).max(24).optional(),
+  batteryPacks: z.array(batteryReadingSchema).max(8).optional(),
 });
-export const flightSchema = z.object({
-  id,
-  sourceApp: z
-    .enum(['DJI Fly', 'DJI GO 4', 'DJI Pilot 2', 'DJI FlightHub 2', 'Other'])
-    .optional(),
-  pilotUserId: z.uuid().optional(),
-  aircraftId: id.optional(),
-  equipmentIds: z.array(id).max(200).optional(),
-  batteryIds: z.array(id).max(200).optional(),
-  plannedBoundary: z.array(point).max(5000).optional(),
-  // Untimed KML geometry is separate from timestamped telemetry.
-  flightTrack: z.array(z.tuple([
-    numeric(-180, 180), numeric(-90, 90), numeric(-1000, 10000),
-  ])).min(2).max(20000).optional(),
-  siteLocation: point.optional(),
-  siteName: z.string().max(300).optional(),
-  equipmentNames: z.array(z.string().max(300)).max(200).optional(),
-  mission: z.string().max(160),
-  missionId: z.string().optional(),
-  pilot: name,
-  aircraft: name,
-  date: z.union([date, z.literal('')]),
-  duration: z.string(),
-  durationSeconds: numeric(1, 86400),
-  distance: z.string().regex(/^\d+(\.\d+)?$/),
-  altitude: numeric(-1000, 10000),
-  start: numeric(0, 100).nullable(),
-  end: numeric(0, 100).nullable(),
-  battery: z.string().max(160),
-  peakTemperature: numeric(-50, 150).nullable().optional(),
-  importHash: z.string().max(128).optional(),
-  source: z
-    .enum(['Manual', 'CSV', 'DJI JSON', 'DJI flight record', 'DroneLogbook API'])
-    .default('Manual'),
-  telemetry: z.array(telemetrySchema).max(20000).default([]),
-  notes: note,
-}).refine((flight) => flight.date !== '' || flight.source === 'DroneLogbook API', {
-  message: 'A flight date is required except for undated historical API records',
-  path: ['date'],
-});
+export const flightSchema = z
+  .object({
+    id,
+    sourceApp: z
+      .enum(['DJI Fly', 'DJI GO 4', 'DJI Pilot 2', 'DJI FlightHub 2', 'Other'])
+      .optional(),
+    pilotUserId: z.uuid().optional(),
+    startedAt: z.iso.datetime({ offset: true }).optional(),
+    aircraftSerial: z.string().max(160).optional(),
+    batterySerials: z.array(z.string().min(1).max(160)).max(8).optional(),
+    importProvenance: z
+      .object({
+        format: z.string().min(1).max(80),
+        parserVersion: z.string().max(40),
+        heightDatum: z.enum([
+          'relativeToTakeoff',
+          'relativeToGround',
+          'absolute',
+          'unspecified',
+        ]),
+        sampleCount: z.number().int().min(0).max(20000),
+      })
+      .optional(),
+    aircraftId: id.optional(),
+    equipmentIds: z.array(id).max(200).optional(),
+    batteryIds: z.array(id).max(200).optional(),
+    plannedBoundary: z.array(point).max(5000).optional(),
+    // Untimed KML geometry is separate from timestamped telemetry.
+    flightTrack: z
+      .array(
+        z.tuple([numeric(-180, 180), numeric(-90, 90), numeric(-1000, 10000)]),
+      )
+      .min(2)
+      .max(20000)
+      .optional(),
+    siteLocation: point.optional(),
+    siteName: z.string().max(300).optional(),
+    equipmentNames: z.array(z.string().max(300)).max(200).optional(),
+    mission: z.string().max(160),
+    missionId: z.string().optional(),
+    pilot: name,
+    aircraft: name,
+    date: z.union([date, z.literal('')]),
+    duration: z.string(),
+    durationSeconds: numeric(1, 86400),
+    distance: z.string().regex(/^\d+(\.\d+)?$/),
+    altitude: numeric(-1000, 10000),
+    start: numeric(0, 100).nullable(),
+    end: numeric(0, 100).nullable(),
+    battery: z.string().max(160),
+    peakTemperature: numeric(-50, 150).nullable().optional(),
+    importHash: z.string().max(128).optional(),
+    source: z
+      .enum([
+        'Manual',
+        'CSV',
+        'DJI JSON',
+        'DJI flight record',
+        'DroneLogbook API',
+      ])
+      .default('Manual'),
+    telemetry: z.array(telemetrySchema).max(20000).default([]),
+    notes: note,
+  })
+  .refine(
+    (flight) => flight.date !== '' || flight.source === 'DroneLogbook API',
+    {
+      message:
+        'A flight date is required except for undated historical API records',
+      path: ['date'],
+    },
+  );
 export const schemas = {
   mission: missionSchema,
   asset: assetSchema,

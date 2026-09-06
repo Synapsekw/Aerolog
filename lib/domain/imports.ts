@@ -1,5 +1,6 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { parse } from 'csv-parse/sync';
+import { isTelemetryCSV, telemetryCSV } from './telemetry-csv';
 import { flightSchema, durationLabel, type Flight } from './models';
 export const CSV_HEADERS = [
   'date',
@@ -25,6 +26,11 @@ export function normalizeImport(
     id: 'FL-' + randomUUID().slice(0, 8).toUpperCase(),
     mission: d.mission || 'Imported flight',
     missionId: d.missionId || undefined,
+    startedAt: d.startedAt || undefined,
+    aircraftSerial: d.aircraftSerial || undefined,
+    batterySerials: d.batterySerials,
+    importProvenance: d.importProvenance,
+    flightTrack: d.flightTrack,
     pilot: d.pilot || 'Assign pilot',
     aircraft: d.aircraft || 'Assign aircraft',
     date: d.date,
@@ -63,6 +69,8 @@ export function parseTextImport(
       max_record_size: 100000,
     });
     source = 'CSV';
+    if (records.length && isTelemetryCSV(records[0] as Record<string, string>))
+      records = [telemetryCSV(records as Record<string, string>[])];
     if (
       !records.length ||
       !['date', 'durationSeconds'].every((k) => k in (records[0] as object))

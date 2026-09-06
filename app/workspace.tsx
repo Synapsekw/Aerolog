@@ -2436,7 +2436,7 @@ export default function Workspace() {
                       events={items('battery_event').filter(
                         (e) => e.battery === record.id,
                       )}
-                      current={record.health ?? '—'}
+                      current={record.health ?? null}
                     />
                     <h3 className="detail-heading">
                       Usage and condition history
@@ -2955,7 +2955,7 @@ export default function Workspace() {
                     <span>
                       {uploading
                         ? 'Parsing flight log…'
-                        : 'Flight log file (max 25 MB)'}
+                        : 'DJI record, telemetry CSV or JSON (max 25 MB)'}
                     </span>
                     <Input
                       type="file"
@@ -3020,7 +3020,10 @@ export default function Workspace() {
                                 f.duration +
                                 ' · ' +
                                 f.distance +
-                                ' km',
+                                ' km · ' +
+                                f.telemetry.length + ' telemetry samples' +
+                                (f.startedAt ? ' · ' + f.startedAt : '') +
+                                (f.aircraftSerial ? ' · aircraft SN ' + f.aircraftSerial : ''),
                             )
                             .join('; ')}
                         </p>

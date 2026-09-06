@@ -17,3 +17,9 @@ local Git. Independently implement product behavior; no AGPL application code co
 - Added searchable, paginated team access directory with role/status filters and identity-based totals. Browser verified Ivan's 20 flights / 8.22 h and opened his access editor without changing his permissions.
 - Passed 14 unit tests, production build, and 29 organization API checks using isolated temporary test users/organizations with cleanup. Existing e& records were not modified.
 - Fixed a map race found during browser QA: route updates no longer depend on all source data finishing loading. Stable empty geometry defaults prevent redundant route writes while scrubbing.
+
+### Import contract progress
+
+- Normalized JSON now retains exact timestamps, source aircraft/battery serials, per-pack capacity/current/cell readings and parser provenance. These fields pass through the same validated preview/save schema.
+- Added an independently written Airdata telemetry CSV adapter with explicit unit conversion, GPS distance, sample-span duration and strict clock/unit checks. No upstream AGPL code or third-party service is used.
+- 17 unit tests pass; production build passes. Real Airdata/DJI-file validation, duplicate candidate review, safe enrichment and the battery history UI remain pending. See `TELEMETRY-IMPORTS.md` for supported columns and limits.

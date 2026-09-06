@@ -165,6 +165,8 @@ export const flightSchema = z
           'unspecified',
         ]),
         sampleCount: z.number().int().min(0).max(20000),
+        originalSampleCount: z.number().int().min(0).optional(),
+        sampleSelection: z.enum(['full', 'uniform']).optional(),
       })
       .optional(),
     aircraftId: id.optional(),

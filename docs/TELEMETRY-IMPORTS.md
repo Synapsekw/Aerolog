@@ -73,3 +73,9 @@ Archive retries merge links to saved flights without removing earlier links.
 Migration `202609060014_source_retry_links.sql` is applied to the connected
 project. Partial batch errors retain successful rows, attempt their source
 archive, refresh the workspace, and explain what was saved before the failure.
+
+The local DJI parser now retains the decoded exact start time and aircraft /
+battery serials for cross-format review. Its existing large-log sample limit is
+explicitly reported in provenance and preview warnings: uniformly sampled
+stored telemetry may miss brief events, while the original TXT remains the
+source of record. Do not use those reduced curves as a battery fault detector.

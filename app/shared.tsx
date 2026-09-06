@@ -4,11 +4,11 @@ export function Status({ children }: { children: string }) {
       className={
         'status ' +
         (String(children).match(
-          /Pending|Review|due|Attention|Quarantined|Overdue|Changes/,
+          /Pending|Review|due|Attention|Quarantined|Overdue|Changes|Unverified/,
         )
           ? 'amber'
           : String(children).match(
-                /Draft|Disconnected|Retired|Inactive|Unavailable/,
+                /Draft|Disconnected|Retired|Inactive|Unavailable|Disabled/,
               )
             ? 'gray'
             : 'green')

@@ -14,14 +14,18 @@ try:
         points.append(dict(time=o.fly_time, longitude=o.longitude, latitude=o.latitude, altitude=o.height,
                            battery=b.charge_level, temperature=b.temperature, voltage=b.voltage, speed=o.h_speed))
     detail = log.details
-    result = dict(date=detail.start_time.date().isoformat(), durationSeconds=max([f.osd.fly_time for f in frames] or [detail.total_time]),
+    result = dict(date=detail.start_time.date().isoformat(),
+                  startedAt=detail.start_time.isoformat(), aircraftSerial=detail.aircraft_sn or None,
+                  batterySerials=[detail.battery_sn] if detail.battery_sn else [],
+                  importProvenance=dict(format='DJI flight record v' + str(log.version), parserVersion='pydjirecord-local', heightDatum='relativeToTakeoff', sampleCount=len(points), originalSampleCount=len(frames), sampleSelection='uniform' if stride > 1 else 'full'),
+                  durationSeconds=max([f.osd.fly_time for f in frames] or [detail.total_time]),
                   distanceMeters=frames[-1].osd.cumulative_distance if frames else detail.total_distance,
                   altitude=max([f.osd.height for f in frames] or [detail.max_height]),
                   aircraft=detail.aircraft_name or 'Unassigned aircraft',
                   start=frames[0].battery.charge_level if frames else None,
                   end=frames[-1].battery.charge_level if frames else None,
                   peakTemperature=max([f.battery.temperature for f in frames] or [0]), telemetry=points,
-                  notes='Parsed DJI record v' + str(log.version) + '. Aircraft serial: ' + (detail.aircraft_sn or 'not recorded'))
+                  notes='Parsed DJI record v' + str(log.version) + '. Aircraft serial: ' + (detail.aircraft_sn or 'not recorded') + ('. Large log: stored telemetry uniformly sampled; original TXT retained in source archive.' if stride > 1 else ''))
     print(json.dumps(result, allow_nan=False))
 except Exception:
     # Never echo provider responses, headers or account details into logs.

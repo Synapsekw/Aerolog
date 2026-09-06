@@ -42,3 +42,7 @@ next-env.d.ts
 /.venv/
 /.local/
 !.env.example
+
+# Python bytecode
+__pycache__/
+*.pyc

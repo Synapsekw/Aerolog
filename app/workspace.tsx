@@ -1560,7 +1560,7 @@ export default function Workspace() {
                               </strong>
                               <span>Measured health</span>
                             </div>
-                            <Progress value={b.health ?? '—'} />
+                            {b.health != null && <Progress value={b.health} />}
                             <div className="battery-card-foot">
                               <span>{b.cycles} cycles</span>
                               <span>
@@ -2626,13 +2626,7 @@ export default function Workspace() {
                         </div>
                       ))}
                     </dl>
-                    <Progress
-                      value={
-                        record.next && record.hours != null
-                          ? Math.min(100, (record.hours / record.next) * 100)
-                          : 0
-                      }
-                    />
+                    {record.next != null && record.hours != null && <Progress value={Math.min(100,(record.hours / record.next)*100)}/>}
                     <p>{record.notes}</p>
                     {fleet && (
                       <div className="action-footer">

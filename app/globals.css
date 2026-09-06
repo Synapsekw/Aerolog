@@ -3559,3 +3559,10 @@ textarea {
 .import-review { max-height:360px; overflow:auto; margin:12px 0; }
 .import-review-row { border-bottom:1px solid #ffffff12; padding:14px 0; overflow-wrap:anywhere; }
 .import-review-row .field { margin-top:10px; }
+
+/* Constrain intrinsic select/text widths inside the dialog's grid. */
+.form-dialog { grid-template-columns:minmax(0,1fr); }
+.form-dialog > *, .form-dialog .info-box > div { min-width:0; }
+.form-dialog select { width:100%; min-width:0; max-width:100%; text-overflow:ellipsis; }
+.form-dialog .info-box > svg { flex-shrink:0; }
+.form-dialog .import-review-row { white-space:normal; }

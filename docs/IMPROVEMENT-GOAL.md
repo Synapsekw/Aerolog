@@ -4,12 +4,12 @@ Preserve AEROLOG design, organization isolation, immutable flight accounting and
 local Git. Independently implement product behavior; no AGPL application code copying.
 
 - [x] Refresh the AEROLOG logo and place it beside the name in the header, matching the existing design. Added an original drone/A monogram with the app's lime-to-cyan gradient; verified its placement in the local browser.
-- [ ] Flight analysis: shared map/chart cursor, route scrubbing, timestamp-based playback, altitude coloring, truthful missing-data panels and exports.
-- [ ] Imports: better normalized data contract, supported CSV adapters, identity/provenance, duplicate candidates and safe enrichment; preserve raw logs.
-- [ ] Battery history: per-battery measurements and multi-battery links; distinguish service-life counters from measured health.
-- [ ] Inventory: source identity, review workflow, usable search/filter and readiness details.
-- [ ] Teams: review membership management, role changes and deactivation, permissions and pilot totals; preserve organization access boundaries.
-- [ ] Validate integrated workflows, responsive UI and local persistence; document original-file-dependent limitations.
+- [x] Flight analysis: shared map/chart cursor, route scrubbing, timestamp-based playback, altitude coloring, truthful missing-data panels and exports.
+- [x] Imports: better normalized data contract, supported CSV adapters, identity/provenance, duplicate candidates and safe enrichment; preserve raw logs.
+- [x] Battery history: per-battery measurements and multi-battery links; distinguish service-life counters from measured health.
+- [x] Inventory: source identity, review workflow, usable search/filter and readiness details.
+- [x] Teams: review membership management, role changes and deactivation, permissions and pilot totals; preserve organization access boundaries.
+- [x] Validate integrated workflows, responsive UI and local persistence; document original-file-dependent limitations.
 
 ## Verified progress — 6 September 2026
 
@@ -57,3 +57,14 @@ local Git. Independently implement product behavior; no AGPL application code co
 - Applied migration 014 and updated source archive handling: retrying the same file merges all successfully saved flight IDs under a row lock, preserves prior links and adds an audit entry. Repeated IDs are deduplicated and ownership/organization are checked again in the database.
 - All 38 isolated API checks passed, including partial-batch archive retries. Production build passed.
 - Read-only preservation audit: e& still has 27 flights; Ivan has exactly 20 flights, 29,532 KML positions and 29,599 seconds. His existing KML flights still have no fabricated timed/battery telemetry.
+
+### Browser review completed
+
+- Resolved the earlier native-picker limitation using the documented browser file-chooser API. Uploaded a synthetic three-record fixture for preview only: verified existing-flight candidate detection, exact duplicate rows, new-flight detection, enrichment target selection and required reason gating. No flight writes were submitted.
+- Found and fixed mobile dialog intrinsic-width overflow; rechecked the full form and review controls at 390 px. Restored the viewport and closed the test preview.
+- Browser verified inventory category counts, search, source serial/status, unknown readiness fields and linked flight history. Unverified badges now use amber; unknown measurements have no misleading progress bar.
+- Local DJI normalization retains exact start time and source serials, plus honest sampling provenance/warnings. Original-file-dependent decoding remains unverified without a real source TXT, as documented.
+
+## Acceptance
+
+Completed acceptance is recorded in `IMPROVEMENT-ACCEPTANCE.md`, which supersedes historical pending-QA notes above. Source-file-dependent limitations are documented rather than represented as verified capabilities.

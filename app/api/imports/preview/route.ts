@@ -106,6 +106,11 @@ export async function POST(request: Request) {
         ),
       ],
       warnings: [
+        ...(parsed.importProvenance?.sampleSelection === 'uniform'
+          ? [
+              'Large DJI log: stored telemetry is uniformly sampled. The original TXT is retained in the source archive; brief voltage or temperature events may not appear in the charts.',
+            ]
+          : []),
         'Review equipment and battery assignments. DJI parsing does not provide historical DJI account cloud sync.',
       ],
     });

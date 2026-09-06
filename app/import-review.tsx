@@ -46,7 +46,7 @@ export default function ImportReview({
                     .join('; ')}
                 </p>
                 {exact ? (
-                  <strong>Already imported · skipped</strong>
+                  <strong>Duplicate source record · skipped</strong>
                 ) : (
                   <label className="field">
                     <span>Review possible duplicate</span>

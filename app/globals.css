@@ -3531,3 +3531,5 @@ textarea {
   .data-toolbar { flex-wrap:nowrap; }
   .data-toolbar .field { flex:0 0 180px; width:180px; }
 }
+.table-link { display:flex; flex-direction:column; align-items:flex-start; gap:6px; max-width:340px; text-align:left; white-space:normal; overflow-wrap:anywhere; }
+.table-link small { display:block; font-size:12px; line-height:1.5; color:#92a6ae; }

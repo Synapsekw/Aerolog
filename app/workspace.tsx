@@ -2536,6 +2536,15 @@ export default function Workspace() {
                           ])}
                           height={280}
                         />
+                      ) : record.flightTrack?.length > 1 ? (
+                        <>
+                          <MissionMap
+                            key={record.id}
+                            track={record.flightTrack.map((p: number[]) => [p[0], p[1]])}
+                            height={280}
+                          />
+                          <p className="fine-print">Recorded flight path · DroneLogbook KML · No timestamps supplied</p>
+                        </>
                       ) : record.plannedBoundary?.length >= 3 || record.siteLocation ? (
                         <>
                           <MissionMap

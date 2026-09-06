@@ -112,6 +112,10 @@ export const flightSchema = z.object({
     .optional(),
   pilotUserId: z.uuid().optional(),
   plannedBoundary: z.array(point).max(5000).optional(),
+  // Untimed KML geometry is separate from timestamped telemetry.
+  flightTrack: z.array(z.tuple([
+    numeric(-180, 180), numeric(-90, 90), numeric(-1000, 10000),
+  ])).min(2).max(20000).optional(),
   siteLocation: point.optional(),
   siteName: z.string().max(300).optional(),
   equipmentNames: z.array(z.string().max(300)).max(200).optional(),

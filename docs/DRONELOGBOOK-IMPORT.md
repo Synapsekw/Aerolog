@@ -11,3 +11,22 @@ Upcoming entries are retained in the source archive but excluded from recorded f
 The public flight response supplies planned geometry and site coordinates but does not document an actual GPS track. Flight details label the first planned polygon or the site marker explicitly. These must never be presented as flight replay. Raw API responses for the pilot and related references are retained privately as a downloadable source archive. KML/original logs are still needed for actual tracks.
 
 This is a one-time import; no recurring sync is enabled.
+
+## KML route enrichment
+
+The provided `MultipleFlights.kml` batch contains 20 LineStrings (flight numbers
+9156–9175) and 29,532 positions. Each was matched to a unique API flight number
+and exact source name, then checked against the existing record's pilot, GUID,
+source date and duration. The private source attachment references only these
+20 existing flight IDs. No flights, hours, asset usage or battery cycles were added.
+
+Untimed coordinates are stored in `flightTrack` as longitude/latitude/height
+triples, separate from timed `telemetry`. The map displays this actual route before
+falling back to planned boundaries or site markers. Source altitude mode is retained
+in track provenance; no sample times are inferred. Existing flight metadata and
+telemetry are preserved. The one-off import backup and verification report are
+in the ignored `.local/imports/ivan-kml/` directory.
+
+Storage migration 202609060010 allows KML MIME attachments without changing
+bucket privacy or file size limits. This allowance was applied to the current
+project via the Storage API during the import.

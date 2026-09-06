@@ -17,3 +17,11 @@ test('planned geometry is separate from actual position telemetry and validates 
   assert.equal(parsed.plannedBoundary?.length, 3);
   assert.equal(flightSchema.safeParse({...record, siteLocation: [200, 28]}).success, false);
 });
+test('untimed KML tracks preserve heights without fabricating telemetry times', () => {
+  const flightTrack = [[48, 28, 0], [48.01, 28.01, 49]];
+  const parsed = flightSchema.parse({...record, flightTrack});
+  assert.deepEqual(parsed.flightTrack, flightTrack);
+  assert.deepEqual(parsed.telemetry, []);
+  assert.equal(flightSchema.safeParse({...record, flightTrack: [[48, 28, 0]]}).success, false);
+  assert.equal(flightSchema.safeParse({...record, flightTrack: [[48, 95, 0], [48, 28, 1]]}).success, false);
+});

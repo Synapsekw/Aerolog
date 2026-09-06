@@ -4,31 +4,39 @@ import type { Map as MapboxMap } from 'mapbox-gl';
 import { Button } from '@/components/ui/button';
 import { Layers, Undo2, Trash2, MapPin } from 'lucide-react';
 type Point = [number, number];
+const EMPTY_POINTS: Point[] = [];
 export default function MissionMap({
-  points = [],
+  points = EMPTY_POINTS,
   onChange,
-  track = [],
+  track = EMPTY_POINTS,
   height = 310,
+  selectedPoint,
+  altitudeValues,
 }: {
   points?: Point[];
   onChange?: (points: Point[]) => void;
   track?: Point[];
   height?: number;
+  selectedPoint?: Point;
+  altitudeValues?: number[];
 }) {
+  const styleReady = useRef(false);
   const root = useRef<HTMLDivElement>(null),
     map = useRef<MapboxMap | null>(null),
     latest = useRef(points),
     latestTrack = useRef(track),
+    heights = useRef(altitudeValues),
     change = useRef(onChange),
     [ready, setReady] = useState(false),
     [error, setError] = useState(''),
     [satellite, setSatellite] = useState(false);
   latest.current = points;
   latestTrack.current = track;
+  heights.current = altitudeValues;
   change.current = onChange;
   function draw() {
     const m = map.current;
-    if (!m || !m.isStyleLoaded()) return;
+    if (!m || !styleReady.current) return;
     const p = latest.current;
     const features: any[] = [];
     if (p.length >= 3)
@@ -85,22 +93,63 @@ export default function MissionMap({
       });
     }
     const route = latestTrack.current;
-    if (route.length > 1 && !m.getSource('flight-track')) {
-      m.addSource('flight-track', {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          properties: {},
-          geometry: { type: 'LineString', coordinates: route },
-        },
-      });
-      m.addLayer({ id: 'flight-track-halo', type: 'line', source: 'flight-track', paint: { 'line-color': '#102527', 'line-width': 6, 'line-opacity': 0.8 } });
-      m.addLayer({
-        id: 'flight-track',
-        type: 'line',
-        source: 'flight-track',
-        paint: { 'line-color': '#8ad8e0', 'line-width': 3 },
-      });
+    const h = heights.current;
+    const routeData: any =
+      h?.length === route.length
+        ? {
+            type: 'FeatureCollection',
+            features: route
+              .slice(1)
+              .map((p, i) => ({
+                type: 'Feature',
+                properties: { altitude: h[i] },
+                geometry: { type: 'LineString', coordinates: [route[i], p] },
+              })),
+          }
+        : {
+            type: 'Feature',
+            properties: {},
+            geometry: { type: 'LineString', coordinates: route },
+          };
+    if (route.length > 1) {
+      const existing = m.getSource('flight-track') as any;
+      if (existing) existing.setData(routeData);
+      else {
+        m.addSource('flight-track', { type: 'geojson', data: routeData });
+        m.addLayer({
+          id: 'flight-track-halo',
+          type: 'line',
+          source: 'flight-track',
+          paint: {
+            'line-color': '#102527',
+            'line-width': 6,
+            'line-opacity': 0.8,
+          },
+        });
+        m.addLayer({
+          id: 'flight-track',
+          type: 'line',
+          source: 'flight-track',
+          paint: { 'line-color': '#8ad8e0', 'line-width': 3 },
+        });
+      }
+      const min = h?.length ? Math.min(...h) : 0,
+        max = h?.length ? Math.max(...h) : 1;
+      m.setPaintProperty(
+        'flight-track',
+        'line-color',
+        h?.length === route.length
+          ? [
+              'interpolate',
+              ['linear'],
+              ['get', 'altitude'],
+              min,
+              '#7dd3fc',
+              Math.max(min + 0.01, max),
+              '#d0f68b',
+            ]
+          : '#8ad8e0',
+      );
     }
   }
   useEffect(() => {
@@ -133,7 +182,10 @@ export default function MissionMap({
             m.fitBounds(bounds, { padding: 50, maxZoom: 16 });
           }
         });
-        m.on('style.load', draw);
+        m.on('style.load', () => {
+          styleReady.current = true;
+          draw();
+        });
         m.on('click', (e) => {
           if (change.current)
             change.current([...latest.current, [e.lngLat.lng, e.lngLat.lat]]);
@@ -150,11 +202,37 @@ export default function MissionMap({
       ro?.disconnect();
       map.current?.remove();
       map.current = null;
+      styleReady.current = false;
     };
   }, []);
   useEffect(() => {
     draw();
-  }, [points, track, ready]);
+  }, [points, track, altitudeValues, ready]);
+  useEffect(() => {
+    const m = map.current;
+    if (!m || !ready || !selectedPoint) return;
+    const data: any = {
+      type: 'Feature',
+      properties: {},
+      geometry: { type: 'Point', coordinates: selectedPoint },
+    };
+    const source = m.getSource('inspection-point') as any;
+    if (source) source.setData(data);
+    else {
+      m.addSource('inspection-point', { type: 'geojson', data });
+      m.addLayer({
+        id: 'inspection-point',
+        type: 'circle',
+        source: 'inspection-point',
+        paint: {
+          'circle-radius': 7,
+          'circle-color': '#fff',
+          'circle-stroke-color': '#39cdd2',
+          'circle-stroke-width': 3,
+        },
+      });
+    }
+  }, [selectedPoint, ready]);
   return (
     <div className="real-map" style={{ height }}>
       <div ref={root} className="map-canvas" />
@@ -177,10 +255,26 @@ export default function MissionMap({
             if (!m) return;
             // Toggle imagery within the existing style so route sources never disappear.
             if (!m.getSource('satellite-imagery')) {
-              m.addSource('satellite-imagery', { type: 'raster', url: 'mapbox://mapbox.satellite', tileSize: 256 });
-              m.addLayer({ id: 'satellite-imagery', type: 'raster', source: 'satellite-imagery', paint: { 'raster-fade-duration': 200 } }, 'mission-area');
+              m.addSource('satellite-imagery', {
+                type: 'raster',
+                url: 'mapbox://mapbox.satellite',
+                tileSize: 256,
+              });
+              m.addLayer(
+                {
+                  id: 'satellite-imagery',
+                  type: 'raster',
+                  source: 'satellite-imagery',
+                  paint: { 'raster-fade-duration': 200 },
+                },
+                'mission-area',
+              );
             }
-            m.setLayoutProperty('satellite-imagery', 'visibility', next ? 'visible' : 'none');
+            m.setLayoutProperty(
+              'satellite-imagery',
+              'visibility',
+              next ? 'visible' : 'none',
+            );
           }}
         >
           <Layers size={14} />

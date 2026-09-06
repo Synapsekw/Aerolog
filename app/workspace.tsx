@@ -3,8 +3,10 @@ import Image from 'next/image';
 import { useState } from 'react';
 import { useApp } from './app-provider';
 import MissionMap from './mission-map';
+import FlightAnalysis from './flight-analysis';
 import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
+import TeamDirectory from './team-directory';
 import { Status } from './shared';
 import {
   Camera,
@@ -574,7 +576,7 @@ export default function Workspace() {
       <Sidebar className="app-sidebar" collapsible="icon">
         <SidebarHeader>
           <div className="brand">
-            <Crosshair />
+            <Image src="/aerolog-mark.svg" width={38} height={38} className="aerolog-mark" alt="" />
             <span>
               AEROLOG<span className="brand-dot">®</span>
             </span>
@@ -685,46 +687,7 @@ export default function Workspace() {
               <Button variant="outline" onClick={() => setDetail(null)}>← Back to flight logs</Button>
               <div className="page-heading"><div><div className="eyebrow">FLIGHT ANALYSIS</div><h1>{record.mission}</h1><p>{record.pilot} · {record.aircraft} · {record.date || 'Unknown date'}</p></div><Status>Recorded</Status></div>
 
-                    <div style={{ marginTop: 20 }}>
-                      {record.telemetry?.length > 1 ? (
-                        <MissionMap
-                          key={record.id}
-                          track={record.telemetry.map((p: any) => [
-                            p.longitude,
-                            p.latitude,
-                          ])}
-                          height={480}
-                        />
-                      ) : record.flightTrack?.length > 1 ? (
-                        <>
-                          <MissionMap
-                            key={record.id}
-                            track={record.flightTrack.map((p: number[]) => [p[0], p[1]])}
-                            height={480}
-                          />
-                          <p className="fine-print">Recorded flight path · DroneLogbook KML · No timestamps supplied</p>
-                        </>
-                      ) : record.plannedBoundary?.length >= 3 || record.siteLocation ? (
-                        <>
-                          <MissionMap
-                            key={record.id}
-                            points={record.plannedBoundary?.length >= 3
-                              ? record.plannedBoundary
-                              : [record.siteLocation]}
-                            height={480}
-                          />
-                          <p className="fine-print">
-                            {record.plannedBoundary?.length >= 3
-                              ? 'Planned flight area from DroneLogbook. Actual flight track is unavailable.'
-                              : 'Recorded site location from DroneLogbook. Actual flight track is unavailable.'}
-                          </p>
-                        </>
-                      ) : (
-                        <div className="info-box">
-                          No position telemetry was recorded for this flight.
-                        </div>
-                      )}
-                    </div>
+                    <FlightAnalysis key={record.id} flight={record} />
                     <div className="detail-metrics">
                       <Stat
                         label="Duration"
@@ -742,7 +705,7 @@ export default function Workspace() {
                         note="Above takeoff"
                       />
                     </div>
-                    <FlightTelemetry frames={record.telemetry || []} track={record.flightTrack || []} altitudeMode={record.trackSource?.altitudeMode} />
+
                     {items('attachment')
                       .filter(
                         (a: any) => a.source && a.flights?.includes(record.id),
@@ -1641,50 +1604,11 @@ export default function Workspace() {
                   </Button>
                 )}
               </section>
-              <section className="glass">
-                <div className="row">
-                  <h2>Workspace access</h2>
-                  {profile.role === 'admin' && (
-                    <Button
-                      variant="outline"
-                      onClick={() => {
-                        setDraft({ email: '', name: '', role: 'pilot' });
-                        setError('');
-                        setAccountResult(null);
-                        setDialog('account');
-                      }}
-                    >
-                      <Plus size={14} /> Add account
-                    </Button>
-                  )}
-                </div>
-                {app.profiles.map((p) => (
-                  <div className="linked-item" key={p.id}>
-                    <span>
-                      {p.display_name}
-                      <small>{p.active ? 'Active' : 'Disabled'}</small>
-                    </span>
-                    <Status>{p.role}</Status>
-                    {profile.role === 'admin' && p.id !== profile.id && (
-                      <Button
-                        variant="ghost"
-                        onClick={() => {
-                          setDraft({ ...p });
-                          setError('');
-                          setDialog('access');
-                        }}
-                      >
-                        Manage
-                      </Button>
-                    )}
-                  </div>
-                ))}
-                <p className="fine-print">
-                  Initial test accounts are available from the local sign-in
-                  page. New accounts receive a one-time temporary password for
-                  local testing when email delivery is unavailable.
-                </p>
-              </section>
+              <TeamDirectory
+                members={app.profiles} flights={flights} profile={profile}
+                onManage={(member) => { setDraft({ ...member }); setError(''); setDialog('access'); }}
+                onAdd={() => { setDraft({ email: '', name: '', role: 'pilot' }); setError(''); setAccountResult(null); setDialog('account'); }}
+              />
               <section className="glass">
                 <h2>Account password</h2>
                 <p>Change the password for your signed-in account.</p>
@@ -3418,32 +3342,6 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-function FlightTelemetry({ frames, track, altitudeMode }: { frames: any[]; track: number[][]; altitudeMode?: string }) {
-  const timed = frames.length > 1;
-  const altitude = timed ? frames : track.map((p, index) => ({ position: index + 1, altitude: p[2] }));
-  const battery = frames.map(p => ({...p, battery: typeof p.battery === 'number' ? p.battery : null}));
-  const hasBattery = battery.filter(p => p.battery != null).length > 1;
-  const chart = (data: any[], field: string, color: string, label: string, percent = false) => (
-    <ChartContainer className="flight-profile-chart" config={{[field]: {label, color}}}>
-      <AreaChart data={data}>
-        <CartesianGrid vertical={false} stroke="#ffffff10" />
-        <XAxis dataKey={timed ? 'time' : 'position'} minTickGap={50} tickFormatter={v => timed ? (v / 60).toFixed(1) + ' min' : String(v)} />
-        <YAxis width={52} domain={percent ? [0, 100] : ['auto', 'auto']} tickFormatter={v => v + (percent ? '%' : ' m')} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Area type="linear" dataKey={field} stroke={color} fill={color + '25'} connectNulls={false} isAnimationActive={false} />
-      </AreaChart>
-    </ChartContainer>
-  );
-  return <div className="flight-chart-grid">
-    <section className="flight-chart-card"><h2>Altitude profile</h2>
-      <p>{timed ? 'Altitude over elapsed flight time' : 'Height by recorded route point · ' + (altitudeMode === 'relativeToGround' ? 'KML height relative to ground' : 'Source KML height')}</p>
-      {altitude.length > 1 ? chart(altitude, 'altitude', '#d0f68b', 'Altitude (m)') : <div className="flight-chart-empty">No altitude samples available.</div>}
-    </section>
-    <section className="flight-chart-card"><h2>Battery drain</h2><p>Remaining charge over elapsed flight time</p>
-      {hasBattery ? chart(battery, 'battery', '#7dd3fc', 'Remaining charge (%)', true) : <div className="flight-chart-empty"><Battery size={28} /><strong>No battery samples in this log</strong><span>KML contains the flight path and heights. Import a telemetry log with battery readings to see the drain curve.</span></div>}
-    </section>
-  </div>;
-}
 function BatteryHistory({
   events,
   current,

@@ -3533,3 +3533,20 @@ textarea {
 }
 .table-link { display:flex; flex-direction:column; align-items:flex-start; gap:6px; max-width:340px; text-align:left; white-space:normal; overflow-wrap:anywhere; }
 .table-link small { display:block; font-size:12px; line-height:1.5; color:#92a6ae; }
+.analysis-controls { margin-top:18px; }
+.route-slider { width:100%; accent-color:#cdef8f; margin:22px 0 16px; cursor:pointer; }
+.analysis-values { display:flex; flex-wrap:wrap; gap:12px 24px; font-variant-numeric:tabular-nums; font-size:14px; color:#bdd1d8; }
+.analysis-controls select { background:#182935; border:1px solid #ffffff25; border-radius:8px; padding:7px; }
+.brand .aerolog-mark { width:38px; height:38px; flex-shrink:0; filter:drop-shadow(0 0 10px #89dcb326); }
+
+.team-directory { min-width:0; }
+.team-heading { flex-wrap:wrap; gap:12px; }
+.team-filters { display:grid; grid-template-columns:minmax(180px,1fr) minmax(120px,160px) minmax(120px,160px); align-items:end; gap:12px; margin:20px 0; }
+.team-filters .field { margin:0; min-width:0; }
+.team-filters input { min-width:0; }
+.team-member { display:flex; align-items:center; gap:16px; flex-wrap:wrap; padding:16px 0; border-bottom:1px solid #ffffff0c; }
+.team-member-name { flex:1; min-width:150px; overflow-wrap:anywhere; }
+.team-member small { display:block; color:var(--muted-foreground); font-size:12px; margin-top:4px; }
+.team-flight-total { min-width:110px; }
+@media(max-width:1100px) { .team-filters { grid-template-columns:1fr 1fr; } .team-filters > input { grid-column:1/-1; } }
+@media(max-width:480px) { .team-member-name { flex-basis:65%; } .team-filters { gap:8px; } }

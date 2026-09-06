@@ -38,3 +38,7 @@ next-env.d.ts
 /work/
 
 *.tsbuildinfo
+
+/.venv/
+/.local/
+!.env.example

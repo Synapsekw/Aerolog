@@ -43,3 +43,11 @@ local Git. Independently implement product behavior; no AGPL application code co
 - Applied migration 013: service-only RPC checks active manager membership, organization and revision under the existing lock order; writes before/after audit data and tracks source hashes. Previously enriched sources are detected on reimport.
 - Database rollback test proved retained duration/KML, unchanged fleet and battery events, audit insertion, stale revision rejection and lack of authenticated direct RPC access. No operational flight was modified. Production build and 28 unit tests passed before the added enrichment-reimport regression test.
 - Browser import/enrichment and final responsive/real-data checks remain pending.
+
+### Integrated validation progress
+
+- Browser verified timed playback advances and pauses with a map marker and chart cursor; at 390 px the flight header, playback controls and charts wrap without collisions. Verified the local sample battery has 7 populated voltage-history points at phone width. Restored the normal viewport.
+- Improved partial import failures: successfully saved/enriched rows still attempt source archiving, workspace state refreshes, and the error reports retained progress with a retry path. Cleared readiness measurements now remain unknown instead of becoming zero; imported assets can retain Unverified while being reviewed.
+- Extended isolated organization API tests with normalized file preview, manager-only enrichment, revision conflict, persisted telemetry and serial, raw source archive, audit and unchanged usage. Test resources (including storage files) are cleaned up.
+- Native Codex file-picker computer use is prohibited by the tool, so full browser file-upload review is not verified. This does not block independent API tests or other work; do not claim that browser workflow passed.
+- Expanded integration run passed all 35 API checks, including the enrichment/archive path. Usage comparison uses the saved value before enrichment, respecting existing three-decimal accounting precision.

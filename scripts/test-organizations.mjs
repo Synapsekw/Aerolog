@@ -189,6 +189,60 @@ try {
     400,
     'commands',
   );
+  // End-to-end import preview, reviewed enrichment, persistence and raw archive.
+  const usageBeforeEnrichment = store.records.find(r=>r.id===tag+'-A').data.hours;
+  const rawLog = JSON.stringify({
+    ...flight,
+    id: undefined,
+    importHash: undefined,
+    durationSeconds: 900,
+    aircraftSerial: 'TEST-SN',
+    startedAt: '2026-09-06T10:00:00Z',
+    telemetry: [
+      { time: 0, longitude: 55, latitude: 25, altitude: 10, voltage: 24 },
+      { time: 10, longitude: 55.001, latitude: 25, altitude: 10, voltage: 23 },
+    ],
+  });
+  const upload = async (path, ids) => {
+    const body = new FormData();
+    body.set(
+      'file',
+      new File([rawLog], 'test-telemetry.json', { type: 'application/json' }),
+    );
+    if (ids) body.set('flights', JSON.stringify(ids));
+    const response = await fetch('http://127.0.0.1:3000/api/imports/' + path, {
+      method: 'POST',
+      headers: { Authorization: 'Bearer ' + tokens.owner },
+      body,
+    });
+    const result = await response.json();
+    assert.equal(response.status, 200, result.error);
+    checks++;
+    return result;
+  };
+  const preview = await upload('preview');
+  assert.equal(preview.flights[0].telemetry.length, 2);
+  const enrich = {
+    targetId: flight.id,
+    revision: 1,
+    reason: 'Test fixture verified as the same flight for API validation.',
+    incoming: preview.flights[0],
+  };
+  await request('pilot', enrich, 403, 'imports/enrich');
+  await request('owner', enrich, 200, 'imports/enrich');
+  await request('owner', enrich, 409, 'imports/enrich');
+  const archive = await upload('archive', [flight.id]);
+  assert.equal(archive.flights[0], flight.id);
+  store = await request('owner', null, 200, 'bootstrap', 'GET');
+  const enriched = store.records.find((r) => r.id === flight.id);
+  assert.equal(enriched.data.durationSeconds, 600);
+  assert.equal(enriched.data.telemetry.length, 2);
+  assert.equal(enriched.data.aircraftSerial, 'TEST-SN');
+  assert.equal(
+    store.records.find((r) => r.id === tag + '-A').data.hours,
+    usageBeforeEnrichment,
+  );
+  assert(store.audit.some((a) => a.action === 'flight_telemetry_enriched'));
   const second = (
     await request('owner', { action: 'create', name: tag + ' second' })
   ).id;
@@ -245,6 +299,17 @@ try {
       ' organization API checks: creation, membership, invitation security, branding, tenant isolation, pilot attribution, deduplication, stale-tab protection and access revocation.',
   );
 } finally {
+  if (orgs.length) {
+    const attachments = ok(
+      await db
+        .from('aerolog_records')
+        .select('data')
+        .eq('kind', 'attachment')
+        .in('organization_id', orgs),
+    );
+    const paths = attachments.map((a) => a.data.path).filter(Boolean);
+    if (paths.length) ok(await db.storage.from('aerolog-files').remove(paths));
+  }
   for (const table of [
     'aerolog_audit',
     'aerolog_notifications',

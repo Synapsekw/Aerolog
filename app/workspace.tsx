@@ -8,7 +8,7 @@ import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
 import TeamDirectory from './team-directory';
 import ImportReview from './import-review';
-import {duplicateMatches} from '@/lib/flight/duplicates';
+import { duplicateMatches } from '@/lib/flight/duplicates';
 import BatteryTelemetryHistory from './battery-telemetry-history';
 import { Status } from './shared';
 import {
@@ -313,11 +313,11 @@ export default function Workspace() {
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
   const [inventoryPage, setInventoryPage] = useState(1);
   const inventoryCategories = [
-    {key:'Aircraft', label:'Aircraft', Icon:Drone},
-    {key:'Battery', label:'Batteries', Icon:Battery},
-    {key:'Payload', label:'Payloads', Icon:Camera},
-    {key:'Controller', label:'Controllers', Icon:Gamepad2},
-    {key:'Accessory', label:'Accessories', Icon:Package},
+    { key: 'Aircraft', label: 'Aircraft', Icon: Drone },
+    { key: 'Battery', label: 'Batteries', Icon: Battery },
+    { key: 'Payload', label: 'Payloads', Icon: Camera },
+    { key: 'Controller', label: 'Controllers', Icon: Gamepad2 },
+    { key: 'Accessory', label: 'Accessories', Icon: Package },
   ];
   const [page, setPage] = useState('Overview'),
     [search, setSearch] = useState(''),
@@ -332,7 +332,7 @@ export default function Workspace() {
     [uploading, setUploading] = useState(false),
     [importPreview, setImportPreview] = useState<any>(null),
     [importAllowNew, setImportAllowNew] = useState<Set<string>>(new Set()),
-    [importEnrich, setImportEnrich] = useState<Record<string,string>>({}),
+    [importEnrich, setImportEnrich] = useState<Record<string, string>>({}),
     [importFile, setImportFile] = useState<File | null>(null),
     [accountResult, setAccountResult] = useState<any>(null);
   const record = detail
@@ -348,7 +348,9 @@ export default function Workspace() {
         a.category === 'Aircraft' &&
         a.status !== 'Retired' &&
         a.status !== 'Maintenance due' &&
-        a.hours != null && a.next != null && a.hours < a.next,
+        a.hours != null &&
+        a.next != null &&
+        a.hours < a.next,
     ),
     aircraft = assets.filter(
       (a) => a.category === 'Aircraft' && a.status !== 'Retired',
@@ -361,12 +363,18 @@ export default function Workspace() {
   const batteryAlerts = batteries.filter(
     (b) =>
       b.status !== 'Retired' &&
-      (b.health == null || b.temp == null || b.health < organization.settings.batteryMinHealth ||
+      (b.health == null ||
+        b.temp == null ||
+        b.health < organization.settings.batteryMinHealth ||
         b.temp > organization.settings.batteryMaxTemperature ||
         b.status === 'Quarantined'),
   );
   const serviceAlerts = assets.filter(
-    (a) => a.status !== 'Retired' && a.next != null && a.hours != null && a.next - a.hours <= 5,
+    (a) =>
+      a.status !== 'Retired' &&
+      a.next != null &&
+      a.hours != null &&
+      a.next - a.hours <= 5,
   );
   const titles: Record<string, string> = {
     Overview: 'Your fleet, your people, your next move.',
@@ -551,7 +559,9 @@ export default function Workspace() {
     visible = kind
       ? items(kind).filter(
           (d) =>
-            (page !== 'Inventory' || inventoryCategory === 'Battery' || d.category === inventoryCategory) &&
+            (page !== 'Inventory' ||
+              inventoryCategory === 'Battery' ||
+              d.category === inventoryCategory) &&
             Object.values(d)
               .filter((v) => typeof v === 'string')
               .join(' ')
@@ -565,7 +575,10 @@ export default function Workspace() {
       : [];
   const inventoryPageCount = Math.max(1, Math.ceil(visible.length / 24));
   const currentInventoryPage = Math.min(inventoryPage, inventoryPageCount);
-  const inventoryRows = visible.slice((currentInventoryPage - 1) * 24, currentInventoryPage * 24);
+  const inventoryRows = visible.slice(
+    (currentInventoryPage - 1) * 24,
+    currentInventoryPage * 24,
+  );
   const unread = app.notifications.filter(
     (n) => !n.read_by.includes(profile.id),
   );
@@ -581,7 +594,13 @@ export default function Workspace() {
       <Sidebar className="app-sidebar" collapsible="icon">
         <SidebarHeader>
           <div className="brand">
-            <Image src="/aerolog-mark.svg" width={38} height={38} className="aerolog-mark" alt="" />
+            <Image
+              src="/aerolog-mark.svg"
+              width={38}
+              height={38}
+              className="aerolog-mark"
+              alt=""
+            />
             <span>
               AEROLOG<span className="brand-dot">®</span>
             </span>
@@ -689,949 +708,1186 @@ export default function Workspace() {
         <div className="content">
           {detail?.kind === 'flight' && record ? (
             <article className="flight-page">
-              <Button variant="outline" onClick={() => setDetail(null)}>← Back to flight logs</Button>
-              <div className="page-heading"><div><div className="eyebrow">FLIGHT ANALYSIS</div><h1>{record.mission}</h1><p>{record.pilot} · {record.aircraft} · {record.date || 'Unknown date'}</p></div><Status>Recorded</Status></div>
-
-                    <FlightAnalysis key={record.id} flight={record} />
-                    <div className="detail-metrics">
-                      <Stat
-                        label="Duration"
-                        value={record.duration}
-                        note="min : sec"
-                      />
-                      <Stat
-                        label="Distance"
-                        value={record.distance + ' km'}
-                        note="Recorded distance"
-                      />
-                      <Stat
-                        label="Max altitude"
-                        value={record.altitude + ' m'}
-                        note="Above takeoff"
-                      />
-                    </div>
-
-                    {items('attachment')
-                      .filter(
-                        (a: any) => a.source && a.flights?.includes(record.id),
-                      )
-                      .map((a: any) => (
-                        <Button
-                          key={a.id}
-                          variant="outline"
-                          onClick={async () => {
-                            try {
-                              const r = await api<{ url: string }>(
-                                'files/' + a.id,
-                              );
-                              window.open(
-                                r.url,
-                                '_blank',
-                                'noopener,noreferrer',
-                              );
-                            } catch (e) {
-                              notify((e as Error).message);
-                            }
-                          }}
-                        >
-                          <Download size={14} />
-                          Source file · {a.name}
-                        </Button>
-                      ))}
-                    <section className="flight-chart-card" style={{marginTop:24}}>
-                      <h2>Linked equipment</h2>
-                      <div className="row" style={{flexWrap:'wrap',gap:10}}>
-                        {record.aircraftId && <Button variant="outline" onClick={() => void open('asset',record.aircraftId)}>{record.aircraft}</Button>}
-                        {(record.equipmentIds || []).map((id: string) => {
-                          const battery = batteries.find(b => b.id === id);
-                          const asset = assets.find(a => a.id === id);
-                          return <Button key={id} variant="outline" onClick={() => void open(battery ? 'battery' : 'asset',id)}>{battery?.model || asset?.name || id}</Button>;
-                        })}
-                        {!record.aircraftId && !record.equipmentIds?.length && <p>No inventory links available.</p>}
-                      </div>
-                    </section>
-                    <dl className="summary-list">
-                      {[
-                        ['Pilot', record.pilot],
-                        ['Aircraft', record.aircraft],
-                        ['Date', record.date || 'Unknown date in source'],
-                        ['Mission', record.mission],
-                        ['Battery', batteries.find(b => b.id === record.battery)?.model || record.battery || 'Not recorded'],
-                        [
-                          'Battery use',
-                          record.start != null
-                            ? record.start + '% → ' + record.end + '%'
-                            : 'Not available',
-                        ],
-                        ['Source', record.source],
-                        ['Site', record.siteName || 'Not recorded'],
-                        ['Source equipment', record.equipmentNames?.join(', ') || 'Not recorded'],
-                        ['Flight app', record.sourceApp || 'Not recorded'],
-                      ].map(([k, v]) => (
-                        <div key={k}>
-                          <dt>{k}</dt>
-                          <dd>{v}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                    <p>{record.notes}</p>
-                    {record.battery &&
-                      batteries.some((b) => b.id === record.battery) && (
-                        <Button
-                          className="primary wide"
-                          onClick={() => void open('battery', record.battery)}
-                        >
-                          Open battery passport
-                        </Button>
-                      )}
-                    <p className="fine-print">
-                      Flight records are immutable. Original import identifiers
-                      prevent duplicate usage accounting.
-                    </p>
-
-            </article>
-          ) : (<>
-
-          <div className="page-heading">
-            <div>
-              <div className="eyebrow">YOUR OPERATIONS, IN SYNC</div>
-              <h1>{page === 'Overview' ? 'Command center' : page}</h1>
-              <p>{titles[page]}</p>
-            </div>
-            {planner && (
-              <Button className="primary" onClick={() => edit('mission')}>
-                <Plus size={16} /> Plan a mission
+              <Button variant="outline" onClick={() => setDetail(null)}>
+                ← Back to flight logs
               </Button>
-            )}
-          </div>
-          {page === 'Overview' && (
-            <>
-              <div className="stats">
+              <div className="page-heading">
+                <div>
+                  <div className="eyebrow">FLIGHT ANALYSIS</div>
+                  <h1>{record.mission}</h1>
+                  <p>
+                    {record.pilot} · {record.aircraft} ·{' '}
+                    {record.date || 'Unknown date'}
+                  </p>
+                </div>
+                <Status>Recorded</Status>
+              </div>
+
+              <FlightAnalysis key={record.id} flight={record} />
+              <div className="detail-metrics">
                 <Stat
-                  label="Missions"
-                  value={String(missions.length)}
-                  note={pending.length + ' awaiting review'}
-                  Icon={MapIcon}
+                  label="Duration"
+                  value={record.duration}
+                  note="min : sec"
                 />
                 <Stat
-                  label="Logged flight time"
-                  value={(totalSeconds / 3600).toFixed(1) + ' h'}
-                  note={flights.length + ' recorded flights'}
+                  label="Distance"
+                  value={record.distance + ' km'}
+                  note="Recorded distance"
                 />
                 <Stat
-                  label="Fleet readiness"
-                  value={
-                    aircraft.length
-                      ? Math.round((ready.length / aircraft.length) * 100) + '%'
-                      : '—'
-                  }
-                  note={
-                    ready.length +
-                    ' of ' +
-                    aircraft.length +
-                    ' aircraft available'
-                  }
-                  Icon={Drone}
-                />
-                <Stat
-                  label="Battery attention"
-                  value={String(
-                    batteries.filter(
-                      (b) =>
-                        b.health == null || b.temp == null || b.health < organization.settings.batteryMinHealth ||
-                        b.temp > organization.settings.batteryMaxTemperature ||
-                        b.status === 'Quarantined',
-                    ).length,
-                  )}
-                  note={batteries.length + ' tracked power packs'}
-                  Icon={Battery}
+                  label="Max altitude"
+                  value={record.altitude + ' m'}
+                  note="Above takeoff"
                 />
               </div>
-              <Analytics flights={flights} />
-              <div className="overview-grid">
-                <section className="glass map-panel">
-                  <div className="panel-heading">
-                    <div>
-                      <h2>Mission area</h2>
-                      <p>
-                        {missions.find((m) => m.geometry?.length)?.location ||
-                          'Plan a mission to define an operating area'}
-                      </p>
-                    </div>
-                    <span className="live">
-                      <i /> MAPBOX
-                    </span>
-                  </div>
-                  <div style={{ padding: '0 14px 14px' }}>
-                    <MissionMap
-                      points={
-                        missions.find((m) => m.geometry?.length)?.geometry || []
+
+              {items('attachment')
+                .filter((a: any) => a.source && a.flights?.includes(record.id))
+                .map((a: any) => (
+                  <Button
+                    key={a.id}
+                    variant="outline"
+                    onClick={async () => {
+                      try {
+                        const r = await api<{ url: string }>('files/' + a.id);
+                        window.open(r.url, '_blank', 'noopener,noreferrer');
+                      } catch (e) {
+                        notify((e as Error).message);
                       }
-                    />
-                  </div>
-                  <div className="weather">
-                    <span>
-                      Airspace restrictions and live weather are not connected.
-                    </span>
-                  </div>
-                </section>
-                <section className="glass attention">
-                  <div className="panel-heading">
-                    <h2>Needs your attention</h2>
-                    <span className="count">
-                      {pending.length +
-                        overdue.length +
-                        batteryAlerts.length +
-                        serviceAlerts.length}
-                    </span>
-                  </div>
-                  {pending.slice(0, 3).map((m) => (
-                    <button
-                      className="attention-item"
-                      key={m.id}
-                      onClick={() => void open('mission', m.id)}
-                    >
-                      <span className="attention-icon">
-                        <ShieldCheck size={18} />
-                      </span>
-                      <div>
-                        <h3>{m.name}</h3>
-                        <p>Awaiting operations review</p>
-                        <span>
-                          Review package <ArrowRight size={13} />
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                  {overdue.slice(0, 2).map((s) => (
-                    <button
-                      className="attention-item"
-                      key={s.id}
-                      onClick={() => void open('service', s.id)}
-                    >
-                      <span className="attention-icon">
-                        <Wrench size={18} />
-                      </span>
-                      <div>
-                        <h3>{s.asset}</h3>
-                        <p>{s.task}</p>
-                        <span>Overdue · {s.due}</span>
-                      </div>
-                    </button>
-                  ))}
-                  {batteryAlerts.slice(0, 2).map((b) => (
-                    <button
-                      className="attention-item"
-                      key={b.id}
-                      onClick={() => void open('battery', b.id)}
-                    >
-                      <span className="attention-icon">
-                        <Battery size={18} />
-                      </span>
-                      <div>
-                        <h3>{b.id}</h3>
-                        <p>
-                          {b.health ?? '—'}% health · {b.temp == null ? 'Unknown' : b.temp + '°C'} · {b.status}
-                        </p>
-                        <span>Inspect battery</span>
-                      </div>
-                    </button>
-                  ))}
-                  {serviceAlerts.slice(0, 2).map((a) => (
-                    <button
-                      className="attention-item"
-                      key={a.id}
-                      onClick={() => void open('asset', a.id)}
-                    >
-                      <span className="attention-icon">
-                        <Wrench size={18} />
-                      </span>
-                      <div>
-                        <h3>{a.name}</h3>
-                        <p>
-                          {Math.max(0, (a.next ?? 0) - (a.hours ?? 0)).toFixed(1)} hours until
-                          service
-                        </p>
-                        <span>
-                          {a.next != null && a.hours != null && a.hours >= a.next
-                            ? 'Maintenance due'
-                            : 'Service approaching'}
-                        </span>
-                      </div>
-                    </button>
-                  ))}
-                  {!pending.length &&
-                    !overdue.length &&
-                    !batteryAlerts.length &&
-                    !serviceAlerts.length && (
-                      <Empty
-                        label="All caught up"
-                        description="Approval requests and overdue services will appear here."
-                      />
-                    )}
-                </section>
-              </div>
-              <section className="glass">
-                <div className="panel-heading">
-                  <h2>Upcoming missions</h2>
-                  <Button variant="ghost" onClick={() => navigate('Missions')}>
-                    All missions <ArrowUpRight size={15} />
+                    }}
+                  >
+                    <Download size={14} />
+                    Source file · {a.name}
                   </Button>
-                </div>
-                <div className="mission-cards">
-                  {missions
-                    .filter((m) => m.status !== 'Completed')
-                    .slice(0, 3)
-                    .map((m) => (
-                      <button
-                        className="mission-card"
-                        key={m.id}
-                        onClick={() => void open('mission', m.id)}
-                      >
-                        <div className="row">
-                          <span className="mono">{m.id}</span>
-                          <Status>{m.status}</Status>
-                        </div>
-                        <h3>{m.name}</h3>
-                        <p>{m.location}</p>
-                        <div className="mission-bottom">
-                          <span>
-                            {m.date} · {m.time}
-                          </span>
-                          <ArrowUpRight size={16} />
-                        </div>
-                      </button>
-                    ))}
-                </div>
-                {!missions.length && (
-                  <Empty
-                    label="Your first mission starts here"
-                    description="Use Plan a mission to assign crew, equipment and a risk assessment."
-                  />
-                )}
-              </section>
-            </>
-          )}
-          {kind && (
-            <>
-              {page === 'Inventory' && (
-                <div className="inventory-categories" aria-label="Equipment categories">
-                  {inventoryCategories.map(({key,label,Icon}) => (
-                    <button key={key} className={'inventory-category ' + (inventoryCategory === key ? 'selected' : '')} aria-pressed={inventoryCategory === key} onClick={() => {setInventoryCategory(key);setInventoryPage(1);setFilter('All');setSearch('');}}>
-                      <Icon size={23}/><span>{label}<strong>{key === 'Battery' ? batteries.length : assets.filter(a => a.category === key).length}</strong></span>
-                    </button>
-                  ))}
-                </div>
-              )}
-              <div className="toolbar">
-                <div className="search-field">
-                  <Search size={16} />
-                  <Input
-                    aria-label={'Search ' + page.toLowerCase()}
-                    placeholder={'Search ' + page.toLowerCase() + '…'}
-                    value={search}
-                    onChange={(e) => {setSearch(e.target.value);setInventoryPage(1);}}
-                  />
-                </div>
-                <div className="data-toolbar">
-                  <Pick
-                    label="Filter"
-                    value={filter}
-                    onChange={(value) => {setFilter(value);setInventoryPage(1);}}
-                    options={[
-                      'All',
-                      ...new Set(
-                        items(kind)
-                          .map((d) =>
-                            page === 'Inventory'
-                              ? d.status
-                              : page === 'Flight logs'
-                                ? d.pilot
-                                : d.status,
-                          )
-                          .filter(Boolean),
-                      ),
-                    ]}
-                  />
-                  {page === 'Flight logs' && (
-                    <>
+                ))}
+              <section className="flight-chart-card" style={{ marginTop: 24 }}>
+                <h2>Linked equipment</h2>
+                <div className="row" style={{ flexWrap: 'wrap', gap: 10 }}>
+                  {record.aircraftId && (
+                    <Button
+                      variant="outline"
+                      onClick={() => void open('asset', record.aircraftId)}
+                    >
+                      {record.aircraft}
+                    </Button>
+                  )}
+                  {(record.equipmentIds || []).map((id: string) => {
+                    const battery = batteries.find((b) => b.id === id);
+                    const asset = assets.find((a) => a.id === id);
+                    return (
                       <Button
+                        key={id}
                         variant="outline"
                         onClick={() =>
-                          csv([
-                            [
-                              'Flight',
-                              'Mission',
-                              'Pilot',
-                              'Aircraft',
-                              'Date',
-                              'Seconds',
-                              'Distance km',
-                              'Battery',
-                            ],
-                            ...visible.map((f) => [
-                              f.id,
-                              f.mission,
-                              f.pilot,
-                              f.aircraft,
-                              f.date,
-                              f.durationSeconds,
-                              f.distance,
-                              f.battery,
-                            ]),
-                          ])
+                          void open(battery ? 'battery' : 'asset', id)
                         }
                       >
-                        <Download size={15} /> CSV
+                        {battery?.model || asset?.name || id}
                       </Button>
-                      {planner && (
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            edit('flight');
-                            setDialog('import');
-                          }}
-                        >
-                          <Upload size={15} /> Import logs
-                        </Button>
-                      )}
-                    </>
+                    );
+                  })}
+                  {!record.aircraftId && !record.equipmentIds?.length && (
+                    <p>No inventory links available.</p>
                   )}
-                  {(kind === 'asset' || kind === 'service' || kind === 'battery'
-                    ? fleet
-                    : kind === 'crew'
-                      ? manager
-                      : planner) &&
-                    kind !== 'mission' && (
-                      <Button className="primary" onClick={() => edit(kind)}>
-                        <Plus size={15} />
-                        {kind === 'service'
-                          ? 'Schedule service'
-                          : kind === 'flight'
-                            ? 'Log flight'
-                            : 'Add ' + kind}
-                      </Button>
-                    )}
                 </div>
+              </section>
+              <dl className="summary-list">
+                {[
+                  ['Pilot', record.pilot],
+                  ['Aircraft', record.aircraft],
+                  ['Date', record.date || 'Unknown date in source'],
+                  ['Mission', record.mission],
+                  [
+                    'Battery',
+                    batteries.find((b) => b.id === record.battery)?.model ||
+                      record.battery ||
+                      'Not recorded',
+                  ],
+                  [
+                    'Battery use',
+                    record.start != null
+                      ? record.start + '% → ' + record.end + '%'
+                      : 'Not available',
+                  ],
+                  ['Source', record.source],
+                  ['Site', record.siteName || 'Not recorded'],
+                  [
+                    'Source equipment',
+                    record.equipmentNames?.join(', ') || 'Not recorded',
+                  ],
+                  ['Flight app', record.sourceApp || 'Not recorded'],
+                ].map(([k, v]) => (
+                  <div key={k}>
+                    <dt>{k}</dt>
+                    <dd>{v}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p>{record.notes}</p>
+              {record.battery &&
+                batteries.some((b) => b.id === record.battery) && (
+                  <Button
+                    className="primary wide"
+                    onClick={() => void open('battery', record.battery)}
+                  >
+                    Open battery passport
+                  </Button>
+                )}
+              <p className="fine-print">
+                Flight records are immutable. Original import identifiers
+                prevent duplicate usage accounting.
+              </p>
+            </article>
+          ) : (
+            <>
+              <div className="page-heading">
+                <div>
+                  <div className="eyebrow">YOUR OPERATIONS, IN SYNC</div>
+                  <h1>{page === 'Overview' ? 'Command center' : page}</h1>
+                  <p>{titles[page]}</p>
+                </div>
+                {planner && (
+                  <Button className="primary" onClick={() => edit('mission')}>
+                    <Plus size={16} /> Plan a mission
+                  </Button>
+                )}
               </div>
-              {page === 'Missions' && (
-                <div className="mission-board">
-                  {visible.map((m) => (
-                    <button
-                      className="glass mission-tile"
-                      key={m.id}
-                      onClick={() => void open('mission', m.id)}
-                    >
-                      <div className="tile-map">
-                        <MapIcon size={25} />
-                        <span>{m.location}</span>
-                        <b>{m.id}</b>
-                      </div>
-                      <div className="tile-body">
-                        <div className="row">
-                          <span className="category-label">{m.type}</span>
-                          <Status>{m.status}</Status>
-                        </div>
-                        <h3>{m.name}</h3>
-                        <p>
-                          {m.date} · {m.time} · {m.durationMinutes || 60} min
-                        </p>
-                        <div className="tile-meta">
-                          <span>
-                            <Drone size={14} />
-                            {m.aircraft}
-                          </span>
-                          <span>
-                            <Users size={14} />
-                            {m.pilot}
-                          </span>
-                        </div>
-                        <div className="tile-foot">
-                          <span>{m.risks.length} hazards assessed</span>
-                          <ArrowUpRight size={17} />
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              )}
-              {page === 'Inventory' && (
-                <section className="glass inventory-section">
-                  <div className="panel-heading"><div><h2>{inventoryCategories.find(c => c.key === inventoryCategory)?.label}</h2><p>{visible.length} matching items</p></div><span className="category-label">{Math.min(visible.length, (currentInventoryPage - 1) * 24 + 1)}–{Math.min(visible.length,currentInventoryPage * 24)} of {visible.length}</span></div>
-                  <Table>
-                    <TableHeader><TableRow>{['Equipment','Serial','Status',inventoryCategory === 'Battery' ? 'Assigned aircraft' : 'Custodian',inventoryCategory === 'Battery' ? 'Cycles / health' : 'Usage / service',''].map(h => <TableHead key={h}>{h}</TableHead>)}</TableRow></TableHeader>
-                    <TableBody>{inventoryRows.map(a => {
-                      const isBattery = inventoryCategory === 'Battery';
-                      const Icon = inventoryCategories.find(c => c.key === inventoryCategory)!.Icon;
-                      const title = isBattery ? a.model : a.name;
-                      return <TableRow key={a.id}>
-                        <TableCell><button className="equipment-name" onClick={() => void open(isBattery ? 'battery' : 'asset',a.id)}><span className="equipment-icon"><Icon size={20}/></span><span>{title}<small>{a.externalSource || 'Local inventory'}</small></span></button></TableCell>
-                        <TableCell>{a.serial || 'Not supplied'}</TableCell>
-                        <TableCell><Status>{a.next != null && a.hours != null && a.hours >= a.next ? 'Maintenance due' : a.status}</Status></TableCell>
-                        <TableCell>{isBattery ? a.aircraft : a.pilot}</TableCell>
-                        <TableCell>{isBattery ? a.cycles + ' cycles · ' + (a.health == null ? 'Health unknown' : a.health + '% health') : (a.hours == null ? 'Usage unknown' : a.hours.toFixed(1) + ' h') + ' · ' + (a.next == null ? 'Service not set' : 'Service at ' + a.next + ' h')}</TableCell>
-                        <TableCell><Button variant="ghost" size="icon" aria-label={'Open ' + title} onClick={() => void open(isBattery ? 'battery' : 'asset',a.id)}><ChevronRight size={16}/></Button></TableCell>
-                      </TableRow>;
-                    })}</TableBody>
-                  </Table>
-                  <div className="inventory-pagination"><span>Page {currentInventoryPage} of {inventoryPageCount}</span><Button variant="outline" disabled={currentInventoryPage <= 1} onClick={() => setInventoryPage(currentInventoryPage - 1)}>Previous</Button><Button variant="outline" disabled={currentInventoryPage >= inventoryPageCount} onClick={() => setInventoryPage(currentInventoryPage + 1)}>Next</Button></div>
-                </section>
-              )}
-              {page === 'Flight logs' && (
+              {page === 'Overview' && (
                 <>
                   <div className="stats">
                     <Stat
-                      label="Recorded flights"
-                      value={String(flights.length)}
-                      note="Saved flight history"
-                      Icon={BookOpen}
-                    />
-                    <Stat
-                      label="Flight time"
-                      value={(totalSeconds / 3600).toFixed(2) + ' h'}
-                      note="From recorded durations"
-                    />
-                    <Stat
-                      label="Distance"
-                      value={totalDistance.toFixed(2) + ' km'}
-                      note="Across all recorded flights"
+                      label="Missions"
+                      value={String(missions.length)}
+                      note={pending.length + ' awaiting review'}
                       Icon={MapIcon}
                     />
                     <Stat
-                      label="Aircraft flown"
-                      value={String(
-                        new Set(flights.map((f) => f.aircraft)).size,
-                      )}
-                      note="Unique registered aircraft"
+                      label="Logged flight time"
+                      value={(totalSeconds / 3600).toFixed(1) + ' h'}
+                      note={flights.length + ' recorded flights'}
+                    />
+                    <Stat
+                      label="Fleet readiness"
+                      value={
+                        aircraft.length
+                          ? Math.round((ready.length / aircraft.length) * 100) +
+                            '%'
+                          : '—'
+                      }
+                      note={
+                        ready.length +
+                        ' of ' +
+                        aircraft.length +
+                        ' aircraft available'
+                      }
                       Icon={Drone}
                     />
+                    <Stat
+                      label="Battery attention"
+                      value={String(
+                        batteries.filter(
+                          (b) =>
+                            b.health == null ||
+                            b.temp == null ||
+                            b.health < organization.settings.batteryMinHealth ||
+                            b.temp >
+                              organization.settings.batteryMaxTemperature ||
+                            b.status === 'Quarantined',
+                        ).length,
+                      )}
+                      note={batteries.length + ' tracked power packs'}
+                      Icon={Battery}
+                    />
+                  </div>
+                  <Analytics flights={flights} />
+                  <div className="overview-grid">
+                    <section className="glass map-panel">
+                      <div className="panel-heading">
+                        <div>
+                          <h2>Mission area</h2>
+                          <p>
+                            {missions.find((m) => m.geometry?.length)
+                              ?.location ||
+                              'Plan a mission to define an operating area'}
+                          </p>
+                        </div>
+                        <span className="live">
+                          <i /> MAPBOX
+                        </span>
+                      </div>
+                      <div style={{ padding: '0 14px 14px' }}>
+                        <MissionMap
+                          points={
+                            missions.find((m) => m.geometry?.length)
+                              ?.geometry || []
+                          }
+                        />
+                      </div>
+                      <div className="weather">
+                        <span>
+                          Airspace restrictions and live weather are not
+                          connected.
+                        </span>
+                      </div>
+                    </section>
+                    <section className="glass attention">
+                      <div className="panel-heading">
+                        <h2>Needs your attention</h2>
+                        <span className="count">
+                          {pending.length +
+                            overdue.length +
+                            batteryAlerts.length +
+                            serviceAlerts.length}
+                        </span>
+                      </div>
+                      {pending.slice(0, 3).map((m) => (
+                        <button
+                          className="attention-item"
+                          key={m.id}
+                          onClick={() => void open('mission', m.id)}
+                        >
+                          <span className="attention-icon">
+                            <ShieldCheck size={18} />
+                          </span>
+                          <div>
+                            <h3>{m.name}</h3>
+                            <p>Awaiting operations review</p>
+                            <span>
+                              Review package <ArrowRight size={13} />
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                      {overdue.slice(0, 2).map((s) => (
+                        <button
+                          className="attention-item"
+                          key={s.id}
+                          onClick={() => void open('service', s.id)}
+                        >
+                          <span className="attention-icon">
+                            <Wrench size={18} />
+                          </span>
+                          <div>
+                            <h3>{s.asset}</h3>
+                            <p>{s.task}</p>
+                            <span>Overdue · {s.due}</span>
+                          </div>
+                        </button>
+                      ))}
+                      {batteryAlerts.slice(0, 2).map((b) => (
+                        <button
+                          className="attention-item"
+                          key={b.id}
+                          onClick={() => void open('battery', b.id)}
+                        >
+                          <span className="attention-icon">
+                            <Battery size={18} />
+                          </span>
+                          <div>
+                            <h3>{b.id}</h3>
+                            <p>
+                              {b.health ?? '—'}% health ·{' '}
+                              {b.temp == null ? 'Unknown' : b.temp + '°C'} ·{' '}
+                              {b.status}
+                            </p>
+                            <span>Inspect battery</span>
+                          </div>
+                        </button>
+                      ))}
+                      {serviceAlerts.slice(0, 2).map((a) => (
+                        <button
+                          className="attention-item"
+                          key={a.id}
+                          onClick={() => void open('asset', a.id)}
+                        >
+                          <span className="attention-icon">
+                            <Wrench size={18} />
+                          </span>
+                          <div>
+                            <h3>{a.name}</h3>
+                            <p>
+                              {Math.max(
+                                0,
+                                (a.next ?? 0) - (a.hours ?? 0),
+                              ).toFixed(1)}{' '}
+                              hours until service
+                            </p>
+                            <span>
+                              {a.next != null &&
+                              a.hours != null &&
+                              a.hours >= a.next
+                                ? 'Maintenance due'
+                                : 'Service approaching'}
+                            </span>
+                          </div>
+                        </button>
+                      ))}
+                      {!pending.length &&
+                        !overdue.length &&
+                        !batteryAlerts.length &&
+                        !serviceAlerts.length && (
+                          <Empty
+                            label="All caught up"
+                            description="Approval requests and overdue services will appear here."
+                          />
+                        )}
+                    </section>
                   </div>
                   <section className="glass">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          {[
-                            'Flight / mission',
-                            'Pilot',
-                            'Aircraft',
-                            'Date',
-                            'Duration',
-                            'Distance',
-                            'Source',
-                            '',
-                          ].map((h) => (
-                            <TableHead key={h}>{h}</TableHead>
-                          ))}
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {visible.map((f) => (
-                          <TableRow key={f.id}>
-                            <TableCell>
-                              <button
-                                className="table-link"
-                                onClick={() => void open('flight', f.id)}
-                              >
-                                {f.id}
-                                <small>{f.mission}</small>
-                              </button>
-                            </TableCell>
-                            <TableCell>{f.pilot}</TableCell>
-                            <TableCell>{f.aircraft}</TableCell>
-                            <TableCell>{f.date || 'Unknown date'}</TableCell>
-                            <TableCell>{f.duration}</TableCell>
-                            <TableCell>{f.distance} km</TableCell>
-                            <TableCell>{f.source}</TableCell>
-                            <TableCell>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                aria-label={'Open ' + f.id}
-                                onClick={() => void open('flight', f.id)}
-                              >
-                                <ArrowUpRight size={16} />
-                              </Button>
-                            </TableCell>
-                          </TableRow>
+                    <div className="panel-heading">
+                      <h2>Upcoming missions</h2>
+                      <Button
+                        variant="ghost"
+                        onClick={() => navigate('Missions')}
+                      >
+                        All missions <ArrowUpRight size={15} />
+                      </Button>
+                    </div>
+                    <div className="mission-cards">
+                      {missions
+                        .filter((m) => m.status !== 'Completed')
+                        .slice(0, 3)
+                        .map((m) => (
+                          <button
+                            className="mission-card"
+                            key={m.id}
+                            onClick={() => void open('mission', m.id)}
+                          >
+                            <div className="row">
+                              <span className="mono">{m.id}</span>
+                              <Status>{m.status}</Status>
+                            </div>
+                            <h3>{m.name}</h3>
+                            <p>{m.location}</p>
+                            <div className="mission-bottom">
+                              <span>
+                                {m.date} · {m.time}
+                              </span>
+                              <ArrowUpRight size={16} />
+                            </div>
+                          </button>
                         ))}
-                      </TableBody>
-                    </Table>
+                    </div>
+                    {!missions.length && (
+                      <Empty
+                        label="Your first mission starts here"
+                        description="Use Plan a mission to assign crew, equipment and a risk assessment."
+                      />
+                    )}
                   </section>
                 </>
               )}
-              {page === 'Maintenance' && (
-                <div className="service-grid">
-                  {visible.map((s) => (
-                    <section key={s.id} className="glass service-card">
-                      <div className="row">
-                        <span className="service-icon">
-                          <Wrench size={22} />
+              {kind && (
+                <>
+                  {page === 'Inventory' && (
+                    <div
+                      className="inventory-categories"
+                      aria-label="Equipment categories"
+                    >
+                      {inventoryCategories.map(({ key, label, Icon }) => (
+                        <button
+                          key={key}
+                          className={
+                            'inventory-category ' +
+                            (inventoryCategory === key ? 'selected' : '')
+                          }
+                          aria-pressed={inventoryCategory === key}
+                          onClick={() => {
+                            setInventoryCategory(key);
+                            setInventoryPage(1);
+                            setFilter('All');
+                            setSearch('');
+                          }}
+                        >
+                          <Icon size={23} />
+                          <span>
+                            {label}
+                            <strong>
+                              {key === 'Battery'
+                                ? batteries.length
+                                : assets.filter((a) => a.category === key)
+                                    .length}
+                            </strong>
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <div className="toolbar">
+                    <div className="search-field">
+                      <Search size={16} />
+                      <Input
+                        aria-label={'Search ' + page.toLowerCase()}
+                        placeholder={'Search ' + page.toLowerCase() + '…'}
+                        value={search}
+                        onChange={(e) => {
+                          setSearch(e.target.value);
+                          setInventoryPage(1);
+                        }}
+                      />
+                    </div>
+                    <div className="data-toolbar">
+                      <Pick
+                        label="Filter"
+                        value={filter}
+                        onChange={(value) => {
+                          setFilter(value);
+                          setInventoryPage(1);
+                        }}
+                        options={[
+                          'All',
+                          ...new Set(
+                            items(kind)
+                              .map((d) =>
+                                page === 'Inventory'
+                                  ? d.status
+                                  : page === 'Flight logs'
+                                    ? d.pilot
+                                    : d.status,
+                              )
+                              .filter(Boolean),
+                          ),
+                        ]}
+                      />
+                      {page === 'Flight logs' && (
+                        <>
+                          <Button
+                            variant="outline"
+                            onClick={() =>
+                              csv([
+                                [
+                                  'Flight',
+                                  'Mission',
+                                  'Pilot',
+                                  'Aircraft',
+                                  'Date',
+                                  'Seconds',
+                                  'Distance km',
+                                  'Battery',
+                                ],
+                                ...visible.map((f) => [
+                                  f.id,
+                                  f.mission,
+                                  f.pilot,
+                                  f.aircraft,
+                                  f.date,
+                                  f.durationSeconds,
+                                  f.distance,
+                                  f.battery,
+                                ]),
+                              ])
+                            }
+                          >
+                            <Download size={15} /> CSV
+                          </Button>
+                          {planner && (
+                            <Button
+                              variant="outline"
+                              onClick={() => {
+                                edit('flight');
+                                setDialog('import');
+                              }}
+                            >
+                              <Upload size={15} /> Import logs
+                            </Button>
+                          )}
+                        </>
+                      )}
+                      {(kind === 'asset' ||
+                      kind === 'service' ||
+                      kind === 'battery'
+                        ? fleet
+                        : kind === 'crew'
+                          ? manager
+                          : planner) &&
+                        kind !== 'mission' && (
+                          <Button
+                            className="primary"
+                            onClick={() => edit(kind)}
+                          >
+                            <Plus size={15} />
+                            {kind === 'service'
+                              ? 'Schedule service'
+                              : kind === 'flight'
+                                ? 'Log flight'
+                                : 'Add ' + kind}
+                          </Button>
+                        )}
+                    </div>
+                  </div>
+                  {page === 'Missions' && (
+                    <div className="mission-board">
+                      {visible.map((m) => (
+                        <button
+                          className="glass mission-tile"
+                          key={m.id}
+                          onClick={() => void open('mission', m.id)}
+                        >
+                          <div className="tile-map">
+                            <MapIcon size={25} />
+                            <span>{m.location}</span>
+                            <b>{m.id}</b>
+                          </div>
+                          <div className="tile-body">
+                            <div className="row">
+                              <span className="category-label">{m.type}</span>
+                              <Status>{m.status}</Status>
+                            </div>
+                            <h3>{m.name}</h3>
+                            <p>
+                              {m.date} · {m.time} · {m.durationMinutes || 60}{' '}
+                              min
+                            </p>
+                            <div className="tile-meta">
+                              <span>
+                                <Drone size={14} />
+                                {m.aircraft}
+                              </span>
+                              <span>
+                                <Users size={14} />
+                                {m.pilot}
+                              </span>
+                            </div>
+                            <div className="tile-foot">
+                              <span>{m.risks.length} hazards assessed</span>
+                              <ArrowUpRight size={17} />
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {page === 'Inventory' && (
+                    <section className="glass inventory-section">
+                      <div className="panel-heading">
+                        <div>
+                          <h2>
+                            {
+                              inventoryCategories.find(
+                                (c) => c.key === inventoryCategory,
+                              )?.label
+                            }
+                          </h2>
+                          <p>{visible.length} matching items</p>
+                        </div>
+                        <span className="category-label">
+                          {Math.min(
+                            visible.length,
+                            (currentInventoryPage - 1) * 24 + 1,
+                          )}
+                          –{Math.min(visible.length, currentInventoryPage * 24)}{' '}
+                          of {visible.length}
                         </span>
+                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            {[
+                              'Equipment',
+                              'Serial',
+                              'Status',
+                              inventoryCategory === 'Battery'
+                                ? 'Assigned aircraft'
+                                : 'Custodian',
+                              inventoryCategory === 'Battery'
+                                ? 'Cycles / health'
+                                : 'Usage / service',
+                              '',
+                            ].map((h) => (
+                              <TableHead key={h}>{h}</TableHead>
+                            ))}
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {inventoryRows.map((a) => {
+                            const isBattery = inventoryCategory === 'Battery';
+                            const Icon = inventoryCategories.find(
+                              (c) => c.key === inventoryCategory,
+                            )!.Icon;
+                            const title = isBattery ? a.model : a.name;
+                            return (
+                              <TableRow key={a.id}>
+                                <TableCell>
+                                  <button
+                                    className="equipment-name"
+                                    onClick={() =>
+                                      void open(
+                                        isBattery ? 'battery' : 'asset',
+                                        a.id,
+                                      )
+                                    }
+                                  >
+                                    <span className="equipment-icon">
+                                      <Icon size={20} />
+                                    </span>
+                                    <span>
+                                      {title}
+                                      <small>
+                                        {a.externalSource || 'Local inventory'}
+                                      </small>
+                                    </span>
+                                  </button>
+                                </TableCell>
+                                <TableCell>
+                                  {a.serial || 'Not supplied'}
+                                </TableCell>
+                                <TableCell>
+                                  <Status>
+                                    {a.next != null &&
+                                    a.hours != null &&
+                                    a.hours >= a.next
+                                      ? 'Maintenance due'
+                                      : a.status}
+                                  </Status>
+                                </TableCell>
+                                <TableCell>
+                                  {isBattery ? a.aircraft : a.pilot}
+                                </TableCell>
+                                <TableCell>
+                                  {isBattery
+                                    ? a.cycles +
+                                      ' cycles · ' +
+                                      (a.health == null
+                                        ? 'Health unknown'
+                                        : a.health + '% health')
+                                    : (a.hours == null
+                                        ? 'Usage unknown'
+                                        : a.hours.toFixed(1) + ' h') +
+                                      ' · ' +
+                                      (a.next == null
+                                        ? 'Service not set'
+                                        : 'Service at ' + a.next + ' h')}
+                                </TableCell>
+                                <TableCell>
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={'Open ' + title}
+                                    onClick={() =>
+                                      void open(
+                                        isBattery ? 'battery' : 'asset',
+                                        a.id,
+                                      )
+                                    }
+                                  >
+                                    <ChevronRight size={16} />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
+                      <div className="inventory-pagination">
+                        <span>
+                          Page {currentInventoryPage} of {inventoryPageCount}
+                        </span>
+                        <Button
+                          variant="outline"
+                          disabled={currentInventoryPage <= 1}
+                          onClick={() =>
+                            setInventoryPage(currentInventoryPage - 1)
+                          }
+                        >
+                          Previous
+                        </Button>
+                        <Button
+                          variant="outline"
+                          disabled={currentInventoryPage >= inventoryPageCount}
+                          onClick={() =>
+                            setInventoryPage(currentInventoryPage + 1)
+                          }
+                        >
+                          Next
+                        </Button>
+                      </div>
+                    </section>
+                  )}
+                  {page === 'Flight logs' && (
+                    <>
+                      <div className="stats">
+                        <Stat
+                          label="Recorded flights"
+                          value={String(flights.length)}
+                          note="Saved flight history"
+                          Icon={BookOpen}
+                        />
+                        <Stat
+                          label="Flight time"
+                          value={(totalSeconds / 3600).toFixed(2) + ' h'}
+                          note="From recorded durations"
+                        />
+                        <Stat
+                          label="Distance"
+                          value={totalDistance.toFixed(2) + ' km'}
+                          note="Across all recorded flights"
+                          Icon={MapIcon}
+                        />
+                        <Stat
+                          label="Aircraft flown"
+                          value={String(
+                            new Set(flights.map((f) => f.aircraft)).size,
+                          )}
+                          note="Unique registered aircraft"
+                          Icon={Drone}
+                        />
+                      </div>
+                      <section className="glass">
+                        <Table>
+                          <TableHeader>
+                            <TableRow>
+                              {[
+                                'Flight / mission',
+                                'Pilot',
+                                'Aircraft',
+                                'Date',
+                                'Duration',
+                                'Distance',
+                                'Source',
+                                '',
+                              ].map((h) => (
+                                <TableHead key={h}>{h}</TableHead>
+                              ))}
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {visible.map((f) => (
+                              <TableRow key={f.id}>
+                                <TableCell>
+                                  <button
+                                    className="table-link"
+                                    onClick={() => void open('flight', f.id)}
+                                  >
+                                    {f.id}
+                                    <small>{f.mission}</small>
+                                  </button>
+                                </TableCell>
+                                <TableCell>{f.pilot}</TableCell>
+                                <TableCell>{f.aircraft}</TableCell>
+                                <TableCell>
+                                  {f.date || 'Unknown date'}
+                                </TableCell>
+                                <TableCell>{f.duration}</TableCell>
+                                <TableCell>{f.distance} km</TableCell>
+                                <TableCell>{f.source}</TableCell>
+                                <TableCell>
+                                  <Button
+                                    size="icon"
+                                    variant="ghost"
+                                    aria-label={'Open ' + f.id}
+                                    onClick={() => void open('flight', f.id)}
+                                  >
+                                    <ArrowUpRight size={16} />
+                                  </Button>
+                                </TableCell>
+                              </TableRow>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </section>
+                    </>
+                  )}
+                  {page === 'Maintenance' && (
+                    <div className="service-grid">
+                      {visible.map((s) => (
+                        <section key={s.id} className="glass service-card">
+                          <div className="row">
+                            <span className="service-icon">
+                              <Wrench size={22} />
+                            </span>
+                            <Status>
+                              {s.status === 'Completed'
+                                ? 'Completed'
+                                : s.due < date()
+                                  ? 'Maintenance due'
+                                  : s.status}
+                            </Status>
+                          </div>
+                          <span className="category-label">{s.asset}</span>
+                          <h3>{s.task}</h3>
+                          <p>{s.notes}</p>
+                          <div className="summary-inline">
+                            <span>{s.due}</span>
+                            <span>{s.technician}</span>
+                          </div>
+                          <Button
+                            variant="outline"
+                            className="wide"
+                            onClick={() => void open('service', s.id)}
+                          >
+                            {s.status === 'Completed'
+                              ? 'View signed record'
+                              : 'Open work order'}
+                            <ArrowRight size={15} />
+                          </Button>
+                        </section>
+                      ))}
+                    </div>
+                  )}
+                  {page === 'Batteries' && (
+                    <>
+                      <section className="glass integration-state">
+                        <h2>Battery condition history</h2>
+                        <p>
+                          Charge cycles, measured capacity, temperature and
+                          linked flight usage are recorded over time. Predictive
+                          failure analysis will require a validated historical
+                          dataset.
+                        </p>
+                      </section>
+                      <div className="battery-grid">
+                        {visible.map((b) => (
+                          <button
+                            key={b.id}
+                            className="glass battery-card"
+                            onClick={() => void open('battery', b.id)}
+                          >
+                            <div className="row">
+                              <Battery size={24} />
+                              <Status>{b.status}</Status>
+                            </div>
+                            <h3>
+                              {b.id}
+                              <small>
+                                {b.model} · {b.aircraft}
+                              </small>
+                            </h3>
+                            <div className="capacity">
+                              <strong>
+                                {b.health ?? '—'}
+                                <span>%</span>
+                              </strong>
+                              <span>Measured health</span>
+                            </div>
+                            <Progress value={b.health ?? '—'} />
+                            <div className="battery-card-foot">
+                              <span>{b.cycles} cycles</span>
+                              <span>
+                                {b.temp == null ? 'Unknown' : b.temp + '°C'}{' '}
+                                latest
+                              </span>
+                              <ArrowUpRight size={16} />
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                  {page === 'Crew' && (
+                    <div className="crew-grid">
+                      {visible.map((c) => (
+                        <section className="glass crew-card" key={c.id}>
+                          <div className="row">
+                            <span className="avatar crew-avatar">
+                              {c.initials}
+                            </span>
+                            <Status>
+                              {c.expires < date()
+                                ? 'Certificate review due'
+                                : c.status}
+                            </Status>
+                          </div>
+                          <h2>{c.name}</h2>
+                          <p>{c.role}</p>
+                          <div className="crew-numbers">
+                            <div>
+                              <b>
+                                {(
+                                  flights
+                                    .filter((f) => f.pilot === c.name)
+                                    .reduce(
+                                      (n, f) => n + f.durationSeconds,
+                                      0,
+                                    ) / 3600
+                                ).toFixed(1)}
+                                h
+                              </b>
+                              <span>Logged flight time</span>
+                            </div>
+                            <div>
+                              <b>
+                                {
+                                  flights.filter((f) => f.pilot === c.name)
+                                    .length
+                                }
+                              </b>
+                              <span>Logged flights</span>
+                            </div>
+                          </div>
+                          <div className="cert">
+                            <ShieldCheck size={20} />
+                            <div>
+                              {c.cert}
+                              <small>Expires {c.expires}</small>
+                            </div>
+                          </div>
+                          <Button
+                            variant="ghost"
+                            className="wide"
+                            onClick={() => void open('crew', c.id)}
+                          >
+                            Open profile <ArrowUpRight size={16} />
+                          </Button>
+                        </section>
+                      ))}
+                    </div>
+                  )}
+                  {!visible.length && (
+                    <Empty
+                      label={
+                        search || filter !== 'All'
+                          ? 'No matching records'
+                          : 'No ' + page.toLowerCase() + ' yet'
+                      }
+                    />
+                  )}
+                </>
+              )}
+              {page === 'Integrations' && (
+                <>
+                  <section className="glass integration-banner">
+                    <span className="integration-logo">dji</span>
+                    <div>
+                      <div className="row">
+                        <h2>DJI flight records</h2>
                         <Status>
-                          {s.status === 'Completed'
-                            ? 'Completed'
-                            : s.due < date()
-                              ? 'Maintenance due'
-                              : s.status}
+                          {app.status.djiKeyConfigured
+                            ? 'App Key configured'
+                            : 'App Key missing'}
                         </Status>
                       </div>
-                      <span className="category-label">{s.asset}</span>
-                      <h3>{s.task}</h3>
-                      <p>{s.notes}</p>
-                      <div className="summary-inline">
-                        <span>{s.due}</span>
-                        <span>{s.technician}</span>
-                      </div>
+                      <p>{app.status.djiSyncMessage}</p>
+                      <p className="integration-note">
+                        Account credentials are configured locally but are not
+                        used with undocumented login endpoints. Binary log
+                        parsing uses the DJI keychain API for supported records.
+                      </p>
                       <Button
-                        variant="outline"
-                        className="wide"
-                        onClick={() => void open('service', s.id)}
+                        className="primary wide"
+                        onClick={() => {
+                          edit('flight');
+                          setDialog('import');
+                        }}
                       >
-                        {s.status === 'Completed'
-                          ? 'View signed record'
-                          : 'Open work order'}
-                        <ArrowRight size={15} />
+                        <Upload size={16} /> Import a flight log
                       </Button>
-                    </section>
-                  ))}
-                </div>
-              )}
-              {page === 'Batteries' && (
-                <>
-                  <section className="glass integration-state">
-                    <h2>Battery condition history</h2>
-                    <p>
-                      Charge cycles, measured capacity, temperature and linked
-                      flight usage are recorded over time. Predictive failure
-                      analysis will require a validated historical dataset.
-                    </p>
+                    </div>
                   </section>
-                  <div className="battery-grid">
-                    {visible.map((b) => (
-                      <button
-                        key={b.id}
-                        className="glass battery-card"
-                        onClick={() => void open('battery', b.id)}
-                      >
+                  <div className="integration-steps">
+                    {[
+                      [
+                        'DJI Fly',
+                        'File import available',
+                        'Import flight-record TXT files from the phone or controller. Automatic DJI account download is not connected.',
+                      ],
+                      [
+                        'DJI GO 4',
+                        'File import available',
+                        'Import exported flight-record TXT files. Compatibility depends on the record version; account history download is not connected.',
+                      ],
+                      [
+                        'DJI Pilot 2 / Dock',
+                        'Cloud connection pending',
+                        'File imports share the same logbook. Live Cloud API access requires a configured platform gateway and supported equipment.',
+                      ],
+                      [
+                        'DJI FlightHub 2',
+                        'Organization API pending',
+                        'FlightHub 2 has a separate OpenAPI for organization flight records. Organization authorization and the connector are still required.',
+                      ],
+                    ].map(([title, status, description]) => (
+                      <section className="glass" key={title}>
+                        <h2>{title}</h2>
+                        <Status>{status}</Status>
+                        <p>{description}</p>
+                      </section>
+                    ))}
+                  </div>
+                  <div className="integration-steps">
+                    {[
+                      [
+                        'Supabase',
+                        'Connected',
+                        'Authentication, persistent records, private files and role permissions.',
+                      ],
+                      [
+                        'Mapbox',
+                        app.status.mapbox ? 'Configured' : 'Not configured',
+                        'Dark and satellite maps, editable mission boundaries and recorded flight tracks.',
+                      ],
+                      [
+                        'Email',
+                        app.status.smtp ? 'Configured' : 'Not configured',
+                        'In-app notifications work now. Configure SMTP to deliver invitations, resets and email alerts.',
+                      ],
+                    ].map(([title, status, description]) => (
+                      <section key={title} className="glass">
                         <div className="row">
-                          <Battery size={24} />
-                          <Status>{b.status}</Status>
+                          <h2>{title}</h2>
+                          <Status>{status}</Status>
                         </div>
-                        <h3>
-                          {b.id}
-                          <small>
-                            {b.model} · {b.aircraft}
-                          </small>
-                        </h3>
-                        <div className="capacity">
-                          <strong>
-                            {b.health ?? '—'}
-                            <span>%</span>
-                          </strong>
-                          <span>Measured health</span>
-                        </div>
-                        <Progress value={b.health ?? '—'} />
-                        <div className="battery-card-foot">
-                          <span>{b.cycles} cycles</span>
-                          <span>{b.temp == null ? 'Unknown' : b.temp + '°C'} latest</span>
-                          <ArrowUpRight size={16} />
-                        </div>
-                      </button>
+                        <p>{description}</p>
+                      </section>
                     ))}
                   </div>
                 </>
               )}
-              {page === 'Crew' && (
-                <div className="crew-grid">
-                  {visible.map((c) => (
-                    <section className="glass crew-card" key={c.id}>
-                      <div className="row">
-                        <span className="avatar crew-avatar">{c.initials}</span>
-                        <Status>
-                          {c.expires < date()
-                            ? 'Certificate review due'
-                            : c.status}
-                        </Status>
-                      </div>
-                      <h2>{c.name}</h2>
-                      <p>{c.role}</p>
-                      <div className="crew-numbers">
+              {page === 'Audit trail' && (
+                <section className="glass">
+                  <div className="panel-heading">
+                    <h2>Operational audit trail</h2>
+                    <span className="category-label">LATEST 150 EVENTS</span>
+                  </div>
+                  <div className="audit-list">
+                    {app.audit.map((e) => (
+                      <div className="audit-row" key={e.id}>
+                        <History size={17} />
                         <div>
-                          <b>
-                            {(
-                              flights
-                                .filter((f) => f.pilot === c.name)
-                                .reduce((n, f) => n + f.durationSeconds, 0) /
-                              3600
-                            ).toFixed(1)}
-                            h
-                          </b>
-                          <span>Logged flight time</span>
+                          <h3>
+                            {e.actor_name} · {e.action.replaceAll('_', ' ')}
+                          </h3>
+                          <p>
+                            {e.kind} / {e.record_id}
+                          </p>
+                          <small>
+                            {new Date(e.created_at).toLocaleString()}
+                          </small>
                         </div>
+                        <Status>{e.after_data?.status || 'Recorded'}</Status>
+                      </div>
+                    ))}
+                  </div>
+                  {!app.audit.length && (
+                    <Empty
+                      label="The audit trail is ready"
+                      description="Saved records, reviews, and service sign-offs will appear here."
+                    />
+                  )}
+                </section>
+              )}
+              {page === 'Notifications' && (
+                <section className="glass">
+                  <div className="audit-list">
+                    {app.notifications.map((n) => (
+                      <div className="audit-row" key={n.id}>
+                        <Bell size={17} />
                         <div>
-                          <b>
-                            {flights.filter((f) => f.pilot === c.name).length}
-                          </b>
-                          <span>Logged flights</span>
+                          <h3>{n.title}</h3>
+                          <p>{n.body}</p>
+                          <small>
+                            {new Date(n.created_at).toLocaleString()}
+                          </small>
+                        </div>
+                        <div className="actions">
+                          {n.record_id && (
+                            <Button
+                              variant="outline"
+                              onClick={() => void open('mission', n.record_id)}
+                            >
+                              Open
+                            </Button>
+                          )}
+                          {!n.read_by.includes(profile.id) && (
+                            <Button
+                              variant="ghost"
+                              onClick={() => void app.markRead(n.id)}
+                            >
+                              Mark read
+                            </Button>
+                          )}
                         </div>
                       </div>
-                      <div className="cert">
-                        <ShieldCheck size={20} />
-                        <div>
-                          {c.cert}
-                          <small>Expires {c.expires}</small>
-                        </div>
+                    ))}
+                  </div>
+                  {!app.notifications.length && (
+                    <Empty label="No notifications yet" />
+                  )}
+                </section>
+              )}
+              {page === 'Settings' && (
+                <div className="settings-grid">
+                  <OrganizationPanel
+                    key={organization.id}
+                    organization={organization}
+                    profile={profile}
+                    flights={flights}
+                    members={app.profiles}
+                    onChange={app.refresh}
+                  />
+                  <section className="glass">
+                    <h2>Operational policies</h2>
+                    <p>Current workspace thresholds.</p>
+                    <dl className="summary-list">
+                      <div>
+                        <dt>Time zone</dt>
+                        <dd>{organization.settings.timezone}</dd>
                       </div>
+                      <div>
+                        <dt>Battery minimum health</dt>
+                        <dd>{organization.settings.batteryMinHealth}%</dd>
+                      </div>
+                      <div>
+                        <dt>Battery maximum temperature</dt>
+                        <dd>{organization.settings.batteryMaxTemperature}°C</dd>
+                      </div>
+                      <div>
+                        <dt>Self approval</dt>
+                        <dd>
+                          {organization.settings.allowSelfApproval
+                            ? 'Allowed'
+                            : 'Requires a different reviewer'}
+                        </dd>
+                      </div>
+                    </dl>
+                    {profile.role === 'admin' && (
                       <Button
-                        variant="ghost"
-                        className="wide"
-                        onClick={() => void open('crew', c.id)}
+                        variant="outline"
+                        onClick={() => {
+                          setDraft({ ...organization.settings });
+                          setError('');
+                          setDialog('settings');
+                        }}
                       >
-                        Open profile <ArrowUpRight size={16} />
+                        Edit policies
                       </Button>
-                    </section>
-                  ))}
-                </div>
-              )}
-              {!visible.length && (
-                <Empty
-                  label={
-                    search || filter !== 'All'
-                      ? 'No matching records'
-                      : 'No ' + page.toLowerCase() + ' yet'
-                  }
-                />
-              )}
-            </>
-          )}
-          {page === 'Integrations' && (
-            <>
-              <section className="glass integration-banner">
-                <span className="integration-logo">dji</span>
-                <div>
-                  <div className="row">
-                    <h2>DJI flight records</h2>
-                    <Status>
-                      {app.status.djiKeyConfigured
-                        ? 'App Key configured'
-                        : 'App Key missing'}
-                    </Status>
-                  </div>
-                  <p>{app.status.djiSyncMessage}</p>
-                  <p className="integration-note">
-                    Account credentials are configured locally but are not used
-                    with undocumented login endpoints. Binary log parsing uses
-                    the DJI keychain API for supported records.
-                  </p>
-                  <Button
-                    className="primary wide"
-                    onClick={() => {
-                      edit('flight');
-                      setDialog('import');
-                    }}
-                  >
-                    <Upload size={16} /> Import a flight log
-                  </Button>
-                </div>
-              </section>
-              <div className="integration-steps">
-                {[
-                  [
-                    'DJI Fly',
-                    'File import available',
-                    'Import flight-record TXT files from the phone or controller. Automatic DJI account download is not connected.',
-                  ],
-                  [
-                    'DJI GO 4',
-                    'File import available',
-                    'Import exported flight-record TXT files. Compatibility depends on the record version; account history download is not connected.',
-                  ],
-                  [
-                    'DJI Pilot 2 / Dock',
-                    'Cloud connection pending',
-                    'File imports share the same logbook. Live Cloud API access requires a configured platform gateway and supported equipment.',
-                  ],
-                  [
-                    'DJI FlightHub 2',
-                    'Organization API pending',
-                    'FlightHub 2 has a separate OpenAPI for organization flight records. Organization authorization and the connector are still required.',
-                  ],
-                ].map(([title, status, description]) => (
-                  <section className="glass" key={title}>
-                    <h2>{title}</h2>
-                    <Status>{status}</Status>
-                    <p>{description}</p>
+                    )}
                   </section>
-                ))}
-              </div>
-              <div className="integration-steps">
-                {[
-                  [
-                    'Supabase',
-                    'Connected',
-                    'Authentication, persistent records, private files and role permissions.',
-                  ],
-                  [
-                    'Mapbox',
-                    app.status.mapbox ? 'Configured' : 'Not configured',
-                    'Dark and satellite maps, editable mission boundaries and recorded flight tracks.',
-                  ],
-                  [
-                    'Email',
-                    app.status.smtp ? 'Configured' : 'Not configured',
-                    'In-app notifications work now. Configure SMTP to deliver invitations, resets and email alerts.',
-                  ],
-                ].map(([title, status, description]) => (
-                  <section key={title} className="glass">
-                    <div className="row">
-                      <h2>{title}</h2>
-                      <Status>{status}</Status>
-                    </div>
-                    <p>{description}</p>
-                  </section>
-                ))}
-              </div>
-            </>
-          )}
-          {page === 'Audit trail' && (
-            <section className="glass">
-              <div className="panel-heading">
-                <h2>Operational audit trail</h2>
-                <span className="category-label">LATEST 150 EVENTS</span>
-              </div>
-              <div className="audit-list">
-                {app.audit.map((e) => (
-                  <div className="audit-row" key={e.id}>
-                    <History size={17} />
-                    <div>
-                      <h3>
-                        {e.actor_name} · {e.action.replaceAll('_', ' ')}
-                      </h3>
-                      <p>
-                        {e.kind} / {e.record_id}
-                      </p>
-                      <small>{new Date(e.created_at).toLocaleString()}</small>
-                    </div>
-                    <Status>{e.after_data?.status || 'Recorded'}</Status>
-                  </div>
-                ))}
-              </div>
-              {!app.audit.length && (
-                <Empty
-                  label="The audit trail is ready"
-                  description="Saved records, reviews, and service sign-offs will appear here."
-                />
-              )}
-            </section>
-          )}
-          {page === 'Notifications' && (
-            <section className="glass">
-              <div className="audit-list">
-                {app.notifications.map((n) => (
-                  <div className="audit-row" key={n.id}>
-                    <Bell size={17} />
-                    <div>
-                      <h3>{n.title}</h3>
-                      <p>{n.body}</p>
-                      <small>{new Date(n.created_at).toLocaleString()}</small>
-                    </div>
-                    <div className="actions">
-                      {n.record_id && (
-                        <Button
-                          variant="outline"
-                          onClick={() => void open('mission', n.record_id)}
-                        >
-                          Open
-                        </Button>
-                      )}
-                      {!n.read_by.includes(profile.id) && (
-                        <Button
-                          variant="ghost"
-                          onClick={() => void app.markRead(n.id)}
-                        >
-                          Mark read
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {!app.notifications.length && (
-                <Empty label="No notifications yet" />
-              )}
-            </section>
-          )}
-          {page === 'Settings' && (
-            <div className="settings-grid">
-              <OrganizationPanel
-                key={organization.id}
-                organization={organization}
-                profile={profile}
-                flights={flights}
-                members={app.profiles}
-                onChange={app.refresh}
-              />
-              <section className="glass">
-                <h2>Operational policies</h2>
-                <p>Current workspace thresholds.</p>
-                <dl className="summary-list">
-                  <div>
-                    <dt>Time zone</dt>
-                    <dd>{organization.settings.timezone}</dd>
-                  </div>
-                  <div>
-                    <dt>Battery minimum health</dt>
-                    <dd>{organization.settings.batteryMinHealth}%</dd>
-                  </div>
-                  <div>
-                    <dt>Battery maximum temperature</dt>
-                    <dd>{organization.settings.batteryMaxTemperature}°C</dd>
-                  </div>
-                  <div>
-                    <dt>Self approval</dt>
-                    <dd>
-                      {organization.settings.allowSelfApproval
-                        ? 'Allowed'
-                        : 'Requires a different reviewer'}
-                    </dd>
-                  </div>
-                </dl>
-                {profile.role === 'admin' && (
-                  <Button
-                    variant="outline"
-                    onClick={() => {
-                      setDraft({ ...organization.settings });
+                  <TeamDirectory
+                    members={app.profiles}
+                    flights={flights}
+                    profile={profile}
+                    onManage={(member) => {
+                      setDraft({ ...member });
                       setError('');
-                      setDialog('settings');
+                      setDialog('access');
                     }}
-                  >
-                    Edit policies
-                  </Button>
-                )}
-              </section>
-              <TeamDirectory
-                members={app.profiles} flights={flights} profile={profile}
-                onManage={(member) => { setDraft({ ...member }); setError(''); setDialog('access'); }}
-                onAdd={() => { setDraft({ email: '', name: '', role: 'pilot' }); setError(''); setAccountResult(null); setDialog('account'); }}
-              />
-              <section className="glass">
-                <h2>Account password</h2>
-                <p>Change the password for your signed-in account.</p>
-                <Button
-                  variant="outline"
-                  className="wide"
-                  onClick={() => {
-                    setDraft({ password: '', confirm: '' });
-                    setError('');
-                    setDialog('password');
-                  }}
-                >
-                  Change password
-                </Button>
-              </section>
-            </div>
+                    onAdd={() => {
+                      setDraft({ email: '', name: '', role: 'pilot' });
+                      setError('');
+                      setAccountResult(null);
+                      setDialog('account');
+                    }}
+                  />
+                  <section className="glass">
+                    <h2>Account password</h2>
+                    <p>Change the password for your signed-in account.</p>
+                    <Button
+                      variant="outline"
+                      className="wide"
+                      onClick={() => {
+                        setDraft({ password: '', confirm: '' });
+                        setError('');
+                        setDialog('password');
+                      }}
+                    >
+                      Change password
+                    </Button>
+                  </section>
+                </div>
+              )}
+            </>
           )}
-          </>)}
           <div className="footer-note">
             <span>
               <i /> Local app · records saved in Supabase
@@ -1773,7 +2029,10 @@ export default function Workspace() {
                       .filter(
                         (b) =>
                           b.aircraft === draft.aircraft &&
-                          b.health != null && b.temp != null && b.status !== 'Unverified' && b.health >= organization.settings.batteryMinHealth &&
+                          b.health != null &&
+                          b.temp != null &&
+                          b.status !== 'Unverified' &&
+                          b.health >= organization.settings.batteryMinHealth &&
                           b.temp <=
                             organization.settings.batteryMaxTemperature &&
                           !['Quarantined', 'Retired'].includes(b.status),
@@ -1784,7 +2043,9 @@ export default function Workspace() {
                         (a) =>
                           a.category !== 'Aircraft' &&
                           a.status === 'Available' &&
-                          a.hours != null && a.next != null && a.hours < a.next,
+                          a.hours != null &&
+                          a.next != null &&
+                          a.hours < a.next,
                       )
                       .map((a) => a.name),
                   ].map((item) => (
@@ -2327,15 +2588,37 @@ export default function Workspace() {
                     <dl className="summary-list">
                       {[
                         ['Serial number', record.serial || 'Not supplied'],
-                        ['Source status', String(record.sourceRecord?.status ?? 'Not supplied')],
+                        [
+                          'Source status',
+                          String(record.sourceRecord?.status ?? 'Not supplied'),
+                        ],
                         ['Custodian', record.pilot],
-                        ['Usage', record.hours == null ? 'Not supplied' : record.hours.toFixed(2) + ' h'],
-                        ['Next service', record.next == null ? 'Not configured' : record.next + ' h'],
+                        [
+                          'Usage',
+                          record.hours == null
+                            ? 'Not supplied'
+                            : record.hours.toFixed(2) + ' h',
+                        ],
+                        [
+                          'Next service',
+                          record.next == null
+                            ? 'Not configured'
+                            : record.next + ' h',
+                        ],
                         [
                           'Remaining',
-                          record.next == null || record.hours == null ? 'Not configured' : Math.max(0, record.next - record.hours).toFixed(1) + ' h',
+                          record.next == null || record.hours == null
+                            ? 'Not configured'
+                            : Math.max(0, record.next - record.hours).toFixed(
+                                1,
+                              ) + ' h',
                         ],
-                        ['Service interval', record.intervalHours == null ? 'Not configured' : record.intervalHours + ' h'],
+                        [
+                          'Service interval',
+                          record.intervalHours == null
+                            ? 'Not configured'
+                            : record.intervalHours + ' h',
+                        ],
                       ].map(([k, v]) => (
                         <div key={k}>
                           <dt>{k}</dt>
@@ -2344,7 +2627,11 @@ export default function Workspace() {
                       ))}
                     </dl>
                     <Progress
-                      value={record.next && record.hours != null ? Math.min(100, (record.hours / record.next) * 100) : 0}
+                      value={
+                        record.next && record.hours != null
+                          ? Math.min(100, (record.hours / record.next) * 100)
+                          : 0
+                      }
                     />
                     <p>{record.notes}</p>
                     {fleet && (
@@ -2373,7 +2660,12 @@ export default function Workspace() {
                     )}
                     <h3 className="detail-heading">Linked flight history</h3>
                     {flights
-                      .filter((f) => f.aircraftId === record.id || f.equipmentIds?.includes(record.id) || f.aircraft === record.name)
+                      .filter(
+                        (f) =>
+                          f.aircraftId === record.id ||
+                          f.equipmentIds?.includes(record.id) ||
+                          f.aircraft === record.name,
+                      )
                       .map((f) => (
                         <button
                           className="linked-item"
@@ -2407,7 +2699,9 @@ export default function Workspace() {
                       </div>
                       <div>
                         <small>Latest temperature</small>
-                        <strong>{record.temp == null ? 'Unknown' : record.temp + '°C'}</strong>
+                        <strong>
+                          {record.temp == null ? 'Unknown' : record.temp + '°C'}
+                        </strong>
                       </div>
                     </div>
                     <p>{record.notes}</p>
@@ -2433,10 +2727,33 @@ export default function Workspace() {
                       </div>
                     )}
                     <h3 className="detail-heading">Linked flights</h3>
-                    {flights.filter(f => f.batteryIds?.includes(record.id) || f.battery === record.id).map(f => (
-                      <button className="linked-item" key={f.id} onClick={() => void open('flight',f.id)}><span>{f.mission}<small>{f.date} · {f.duration}</small></span><ArrowUpRight size={16}/></button>
-                    ))}
-                    <BatteryTelemetryHistory battery={record} inventory={batteries} flights={flights} onFlight={(id)=>void open('flight',id)}/>
+                    {flights
+                      .filter(
+                        (f) =>
+                          f.batteryIds?.includes(record.id) ||
+                          f.battery === record.id,
+                      )
+                      .map((f) => (
+                        <button
+                          className="linked-item"
+                          key={f.id}
+                          onClick={() => void open('flight', f.id)}
+                        >
+                          <span>
+                            {f.mission}
+                            <small>
+                              {f.date} · {f.duration}
+                            </small>
+                          </span>
+                          <ArrowUpRight size={16} />
+                        </button>
+                      ))}
+                    <BatteryTelemetryHistory
+                      battery={record}
+                      inventory={batteries}
+                      flights={flights}
+                      onFlight={(id) => void open('flight', id)}
+                    />
                     <h3 className="detail-heading">Measured capacity trend</h3>
                     <BatteryHistory
                       events={items('battery_event').filter(
@@ -2629,7 +2946,7 @@ export default function Workspace() {
             </DialogTitle>
             <DialogDescription>
               {dialog === 'import'
-                ? 'Upload a DJI TXT record, normalized flight JSON, or CSV flight summary.'
+                ? 'Upload a DJI TXT record, normalized flight JSON, summary CSV or Airdata telemetry CSV.'
                 : 'Changes are saved to your connected workspace.'}
             </DialogDescription>
           </DialogHeader>
@@ -2661,6 +2978,7 @@ export default function Workspace() {
                   'Available',
                   'Checked out',
                   'Maintenance due',
+                  'Unverified',
                   'Retired',
                 ]}
                 onChange={(v) => update('status', v)}
@@ -2676,20 +2994,22 @@ export default function Workspace() {
                   label="Total usage (hours)"
                   type="number"
                   value={draft.hours}
-                  onChange={(v) => update('hours', Number(v))}
+                  onChange={(v) => update('hours', v === '' ? null : Number(v))}
                 />
                 <Field
                   label="Next service at (hours)"
                   type="number"
                   value={draft.next}
-                  onChange={(v) => update('next', Number(v))}
+                  onChange={(v) => update('next', v === '' ? null : Number(v))}
                 />
               </div>
               <Field
                 label="Recurring interval (hours)"
                 type="number"
                 value={draft.intervalHours}
-                onChange={(v) => update('intervalHours', Number(v))}
+                onChange={(v) =>
+                  update('intervalHours', v === '' ? null : Number(v))
+                }
               />
               <Note
                 label="Equipment notes"
@@ -2730,13 +3050,15 @@ export default function Workspace() {
                   label="Measured health (%)"
                   type="number"
                   value={draft.health}
-                  onChange={(v) => update('health', Number(v))}
+                  onChange={(v) =>
+                    update('health', v === '' ? null : Number(v))
+                  }
                 />
                 <Field
                   label="Latest temperature (°C)"
                   type="number"
                   value={draft.temp}
-                  onChange={(v) => update('temp', Number(v))}
+                  onChange={(v) => update('temp', v === '' ? null : Number(v))}
                 />
               </div>
               <Pick
@@ -2841,7 +3163,9 @@ export default function Workspace() {
                 label="Next interval after sign-off (hours)"
                 type="number"
                 value={draft.intervalHours}
-                onChange={(v) => update('intervalHours', Number(v))}
+                onChange={(v) =>
+                  update('intervalHours', v === '' ? null : Number(v))
+                }
               />
               <Note
                 label="Work instructions"
@@ -3020,8 +3344,34 @@ export default function Workspace() {
                       <FileText size={18} />
                       <div>
                         {importPreview.flights.length} flight record(s) parsed.
-                        <ImportReview canEnrich={manager} enrichmentTargets={importEnrich} onEnrich={(id,target)=>setImportEnrich(previous=>({...previous,[id]:target}))} incoming={importPreview.flights} existing={flights} allowNew={importAllowNew} onAllowNew={(id,value)=>setImportAllowNew(previous=>{const next=new Set(previous);if(value)next.add(id);else next.delete(id);return next;})}/>
-                        {Object.values(importEnrich).some(Boolean) && <Note label="Why these records are the same flight (minimum 20 characters)" value={note} onChange={setNote}/>}
+                        <ImportReview
+                          canEnrich={manager}
+                          enrichmentTargets={importEnrich}
+                          onEnrich={(id, target) =>
+                            setImportEnrich((previous) => ({
+                              ...previous,
+                              [id]: target,
+                            }))
+                          }
+                          incoming={importPreview.flights}
+                          existing={flights}
+                          allowNew={importAllowNew}
+                          onAllowNew={(id, value) =>
+                            setImportAllowNew((previous) => {
+                              const next = new Set(previous);
+                              if (value) next.add(id);
+                              else next.delete(id);
+                              return next;
+                            })
+                          }
+                        />
+                        {Object.values(importEnrich).some(Boolean) && (
+                          <Note
+                            label="Why these records are the same flight (minimum 20 characters)"
+                            value={note}
+                            onChange={setNote}
+                          />
+                        )}
                         {importPreview.warnings?.map((w: string) => (
                           <p key={w}>{w}</p>
                         ))}
@@ -3042,13 +3392,15 @@ export default function Workspace() {
                   label="Measured capacity (%)"
                   type="number"
                   value={draft.health}
-                  onChange={(v) => update('health', Number(v))}
+                  onChange={(v) =>
+                    update('health', v === '' ? null : Number(v))
+                  }
                 />
                 <Field
                   label="Peak temperature (°C)"
                   type="number"
                   value={draft.temp}
-                  onChange={(v) => update('temp', Number(v))}
+                  onChange={(v) => update('temp', v === '' ? null : Number(v))}
                 />
               </div>
               <Note
@@ -3188,7 +3540,12 @@ export default function Workspace() {
             <Button
               className="primary wide"
               disabled={
-                busy || uploading || (dialog === 'import' && (!importPreview || (Object.values(importEnrich).some(Boolean) && note.trim().length<20)))
+                busy ||
+                uploading ||
+                (dialog === 'import' &&
+                  (!importPreview ||
+                    (Object.values(importEnrich).some(Boolean) &&
+                      note.trim().length < 20)))
               }
               onClick={async () => {
                 setError('');
@@ -3196,46 +3553,94 @@ export default function Workspace() {
                   if (dialog === 'import') {
                     setUploading(true);
                     let count = 0,
-                      skipped = 0, enriched = 0;
+                      skipped = 0,
+                      enriched = 0;
                     const imported = [...flights];
                     const archiveIds = new Set<string>();
-                    for (const [index, f] of importPreview.flights.entries()) {
-                      const matches = duplicateMatches(f, [...flights, ...importPreview.flights.slice(0,index)]);
-                      const target = importEnrich[f.id];
-                      if (target) {
-                        await api('imports/enrich',{method:'POST',body:JSON.stringify({targetId:target,revision:app.revision('flight',target),reason:note,incoming:f})});
-                        enriched++; archiveIds.add(target); continue;
+                    let importFailure: Error | null = null;
+                    try {
+                      for (const [
+                        index,
+                        f,
+                      ] of importPreview.flights.entries()) {
+                        const matches = duplicateMatches(f, [
+                          ...flights,
+                          ...importPreview.flights.slice(0, index),
+                        ]);
+                        const target = importEnrich[f.id];
+                        if (target) {
+                          await api('imports/enrich', {
+                            method: 'POST',
+                            body: JSON.stringify({
+                              targetId: target,
+                              revision: app.revision('flight', target),
+                              reason: note,
+                              incoming: f,
+                            }),
+                          });
+                          enriched++;
+                          archiveIds.add(target);
+                          continue;
+                        }
+                        const exact = matches.find((m) => m.kind === 'exact');
+                        if (exact) {
+                          skipped++;
+                          const savedExact = duplicateMatches(f, imported).find(
+                            (m) => m.kind === 'exact',
+                          )?.flight;
+                          if (savedExact) archiveIds.add(savedExact.id);
+                          continue;
+                        }
+                        if (matches.length && !importAllowNew.has(f.id)) {
+                          skipped++;
+                          continue;
+                        }
+                        const saved = {
+                          ...f,
+                          sourceApp: draft.sourceApp || 'Other',
+                          pilot: draft.pilot,
+                          aircraft: draft.aircraft,
+                          mission: draft.mission,
+                          missionId: draft.missionId,
+                        };
+                        await command('flight_import', 'flight', saved);
+                        count++;
+                        imported.push(saved);
+                        archiveIds.add(f.id);
                       }
-                      const exact = matches.find(m=>m.kind==='exact');
-                      if (exact) { skipped++; const savedExact=duplicateMatches(f,imported).find(m=>m.kind==='exact')?.flight; if(savedExact)archiveIds.add(savedExact.id); continue; }
-                      if (matches.length && !importAllowNew.has(f.id)) { skipped++; continue; }
-                      const saved = {
-                        ...f,
-                        sourceApp: draft.sourceApp || 'Other',
-                        pilot: draft.pilot,
-                        aircraft: draft.aircraft,
-                        mission: draft.mission,
-                        missionId: draft.missionId,
-                      };
-                      await command('flight_import', 'flight', saved);
-                      count++;
-                      imported.push(saved);
-                      archiveIds.add(f.id);
+                    } catch (failure) {
+                      importFailure = failure as Error;
                     }
-                    if (importFile && archiveIds.size) {
-                      const body = new FormData();
-                      body.set('file', importFile);
-                      body.set('flights', JSON.stringify([...archiveIds]));
-                      await api('imports/archive', { method: 'POST', body });
+                    try {
+                      if (importFile && archiveIds.size) {
+                        const body = new FormData();
+                        body.set('file', importFile);
+                        body.set('flights', JSON.stringify([...archiveIds]));
+                        await api('imports/archive', { method: 'POST', body });
+                      }
+                    } catch (failure) {
+                      importFailure = new Error(
+                        (importFailure ? importFailure.message + ' ' : '') +
+                          'Saved records are retained, but source archiving failed: ' +
+                          (failure as Error).message +
+                          ' Retry this file to archive the source.',
+                      );
+                    } finally {
                       await app.refresh();
                     }
+                    if (importFailure)
+                      throw new Error(
+                        `${count} imported, ${enriched} enriched before this error. ${importFailure.message}`,
+                      );
                     setDialog('');
                     navigate('Flight logs');
                     notify(
                       count +
                         ' flights imported. ' +
                         skipped +
-                        ' records skipped. ' + enriched + ' flights enriched without adding usage.',
+                        ' records skipped. ' +
+                        enriched +
+                        ' flights enriched without adding usage.',
                     );
                   } else if (dialog === 'cycle')
                     await save('battery', 'battery_cycle');
@@ -3354,8 +3759,9 @@ function BatteryHistory({
   if (!data.length)
     return (
       <p>
-        No historical measurements yet. Current capacity: {current == null ? 'unknown' : current + '%'}. Record
-        charge cycles to build the trend.
+        No historical measurements yet. Current capacity:{' '}
+        {current == null ? 'unknown' : current + '%'}. Record charge cycles to
+        build the trend.
       </p>
     );
   return (

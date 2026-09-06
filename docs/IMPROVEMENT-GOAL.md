@@ -23,3 +23,9 @@ local Git. Independently implement product behavior; no AGPL application code co
 - Normalized JSON now retains exact timestamps, source aircraft/battery serials, per-pack capacity/current/cell readings and parser provenance. These fields pass through the same validated preview/save schema.
 - Added an independently written Airdata telemetry CSV adapter with explicit unit conversion, GPS distance, sample-span duration and strict clock/unit checks. No upstream AGPL code or third-party service is used.
 - 17 unit tests pass; production build passes. Real Airdata/DJI-file validation, duplicate candidate review, safe enrichment and the battery history UI remain pending. See `TELEMETRY-IMPORTS.md` for supported columns and limits.
+
+### Battery history progress
+
+- Added per-flight battery telemetry trends to the battery passport: reported full capacity, full/design ratio, minimum voltage, peak temperature, maximum simultaneous cell spread and observed discharge rate. Measured flights link back to their flight analysis.
+- Attribution requires an unambiguous pack serial or a single-battery assignment. Combined aircraft readings are not copied to multiple packs. Charge increases and clock resets suppress discharge-rate estimates. Missing channels stay empty; inventory cycle counters do not become health estimates.
+- Passed 21 unit tests and production build. Browser confirmed Ivan's linked battery shows 0 measured flights and no fabricated readings. Populated-chart and responsive QA remain in the final validation pass.

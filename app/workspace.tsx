@@ -7,6 +7,7 @@ import FlightAnalysis from './flight-analysis';
 import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
 import TeamDirectory from './team-directory';
+import BatteryTelemetryHistory from './battery-telemetry-history';
 import { Status } from './shared';
 import {
   Camera,
@@ -2431,6 +2432,7 @@ export default function Workspace() {
                     {flights.filter(f => f.batteryIds?.includes(record.id) || f.battery === record.id).map(f => (
                       <button className="linked-item" key={f.id} onClick={() => void open('flight',f.id)}><span>{f.mission}<small>{f.date} · {f.duration}</small></span><ArrowUpRight size={16}/></button>
                     ))}
+                    <BatteryTelemetryHistory battery={record} inventory={batteries} flights={flights} onFlight={(id)=>void open('flight',id)}/>
                     <h3 className="detail-heading">Measured capacity trend</h3>
                     <BatteryHistory
                       events={items('battery_event').filter(

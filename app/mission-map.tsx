@@ -18,11 +18,13 @@ export default function MissionMap({
   const root = useRef<HTMLDivElement>(null),
     map = useRef<MapboxMap | null>(null),
     latest = useRef(points),
+    latestTrack = useRef(track),
     change = useRef(onChange),
     [ready, setReady] = useState(false),
     [error, setError] = useState(''),
     [satellite, setSatellite] = useState(false);
   latest.current = points;
+  latestTrack.current = track;
   change.current = onChange;
   function draw() {
     const m = map.current;
@@ -82,15 +84,17 @@ export default function MissionMap({
         },
       });
     }
-    if (track.length > 1 && !m.getSource('flight-track')) {
+    const route = latestTrack.current;
+    if (route.length > 1 && !m.getSource('flight-track')) {
       m.addSource('flight-track', {
         type: 'geojson',
         data: {
           type: 'Feature',
           properties: {},
-          geometry: { type: 'LineString', coordinates: track },
+          geometry: { type: 'LineString', coordinates: route },
         },
       });
+      m.addLayer({ id: 'flight-track-halo', type: 'line', source: 'flight-track', paint: { 'line-color': '#102527', 'line-width': 6, 'line-opacity': 0.8 } });
       m.addLayer({
         id: 'flight-track',
         type: 'line',
@@ -150,7 +154,7 @@ export default function MissionMap({
   }, []);
   useEffect(() => {
     draw();
-  }, [points, ready]);
+  }, [points, track, ready]);
   return (
     <div className="real-map" style={{ height }}>
       <div ref={root} className="map-canvas" />
@@ -164,16 +168,19 @@ export default function MissionMap({
         <Button
           type="button"
           variant="outline"
+          disabled={!ready}
+          aria-pressed={satellite}
           onClick={() => {
             const next = !satellite;
             setSatellite(next);
-            map.current?.setStyle(
-              next
-                ? process.env.NEXT_PUBLIC_MAPBOX_SATELLITE_STYLE_URL ||
-                    'mapbox://styles/mapbox/satellite-streets-v12'
-                : process.env.NEXT_PUBLIC_MAPBOX_STYLE_URL ||
-                    'mapbox://styles/mapbox/dark-v11',
-            );
+            const m = map.current;
+            if (!m) return;
+            // Toggle imagery within the existing style so route sources never disappear.
+            if (!m.getSource('satellite-imagery')) {
+              m.addSource('satellite-imagery', { type: 'raster', url: 'mapbox://mapbox.satellite', tileSize: 256 });
+              m.addLayer({ id: 'satellite-imagery', type: 'raster', source: 'satellite-imagery', paint: { 'raster-fade-duration': 200 } }, 'mission-area');
+            }
+            m.setLayoutProperty('satellite-imagery', 'visibility', next ? 'visible' : 'none');
           }}
         >
           <Layers size={14} />

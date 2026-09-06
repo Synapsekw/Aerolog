@@ -3487,3 +3487,47 @@ textarea {
 .inventory-section .equipment-name { max-width:340px; text-align:left; white-space:normal; }
 @media(max-width:1100px) { .inventory-categories { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 @media(max-width:600px) { .inventory-categories { grid-template-columns:repeat(2,minmax(0,1fr)); } .inventory-category { padding:16px; } }
+
+/* Shared layout polish: controls and long imported names must keep their space. */
+.main, .content, .page-heading > div, .panel-heading > div { min-width:0; }
+.page-heading { gap:20px; flex-wrap:wrap; }
+.page-heading h1 { overflow-wrap:anywhere; }
+.toolbar { display:grid; grid-template-columns:minmax(220px,1fr) auto; align-items:center; gap:16px; }
+.toolbar .search-field { width:100%; max-width:480px; min-width:0; }
+.data-toolbar { justify-content:flex-end; min-width:0; }
+.data-toolbar .field { flex:0 1 200px; min-width:160px; }
+.equipment-name > span:last-child { display:flex; flex-direction:column; gap:5px; min-width:0; overflow-wrap:anywhere; }
+.equipment-name small { display:block; color:#92a6ae; font-size:12px; line-height:1.4; }
+.equipment-icon, .inventory-category > svg { flex-shrink:0; }
+.inventory-section td { padding:14px 16px; }
+.inventory-section th { padding:12px 16px; }
+.inventory-section td:nth-child(2) { max-width:250px; white-space:normal; overflow-wrap:anywhere; }
+.inventory-category { min-height:100px; }
+.inventory-category span { min-width:0; overflow-wrap:anywhere; }
+.summary-list dd { min-width:0; overflow-wrap:anywhere; }
+.flight-page > button { max-width:100%; white-space:normal; height:auto; min-height:40px; overflow-wrap:anywhere; }
+.flight-page .detail-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:16px; }
+.battery-card h3 { overflow-wrap:anywhere; }
+.battery-card-foot, .tile-meta, .tile-foot, .action-footer { flex-wrap:wrap; gap:12px; }
+@media(max-width:900px) {
+  .toolbar { grid-template-columns:1fr; }
+  .toolbar .search-field { max-width:none; }
+  .data-toolbar { justify-content:flex-start; }
+  .data-toolbar .field { flex:1; }
+}
+@media(max-width:600px) {
+  .page-heading { align-items:flex-start; }
+  .page-heading > .primary { width:100%; }
+  .data-toolbar { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); width:100%; }
+  .data-toolbar .field { min-width:0; grid-column:1/-1; width:100%; }
+  .data-toolbar button { min-width:0; white-space:normal; height:auto; min-height:40px; }
+  .inventory-category { gap:10px; padding:14px; }
+  .inventory-pagination { flex-wrap:wrap; }
+  .flight-page .detail-metrics { grid-template-columns:1fr; }
+  .panel-heading { flex-wrap:wrap; gap:12px; }
+}
+@media(min-width:901px) {
+  .toolbar { grid-template-columns:minmax(220px,1fr) max-content; }
+  .data-toolbar { flex-wrap:nowrap; }
+  .data-toolbar .field { flex:0 0 180px; width:180px; }
+}

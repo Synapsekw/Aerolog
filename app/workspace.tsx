@@ -7,6 +7,9 @@ import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
 import { Status } from './shared';
 import {
+  Camera,
+  Gamepad2,
+  Package,
   LayoutDashboard,
   Map as MapIcon,
   Drone,
@@ -302,6 +305,15 @@ export default function Workspace() {
     crew = items('crew') as Crew[],
     flights = items('flight') as Flight[],
     services = items('service') as Service[];
+  const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
+  const [inventoryPage, setInventoryPage] = useState(1);
+  const inventoryCategories = [
+    {key:'Aircraft', label:'Aircraft', Icon:Drone},
+    {key:'Battery', label:'Batteries', Icon:Battery},
+    {key:'Payload', label:'Payloads', Icon:Camera},
+    {key:'Controller', label:'Controllers', Icon:Gamepad2},
+    {key:'Accessory', label:'Accessories', Icon:Package},
+  ];
   const [page, setPage] = useState('Overview'),
     [search, setSearch] = useState(''),
     [filter, setFilter] = useState('All'),
@@ -522,7 +534,7 @@ export default function Workspace() {
     setDraft((d: any) => ({ ...d, [key]: value }));
   const kindByPage: Record<string, Kind> = {
     Missions: 'mission',
-    Inventory: 'asset',
+    Inventory: inventoryCategory === 'Battery' ? 'battery' : 'asset',
     Maintenance: 'service',
     Batteries: 'battery',
     Crew: 'crew',
@@ -532,6 +544,7 @@ export default function Workspace() {
     visible = kind
       ? items(kind).filter(
           (d) =>
+            (page !== 'Inventory' || inventoryCategory === 'Battery' || d.category === inventoryCategory) &&
             Object.values(d)
               .filter((v) => typeof v === 'string')
               .join(' ')
@@ -543,6 +556,9 @@ export default function Workspace() {
               d.pilot === filter),
         )
       : [];
+  const inventoryPageCount = Math.max(1, Math.ceil(visible.length / 24));
+  const currentInventoryPage = Math.min(inventoryPage, inventoryPageCount);
+  const inventoryRows = visible.slice((currentInventoryPage - 1) * 24, currentInventoryPage * 24);
   const unread = app.notifications.filter(
     (n) => !n.read_by.includes(profile.id),
   );
@@ -1030,6 +1046,15 @@ export default function Workspace() {
           )}
           {kind && (
             <>
+              {page === 'Inventory' && (
+                <div className="inventory-categories" aria-label="Equipment categories">
+                  {inventoryCategories.map(({key,label,Icon}) => (
+                    <button key={key} className={'inventory-category ' + (inventoryCategory === key ? 'selected' : '')} aria-pressed={inventoryCategory === key} onClick={() => {setInventoryCategory(key);setInventoryPage(1);setFilter('All');setSearch('');}}>
+                      <Icon size={23}/><span>{label}<strong>{key === 'Battery' ? batteries.length : assets.filter(a => a.category === key).length}</strong></span>
+                    </button>
+                  ))}
+                </div>
+              )}
               <div className="toolbar">
                 <div className="search-field">
                   <Search size={16} />
@@ -1037,21 +1062,21 @@ export default function Workspace() {
                     aria-label={'Search ' + page.toLowerCase()}
                     placeholder={'Search ' + page.toLowerCase() + '…'}
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => {setSearch(e.target.value);setInventoryPage(1);}}
                   />
                 </div>
                 <div className="data-toolbar">
                   <Pick
                     label="Filter"
                     value={filter}
-                    onChange={setFilter}
+                    onChange={(value) => {setFilter(value);setInventoryPage(1);}}
                     options={[
                       'All',
                       ...new Set(
                         items(kind)
                           .map((d) =>
                             page === 'Inventory'
-                              ? d.category
+                              ? d.status
                               : page === 'Flight logs'
                                 ? d.pilot
                                 : d.status,
@@ -1163,65 +1188,25 @@ export default function Workspace() {
                 </div>
               )}
               {page === 'Inventory' && (
-                <section className="glass">
+                <section className="glass inventory-section">
+                  <div className="panel-heading"><div><h2>{inventoryCategories.find(c => c.key === inventoryCategory)?.label}</h2><p>{visible.length} matching items</p></div><span className="category-label">{Math.min(visible.length, (currentInventoryPage - 1) * 24 + 1)}–{Math.min(visible.length,currentInventoryPage * 24)} of {visible.length}</span></div>
                   <Table>
-                    <TableHeader>
-                      <TableRow>
-                        {[
-                          'Equipment',
-                          'Serial',
-                          'Status',
-                          'Custodian',
-                          'Usage / service',
-                          '',
-                        ].map((h) => (
-                          <TableHead key={h}>{h}</TableHead>
-                        ))}
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {visible.map((a) => (
-                        <TableRow key={a.id}>
-                          <TableCell>
-                            <button
-                              className="equipment-name"
-                              onClick={() => void open('asset', a.id)}
-                            >
-                              <span className="equipment-icon">
-                                <Drone size={20} />
-                              </span>
-                              <span>
-                                {a.name}
-                                <small>
-                                  {a.category} · {a.id}
-                                </small>
-                              </span>
-                            </button>
-                          </TableCell>
-                          <TableCell>{a.serial || 'Not supplied'}</TableCell>
-                          <TableCell>
-                            <Status>
-                              {a.next != null && a.hours != null && a.hours >= a.next ? 'Maintenance due' : a.status}
-                            </Status>
-                          </TableCell>
-                          <TableCell>{a.pilot}</TableCell>
-                          <TableCell>
-                            {(a.hours == null ? 'Unknown' : a.hours.toFixed(1))} / {a.next ?? 'Unscheduled'} h
-                          </TableCell>
-                          <TableCell>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              aria-label={'Open ' + a.name}
-                              onClick={() => void open('asset', a.id)}
-                            >
-                              <ChevronRight size={16} />
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
+                    <TableHeader><TableRow>{['Equipment','Serial','Status',inventoryCategory === 'Battery' ? 'Assigned aircraft' : 'Custodian',inventoryCategory === 'Battery' ? 'Cycles / health' : 'Usage / service',''].map(h => <TableHead key={h}>{h}</TableHead>)}</TableRow></TableHeader>
+                    <TableBody>{inventoryRows.map(a => {
+                      const isBattery = inventoryCategory === 'Battery';
+                      const Icon = inventoryCategories.find(c => c.key === inventoryCategory)!.Icon;
+                      const title = isBattery ? a.model : a.name;
+                      return <TableRow key={a.id}>
+                        <TableCell><button className="equipment-name" onClick={() => void open(isBattery ? 'battery' : 'asset',a.id)}><span className="equipment-icon"><Icon size={20}/></span><span>{title}<small>{a.externalSource || 'Local inventory'}</small></span></button></TableCell>
+                        <TableCell>{a.serial || 'Not supplied'}</TableCell>
+                        <TableCell><Status>{a.next != null && a.hours != null && a.hours >= a.next ? 'Maintenance due' : a.status}</Status></TableCell>
+                        <TableCell>{isBattery ? a.aircraft : a.pilot}</TableCell>
+                        <TableCell>{isBattery ? a.cycles + ' cycles · ' + (a.health == null ? 'Health unknown' : a.health + '% health') : (a.hours == null ? 'Usage unknown' : a.hours.toFixed(1) + ' h') + ' · ' + (a.next == null ? 'Service not set' : 'Service at ' + a.next + ' h')}</TableCell>
+                        <TableCell><Button variant="ghost" size="icon" aria-label={'Open ' + title} onClick={() => void open(isBattery ? 'battery' : 'asset',a.id)}><ChevronRight size={16}/></Button></TableCell>
+                      </TableRow>;
+                    })}</TableBody>
                   </Table>
+                  <div className="inventory-pagination"><span>Page {currentInventoryPage} of {inventoryPageCount}</span><Button variant="outline" disabled={currentInventoryPage <= 1} onClick={() => setInventoryPage(currentInventoryPage - 1)}>Previous</Button><Button variant="outline" disabled={currentInventoryPage >= inventoryPageCount} onClick={() => setInventoryPage(currentInventoryPage + 1)}>Next</Button></div>
                 </section>
               )}
               {page === 'Flight logs' && (

@@ -3476,3 +3476,14 @@ textarea {
 .flight-chart-empty span { max-width:360px; font-size:14px; }
 @media(max-width:1000px) { .flight-chart-grid { grid-template-columns:1fr; } }
 @media(max-width:600px) { .flight-chart-card { padding:16px; } .flight-page .page-heading h1 { font-size:26px; } }
+.inventory-categories { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:12px; margin-bottom:24px; }
+.inventory-category { display:flex; align-items:center; gap:14px; min-width:0; text-align:left; padding:20px; border:1px solid #ffffff15; border-radius:16px; background:linear-gradient(140deg,#ffffff0a,#ffffff03); cursor:pointer; transition:background .2s,border-color .2s; }
+.inventory-category span { display:flex; flex-direction:column; gap:8px; font-size:14px; }
+.inventory-category strong { font-size:26px; line-height:1; }
+.inventory-category.selected { border-color:#cdef8f90; background:linear-gradient(140deg,#cdef8f20,#86dbe510); color:#d5f59d; }
+.inventory-category:focus-visible { outline:2px solid #cdef8f; outline-offset:3px; }
+.inventory-pagination { display:flex; justify-content:flex-end; align-items:center; gap:12px; padding:18px; border-top:1px solid #ffffff12; }
+.inventory-pagination > span { margin-right:auto; font-size:14px; }
+.inventory-section .equipment-name { max-width:340px; text-align:left; white-space:normal; }
+@media(max-width:1100px) { .inventory-categories { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+@media(max-width:600px) { .inventory-categories { grid-template-columns:repeat(2,minmax(0,1fr)); } .inventory-category { padding:16px; } }

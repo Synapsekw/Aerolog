@@ -29,3 +29,10 @@ local Git. Independently implement product behavior; no AGPL application code co
 - Added per-flight battery telemetry trends to the battery passport: reported full capacity, full/design ratio, minimum voltage, peak temperature, maximum simultaneous cell spread and observed discharge rate. Measured flights link back to their flight analysis.
 - Attribution requires an unambiguous pack serial or a single-battery assignment. Combined aircraft readings are not copied to multiple packs. Charge increases and clock resets suppress discharge-rate estimates. Missing channels stay empty; inventory cycle counters do not become health estimates.
 - Passed 21 unit tests and production build. Browser confirmed Ivan's linked battery shows 0 measured flights and no fabricated readings. Populated-chart and responsive QA remain in the final validation pass.
+
+### Duplicate review progress
+
+- Added per-flight import review with exact source-hash duplicates, aircraft-serial/exact-start matches across time zones, and weaker same-day/aircraft/duration/distance candidates.
+- Exact matches are skipped; other candidates default to skip with an explicit separate-flight choice. Candidates are not automatically merged, deleted or attached to an existing flight. Reviewed new flights alone increment usage.
+- Fixed batch source archive IDs: duplicate rows within an upload reference the actual saved record, not the discarded generated ID. Skipped uncertain matches are excluded from source attachments.
+- 25 unit tests pass. Safe audited enrichment and browser import review QA are still pending; candidate checks supplement existing database hash uniqueness and do not replace server permissions.

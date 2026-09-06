@@ -7,6 +7,8 @@ import FlightAnalysis from './flight-analysis';
 import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
 import TeamDirectory from './team-directory';
+import ImportReview from './import-review';
+import {duplicateMatches} from '@/lib/flight/duplicates';
 import BatteryTelemetryHistory from './battery-telemetry-history';
 import { Status } from './shared';
 import {
@@ -329,6 +331,7 @@ export default function Workspace() {
     [files, setFiles] = useState<any[]>([]),
     [uploading, setUploading] = useState(false),
     [importPreview, setImportPreview] = useState<any>(null),
+    [importAllowNew, setImportAllowNew] = useState<Set<string>>(new Set()),
     [importFile, setImportFile] = useState<File | null>(null),
     [accountResult, setAccountResult] = useState<any>(null);
   const record = detail
@@ -2976,6 +2979,7 @@ export default function Workspace() {
                             method: 'POST',
                             body,
                           });
+                          setImportAllowNew(new Set());
                           setImportPreview(result);
                           setImportFile(file);
                         } catch (e) {
@@ -3013,22 +3017,7 @@ export default function Workspace() {
                       <FileText size={18} />
                       <div>
                         {importPreview.flights.length} flight record(s) parsed.
-                        <p>
-                          {importPreview.flights
-                            .map(
-                              (f: any) =>
-                                f.date +
-                                ' · ' +
-                                f.duration +
-                                ' · ' +
-                                f.distance +
-                                ' km · ' +
-                                f.telemetry.length + ' telemetry samples' +
-                                (f.startedAt ? ' · ' + f.startedAt : '') +
-                                (f.aircraftSerial ? ' · aircraft SN ' + f.aircraftSerial : ''),
-                            )
-                            .join('; ')}
-                        </p>
+                        <ImportReview incoming={importPreview.flights} existing={flights} allowNew={importAllowNew} onAllowNew={(id,value)=>setImportAllowNew(previous=>{const next=new Set(previous);if(value)next.add(id);else next.delete(id);return next;})}/>
                         {importPreview.warnings?.map((w: string) => (
                           <p key={w}>{w}</p>
                         ))}
@@ -3204,38 +3193,30 @@ export default function Workspace() {
                     setUploading(true);
                     let count = 0,
                       skipped = 0;
-                    const known = new Set(
-                      flights.map((f: any) => f.importHash).filter(Boolean),
-                    );
-                    for (const f of importPreview.flights) {
-                      if (known.has(f.importHash)) {
-                        skipped++;
-                        continue;
-                      }
-                      await command('flight_import', 'flight', {
+                    const imported = [...flights];
+                    const archiveIds = new Set<string>();
+                    for (const [index, f] of importPreview.flights.entries()) {
+                      const matches = duplicateMatches(f, [...flights, ...importPreview.flights.slice(0,index)]);
+                      const exact = matches.find(m=>m.kind==='exact');
+                      if (exact) { skipped++; const savedExact=imported.find(x=>x.importHash===f.importHash); if(savedExact)archiveIds.add(savedExact.id); continue; }
+                      if (matches.length && !importAllowNew.has(f.id)) { skipped++; continue; }
+                      const saved = {
                         ...f,
                         sourceApp: draft.sourceApp || 'Other',
                         pilot: draft.pilot,
                         aircraft: draft.aircraft,
                         mission: draft.mission,
                         missionId: draft.missionId,
-                      });
+                      };
+                      await command('flight_import', 'flight', saved);
                       count++;
-                      known.add(f.importHash);
+                      imported.push(saved);
+                      archiveIds.add(f.id);
                     }
-                    if (importFile) {
+                    if (importFile && archiveIds.size) {
                       const body = new FormData();
                       body.set('file', importFile);
-                      body.set(
-                        'flights',
-                        JSON.stringify(
-                          importPreview.flights.map(
-                            (f: any) =>
-                              flights.find((x) => x.importHash === f.importHash)
-                                ?.id || f.id,
-                          ),
-                        ),
-                      );
+                      body.set('flights', JSON.stringify([...archiveIds]));
                       await api('imports/archive', { method: 'POST', body });
                       await app.refresh();
                     }
@@ -3245,7 +3226,7 @@ export default function Workspace() {
                       count +
                         ' flights imported. ' +
                         skipped +
-                        ' duplicates skipped. Aircraft usage updated.',
+                        ' records skipped. Aircraft usage updated for new flights.',
                     );
                   } else if (dialog === 'cycle')
                     await save('battery', 'battery_cycle');

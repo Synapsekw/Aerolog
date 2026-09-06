@@ -1,5 +1,9 @@
 'use client';
 import { createClient } from '@supabase/supabase-js';
+let activeOrganization = '';
+export function setActiveOrganization(id: string) {
+  activeOrganization = id;
+}
 let instance: ReturnType<typeof createClient>;
 export function browserClient() {
   if (!instance)
@@ -22,6 +26,9 @@ export async function api<T = any>(
       ...(options.body instanceof FormData
         ? {}
         : { 'Content-Type': 'application/json' }),
+      ...(activeOrganization && path !== 'bootstrap'
+        ? { 'X-Aerolog-Organization': activeOrganization }
+        : {}),
       Authorization: 'Bearer ' + (session?.access_token || ''),
       ...Object.fromEntries(new Headers(options.headers).entries()),
     },

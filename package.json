@@ -15,7 +15,8 @@
     "test": "tsx --test tests/*.test.ts",
     "setup:local": "node scripts/bootstrap.mjs",
     "test:integration": "node scripts/integration.mjs",
-    "seed:examples": "node scripts/seed-examples.mjs"
+    "seed:examples": "node scripts/seed-examples.mjs",
+    "test:organizations": "node scripts/test-organizations.mjs"
   },
   "dependencies": {
     "@base-ui/react": "1.7.0",

@@ -107,6 +107,10 @@ export const telemetrySchema = z.object({
 });
 export const flightSchema = z.object({
   id,
+  sourceApp: z
+    .enum(['DJI Fly', 'DJI GO 4', 'DJI Pilot 2', 'DJI FlightHub 2', 'Other'])
+    .optional(),
+  pilotUserId: z.uuid().optional(),
   mission: z.string().max(160),
   missionId: z.string().optional(),
   pilot: name,

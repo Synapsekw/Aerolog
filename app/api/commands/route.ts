@@ -3,7 +3,7 @@ import { requireUser, failure, ApiError } from '@/lib/server/supabase';
 import { schemas, type Kind } from '@/lib/domain/models';
 export async function POST(request: Request) {
   try {
-    const { client } = await requireUser(request);
+    const { client, profile } = await requireUser(request);
     const raw = await request.json();
     const command = z
       .enum([
@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const { data, error } = await client
       .rpc('aerolog_command', {
         command,
-        payload,
+        payload: { ...payload, _organizationId: profile.organization_id },
       })
       .retry(false);
     if (error)

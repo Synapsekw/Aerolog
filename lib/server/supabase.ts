@@ -18,7 +18,7 @@ export function adminClient() {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
-export async function requireUser(request: Request) {
+export async function requireIdentity(request: Request) {
   const token = request.headers.get('authorization')?.replace(/^Bearer /i, '');
   if (!token) throw new ApiError('Please sign in.', 401);
   const client = createClient(
@@ -35,6 +35,10 @@ export async function requireUser(request: Request) {
   } = await client.auth.getUser(token);
   if (error || !user)
     throw new ApiError('Session expired. Please sign in again.', 401);
+  return { client, user };
+}
+export async function requireUser(request: Request) {
+  const { client, user } = await requireIdentity(request);
   const { data: profile } = await client
     .from('aerolog_profiles')
     .select('*')
@@ -42,6 +46,12 @@ export async function requireUser(request: Request) {
     .single();
   if (!profile?.active)
     throw new ApiError('Your account has no active workspace membership.', 403);
+  const expected = request.headers.get('x-aerolog-organization');
+  if (expected && expected !== profile.organization_id)
+    throw new ApiError(
+      'The active organization changed. Refresh before saving.',
+      409,
+    );
   return { client, user, profile: profile as Profile };
 }
 export function requireRole(profile: Profile, roles: string[]) {

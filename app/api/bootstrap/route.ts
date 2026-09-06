@@ -21,7 +21,10 @@ export async function GET(request: Request) {
         .eq('id', profile.organization_id)
         .single(),
       Promise.resolve({ data: records, error: null }),
-      client.from('aerolog_profiles').select('*'),
+      client
+        .from('aerolog_memberships')
+        .select('*')
+        .eq('organization_id', profile.organization_id),
       client
         .from('aerolog_notifications')
         .select('*')
@@ -38,7 +41,10 @@ export async function GET(request: Request) {
       profile: { ...profile, email: user.email },
       organization: results[0].data,
       records: results[1].data,
-      profiles: results[2].data,
+      profiles: (results[2].data || []).map((m: any) => ({
+        ...m,
+        id: m.user_id,
+      })),
       notifications: results[3].data,
       audit: results[4].data,
     });

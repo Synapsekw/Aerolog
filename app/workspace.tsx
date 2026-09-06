@@ -1,8 +1,10 @@
 'use client';
+import Image from 'next/image';
 import { useState } from 'react';
 import { useApp } from './app-provider';
 import MissionMap from './mission-map';
 import Analytics from './live-analytics';
+import OrganizationPanel from './organization-panel';
 import { Status } from './shared';
 import {
   LayoutDashboard,
@@ -562,10 +564,28 @@ export default function Workspace() {
             </span>
           </div>
           <div className="workspace">
-            <span className="workspace-icon">A</span>
+            <span className="workspace-icon">
+              {organization.logo_data ? (
+                <Image
+                  width={32}
+                  height={32}
+                  unoptimized
+                  src={organization.logo_data}
+                  alt="Organization logo"
+                  className="org-logo-small"
+                />
+              ) : (
+                organization.name.slice(0, 1)
+              )}
+            </span>
             <div>
               {organization.name}
-              <small>Connected workspace</small>
+              <button
+                className="org-switch-link"
+                onClick={() => setPage('Settings')}
+              >
+                Manage organization ↗
+              </button>
             </div>
           </div>
         </SidebarHeader>
@@ -1320,6 +1340,36 @@ export default function Workspace() {
               <div className="integration-steps">
                 {[
                   [
+                    'DJI Fly',
+                    'File import available',
+                    'Import flight-record TXT files from the phone or controller. Automatic DJI account download is not connected.',
+                  ],
+                  [
+                    'DJI GO 4',
+                    'File import available',
+                    'Import exported flight-record TXT files. Compatibility depends on the record version; account history download is not connected.',
+                  ],
+                  [
+                    'DJI Pilot 2 / Dock',
+                    'Cloud connection pending',
+                    'File imports share the same logbook. Live Cloud API access requires a configured platform gateway and supported equipment.',
+                  ],
+                  [
+                    'DJI FlightHub 2',
+                    'Organization API pending',
+                    'FlightHub 2 has a separate OpenAPI for organization flight records. Organization authorization and the connector are still required.',
+                  ],
+                ].map(([title, status, description]) => (
+                  <section className="glass" key={title}>
+                    <h2>{title}</h2>
+                    <Status>{status}</Status>
+                    <p>{description}</p>
+                  </section>
+                ))}
+              </div>
+              <div className="integration-steps">
+                {[
+                  [
                     'Supabase',
                     'Connected',
                     'Authentication, persistent records, private files and role permissions.',
@@ -1416,6 +1466,14 @@ export default function Workspace() {
           )}
           {page === 'Settings' && (
             <div className="settings-grid">
+              <OrganizationPanel
+                key={organization.id}
+                organization={organization}
+                profile={profile}
+                flights={flights}
+                members={app.profiles}
+                onChange={app.refresh}
+              />
               <section className="glass">
                 <h2>Operational policies</h2>
                 <p>Current workspace thresholds.</p>
@@ -2543,6 +2601,7 @@ export default function Workspace() {
                             : 'Not available',
                         ],
                         ['Source', record.source],
+                        ['Flight app', record.sourceApp || 'Not recorded'],
                       ].map(([k, v]) => (
                         <div key={k}>
                           <dt>{k}</dt>
@@ -2918,6 +2977,23 @@ export default function Workspace() {
                 </>
               ) : (
                 <>
+                  <Pick
+                    label="Flight app"
+                    value={draft.sourceApp || 'Other'}
+                    options={[
+                      'DJI Fly',
+                      'DJI GO 4',
+                      'DJI Pilot 2',
+                      'DJI FlightHub 2',
+                      'Other',
+                    ]}
+                    onChange={(v) => update('sourceApp', v)}
+                  />
+                  <p className="fine-print">
+                    This import is assigned to {organization.name}. Select the
+                    pilot who flew these records; existing imports in this
+                    organization are skipped.
+                  </p>
                   <label className="field">
                     <span>
                       {uploading
@@ -3176,6 +3252,7 @@ export default function Workspace() {
                       }
                       await command('flight_import', 'flight', {
                         ...f,
+                        sourceApp: draft.sourceApp || 'Other',
                         pilot: draft.pilot,
                         aircraft: draft.aircraft,
                         mission: draft.mission,

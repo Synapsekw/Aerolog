@@ -28,3 +28,19 @@ The integration checks cover authentication for five roles, local login origin r
 - The PDF package currently uses a standard Latin font with a text fallback for unsupported characters. Full multilingual PDF typography is a later improvement.
 
 Sample records are labeled **LOCAL SAMPLE** or **SYNTHETIC LOCAL TEST FIXTURE**. They exist to exercise screens and workflows, and are not real flight history. See the root README for setup, import formats, role workflows and the future Vercel runtime considerations.
+
+## Organizations (September 6 update)
+
+Open Settings → Organization to create and switch workspaces, save a name and a PNG/JPEG/WebP logo (200 KB maximum), or create an email-bound invitation code. Share the code manually; the app does not send invitation emails. Recipients create/confirm an account through Supabase authentication, sign in using the invitation email, and choose Join an organization. Codes expire in seven days and can be accepted once. Existing members are managed through Workspace access. Supabase email confirmation delivery depends on your project's Auth configuration; it was not tested by sending real email.
+
+Memberships persist across workspace switches. An empty organization starts without operational records. Register crew and equipment before logging flights; link crew to the member account for stable pilot attribution. Organization totals sum recorded flight duration once, regardless of pilot. Joining does not copy historical flights across tenants. Imported records now retain their selected source app; parsing compatibility still requires real fleet samples. New flights resolve pilot identity from the crew's account link, with a unique-name fallback. Ambiguous historical names remain unattributed in member totals while still counting toward organization totals.
+
+`node scripts/test-organizations.mjs` runs 29 API assertions plus rollup/identity checks using disposable test accounts and organizations. It covers creation, switching, invitations, incorrect email, expiry/reuse, logo validation and persistence, roles, revocation, flight identity and deduplication, tenant isolation, and stale workspace protection. Test fixtures are removed afterward.
+
+## DJI integration scope
+
+DJI Fly, GO 4, Pilot 2, and FlightHub 2 are all in scope. Their integration paths are explicitly shown in Integrations; automatic cloud synchronization is not implemented. TXT/CSV/normalized JSON imports use the common organization logbook.
+
+FlightHub 2 public cloud OpenAPI uses a separate organization-scoped `x-user-token`, organization UUID, and project UUID. Blank `DJI_FLIGHTHUB_USER_TOKEN`, `DJI_FLIGHTHUB_ORGANIZATION_ID`, and `DJI_FLIGHTHUB_PROJECT_ID` fields are available in `.env.local`. DJI's official example describes obtaining the token from the organization's settings → OpenAPI → Copy Key. These are preparation fields, not an enabled connector. Reference: https://github.com/dji-sdk/FlightHub-2-OpenAPI-V2-Demo/blob/main/README.en.md
+
+Pilot 2/Dock direct integration requires a platform gateway through Cloud API. Fly/GO 4 account cloud history may exist, but a supported universal third-party account-history API has not been verified. The supplied parsing key must not be treated as authorization for every DJI API. Reference: https://developer.dji.com/cloud-api/

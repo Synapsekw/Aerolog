@@ -3448,3 +3448,17 @@ textarea {
     gap: 8px;
   }
 }
+
+.organization-panel { min-width:0; }
+.organization-panel details { border-top:1px solid #ffffff15; padding:16px 0; }
+.organization-panel summary { cursor:pointer; font-weight:600; }
+.organization-panel form { display:grid; gap:14px; padding-top:16px; }
+.organization-panel select { background:#152333; color:#eef7ff; border:1px solid #ffffff25; padding:10px 12px; border-radius:9px; width:100%; }
+.org-logo { width:64px; height:64px; object-fit:contain; border-radius:12px; background:#ffffff0d; }
+.org-logo-small { width:32px; height:32px; object-fit:contain; }
+.org-switch-link { display:block; font-size:10px; color:var(--muted-foreground); margin-top:5px; text-align:left; cursor:pointer; }
+.org-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; padding:18px 0; }
+.org-metrics strong { display:block; font-size:24px; color:#c4f76d; }
+.org-metrics span { display:block; font-size:11px; color:#9caebd; }
+.org-pilot-totals { max-height:240px; overflow:auto; }
+.org-invite { margin-top:12px; display:grid; gap:12px; }

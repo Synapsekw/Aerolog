@@ -6,10 +6,15 @@ import {
   useEffect,
   useState,
 } from 'react';
-import { browserClient, api } from '@/lib/supabase-browser';
+import {
+  browserClient,
+  api,
+  setActiveOrganization,
+} from '@/lib/supabase-browser';
 import type { Profile, RecordEnvelope, Kind } from '@/lib/domain/models';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import OrganizationPanel from './organization-panel';
 import { Crosshair, ArrowRight, ShieldCheck } from 'lucide-react';
 type Store = {
   profile: Profile & { email: string };
@@ -45,6 +50,7 @@ export default function AppProvider({
 }) {
   const [store, setStore] = useState<Store | null>(null),
     [loading, setLoading] = useState(true),
+    [onboarding, setOnboarding] = useState(false),
     [error, setError] = useState(''),
     [message, setMessage] = useState(''),
     [busy, setBusy] = useState(false),
@@ -52,7 +58,25 @@ export default function AppProvider({
     [password, setPassword] = useState(''),
     [status, setStatus] = useState<any>({});
   const refresh = useCallback(async () => {
-    const data = await api<Store>('bootstrap');
+    try {
+      await api('organizations');
+    } catch {
+      setOnboarding(false);
+      throw Error('Please sign in.');
+    }
+    let data: Store;
+    try {
+      data = await api<Store>('bootstrap');
+    } catch (e) {
+      if ((e as Error).message.includes('no active workspace membership')) {
+        setStore(null);
+        setOnboarding(true);
+        return;
+      }
+      throw e;
+    }
+    setOnboarding(false);
+    setActiveOrganization(data.organization.id);
     setStore(data);
     setStatus(await api('status'));
   }, []);
@@ -74,7 +98,10 @@ export default function AppProvider({
     const {
       data: { subscription },
     } = browserClient().auth.onAuthStateChange((event, session) => {
-      if (event === 'SIGNED_OUT') setStore(null);
+      if (event === 'SIGNED_OUT') {
+        setStore(null);
+        setOnboarding(false);
+      }
       if (event === 'SIGNED_IN' && session)
         setTimeout(() => void refresh().catch((e) => setError(e.message)), 0);
     });
@@ -157,6 +184,20 @@ export default function AppProvider({
         </div>
       </main>
     );
+  if (onboarding)
+    return (
+      <main className="auth-screen">
+        <div className="auth-card">
+          <OrganizationPanel onChange={refresh} />
+          <Button
+            variant="ghost"
+            onClick={() => void browserClient().auth.signOut()}
+          >
+            Sign out
+          </Button>
+        </div>
+      </main>
+    );
   if (!store)
     return (
       <main className="auth-screen">
@@ -204,6 +245,40 @@ export default function AppProvider({
           <Button className="primary wide" disabled={busy} type="submit">
             {busy ? 'Signing in…' : 'Sign in'}
             <ArrowRight size={16} />
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={busy}
+            onClick={async () => {
+              if (!email || password.length < 12) {
+                setError(
+                  'Enter your email and a password of at least 12 characters.',
+                );
+                return;
+              }
+              setBusy(true);
+              setError('');
+              try {
+                const { data, error } = await browserClient().auth.signUp({
+                  email,
+                  password,
+                  options: { emailRedirectTo: location.origin },
+                });
+                if (error) throw error;
+                if (data.session) await refresh();
+                else
+                  setError(
+                    'Check your email to confirm your account, then sign in to create or join an organization.',
+                  );
+              } catch (e) {
+                setError((e as Error).message);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            Create an account
           </Button>
           <Button
             type="button"
@@ -288,7 +363,9 @@ export default function AppProvider({
         },
       }}
     >
-      {children}
+      <div key={store.organization.id} style={{ display: 'contents' }}>
+        {children}
+      </div>
       {message && (
         <div className="toast" role="status">
           {message}

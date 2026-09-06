@@ -111,11 +111,15 @@ export const flightSchema = z.object({
     .enum(['DJI Fly', 'DJI GO 4', 'DJI Pilot 2', 'DJI FlightHub 2', 'Other'])
     .optional(),
   pilotUserId: z.uuid().optional(),
+  plannedBoundary: z.array(point).max(5000).optional(),
+  siteLocation: point.optional(),
+  siteName: z.string().max(300).optional(),
+  equipmentNames: z.array(z.string().max(300)).max(200).optional(),
   mission: z.string().max(160),
   missionId: z.string().optional(),
   pilot: name,
   aircraft: name,
-  date,
+  date: z.union([date, z.literal('')]),
   duration: z.string(),
   durationSeconds: numeric(1, 86400),
   distance: z.string().regex(/^\d+(\.\d+)?$/),
@@ -126,10 +130,13 @@ export const flightSchema = z.object({
   peakTemperature: numeric(-50, 150).nullable().optional(),
   importHash: z.string().max(128).optional(),
   source: z
-    .enum(['Manual', 'CSV', 'DJI JSON', 'DJI flight record'])
+    .enum(['Manual', 'CSV', 'DJI JSON', 'DJI flight record', 'DroneLogbook API'])
     .default('Manual'),
   telemetry: z.array(telemetrySchema).max(20000).default([]),
   notes: note,
+}).refine((flight) => flight.date !== '' || flight.source === 'DroneLogbook API', {
+  message: 'A flight date is required except for undated historical API records',
+  path: ['date'],
 });
 export const schemas = {
   mission: missionSchema,

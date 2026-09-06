@@ -1141,7 +1141,7 @@ export default function Workspace() {
                             </TableCell>
                             <TableCell>{f.pilot}</TableCell>
                             <TableCell>{f.aircraft}</TableCell>
-                            <TableCell>{f.date}</TableCell>
+                            <TableCell>{f.date || 'Unknown date'}</TableCell>
                             <TableCell>{f.duration}</TableCell>
                             <TableCell>{f.distance} km</TableCell>
                             <TableCell>{f.source}</TableCell>
@@ -2536,6 +2536,21 @@ export default function Workspace() {
                           ])}
                           height={280}
                         />
+                      ) : record.plannedBoundary?.length >= 3 || record.siteLocation ? (
+                        <>
+                          <MissionMap
+                            key={record.id}
+                            points={record.plannedBoundary?.length >= 3
+                              ? record.plannedBoundary
+                              : [record.siteLocation]}
+                            height={280}
+                          />
+                          <p className="fine-print">
+                            {record.plannedBoundary?.length >= 3
+                              ? 'Planned flight area from DroneLogbook. Actual flight track is unavailable.'
+                              : 'Recorded site location from DroneLogbook. Actual flight track is unavailable.'}
+                          </p>
+                        </>
                       ) : (
                         <div className="info-box">
                           No position telemetry was recorded for this flight.
@@ -2591,7 +2606,7 @@ export default function Workspace() {
                       {[
                         ['Pilot', record.pilot],
                         ['Aircraft', record.aircraft],
-                        ['Date', record.date],
+                        ['Date', record.date || 'Unknown date in source'],
                         ['Mission', record.mission],
                         ['Battery', record.battery || 'Not recorded'],
                         [
@@ -2601,6 +2616,8 @@ export default function Workspace() {
                             : 'Not available',
                         ],
                         ['Source', record.source],
+                        ['Site', record.siteName || 'Not recorded'],
+                        ['Source equipment', record.equipmentNames?.join(', ') || 'Not recorded'],
                         ['Flight app', record.sourceApp || 'Not recorded'],
                       ].map(([k, v]) => (
                         <div key={k}>

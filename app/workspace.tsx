@@ -329,7 +329,7 @@ export default function Workspace() {
         a.category === 'Aircraft' &&
         a.status !== 'Retired' &&
         a.status !== 'Maintenance due' &&
-        a.hours < a.next,
+        a.hours != null && a.next != null && a.hours < a.next,
     ),
     aircraft = assets.filter(
       (a) => a.category === 'Aircraft' && a.status !== 'Retired',
@@ -342,12 +342,12 @@ export default function Workspace() {
   const batteryAlerts = batteries.filter(
     (b) =>
       b.status !== 'Retired' &&
-      (b.health < organization.settings.batteryMinHealth ||
+      (b.health == null || b.temp == null || b.health < organization.settings.batteryMinHealth ||
         b.temp > organization.settings.batteryMaxTemperature ||
         b.status === 'Quarantined'),
   );
   const serviceAlerts = assets.filter(
-    (a) => a.status !== 'Retired' && a.next - a.hours <= 5,
+    (a) => a.status !== 'Retired' && a.next != null && a.hours != null && a.next - a.hours <= 5,
   );
   const titles: Record<string, string> = {
     Overview: 'Your fleet, your people, your next move.',
@@ -754,13 +754,25 @@ export default function Workspace() {
                           Source file · {a.name}
                         </Button>
                       ))}
+                    <section className="flight-chart-card" style={{marginTop:24}}>
+                      <h2>Linked equipment</h2>
+                      <div className="row" style={{flexWrap:'wrap',gap:10}}>
+                        {record.aircraftId && <Button variant="outline" onClick={() => void open('asset',record.aircraftId)}>{record.aircraft}</Button>}
+                        {(record.equipmentIds || []).map((id: string) => {
+                          const battery = batteries.find(b => b.id === id);
+                          const asset = assets.find(a => a.id === id);
+                          return <Button key={id} variant="outline" onClick={() => void open(battery ? 'battery' : 'asset',id)}>{battery?.model || asset?.name || id}</Button>;
+                        })}
+                        {!record.aircraftId && !record.equipmentIds?.length && <p>No inventory links available.</p>}
+                      </div>
+                    </section>
                     <dl className="summary-list">
                       {[
                         ['Pilot', record.pilot],
                         ['Aircraft', record.aircraft],
                         ['Date', record.date || 'Unknown date in source'],
                         ['Mission', record.mission],
-                        ['Battery', record.battery || 'Not recorded'],
+                        ['Battery', batteries.find(b => b.id === record.battery)?.model || record.battery || 'Not recorded'],
                         [
                           'Battery use',
                           record.start != null
@@ -842,7 +854,7 @@ export default function Workspace() {
                   value={String(
                     batteries.filter(
                       (b) =>
-                        b.health < organization.settings.batteryMinHealth ||
+                        b.health == null || b.temp == null || b.health < organization.settings.batteryMinHealth ||
                         b.temp > organization.settings.batteryMaxTemperature ||
                         b.status === 'Quarantined',
                     ).length,
@@ -935,7 +947,7 @@ export default function Workspace() {
                       <div>
                         <h3>{b.id}</h3>
                         <p>
-                          {b.health}% health · {b.temp}°C · {b.status}
+                          {b.health ?? '—'}% health · {b.temp == null ? 'Unknown' : b.temp + '°C'} · {b.status}
                         </p>
                         <span>Inspect battery</span>
                       </div>
@@ -953,11 +965,11 @@ export default function Workspace() {
                       <div>
                         <h3>{a.name}</h3>
                         <p>
-                          {Math.max(0, a.next - a.hours).toFixed(1)} hours until
+                          {Math.max(0, (a.next ?? 0) - (a.hours ?? 0)).toFixed(1)} hours until
                           service
                         </p>
                         <span>
-                          {a.hours >= a.next
+                          {a.next != null && a.hours != null && a.hours >= a.next
                             ? 'Maintenance due'
                             : 'Service approaching'}
                         </span>
@@ -1186,15 +1198,15 @@ export default function Workspace() {
                               </span>
                             </button>
                           </TableCell>
-                          <TableCell>{a.serial}</TableCell>
+                          <TableCell>{a.serial || 'Not supplied'}</TableCell>
                           <TableCell>
                             <Status>
-                              {a.hours >= a.next ? 'Maintenance due' : a.status}
+                              {a.next != null && a.hours != null && a.hours >= a.next ? 'Maintenance due' : a.status}
                             </Status>
                           </TableCell>
                           <TableCell>{a.pilot}</TableCell>
                           <TableCell>
-                            {a.hours.toFixed(1)} / {a.next} h
+                            {(a.hours == null ? 'Unknown' : a.hours.toFixed(1))} / {a.next ?? 'Unscheduled'} h
                           </TableCell>
                           <TableCell>
                             <Button
@@ -1360,15 +1372,15 @@ export default function Workspace() {
                         </h3>
                         <div className="capacity">
                           <strong>
-                            {b.health}
+                            {b.health ?? '—'}
                             <span>%</span>
                           </strong>
                           <span>Measured health</span>
                         </div>
-                        <Progress value={b.health} />
+                        <Progress value={b.health ?? '—'} />
                         <div className="battery-card-foot">
                           <span>{b.cycles} cycles</span>
-                          <span>{b.temp}°C latest</span>
+                          <span>{b.temp == null ? 'Unknown' : b.temp + '°C'} latest</span>
                           <ArrowUpRight size={16} />
                         </div>
                       </button>
@@ -1847,7 +1859,7 @@ export default function Workspace() {
                       .filter(
                         (b) =>
                           b.aircraft === draft.aircraft &&
-                          b.health >= organization.settings.batteryMinHealth &&
+                          b.health != null && b.temp != null && b.status !== 'Unverified' && b.health >= organization.settings.batteryMinHealth &&
                           b.temp <=
                             organization.settings.batteryMaxTemperature &&
                           !['Quarantined', 'Retired'].includes(b.status),
@@ -1858,7 +1870,7 @@ export default function Workspace() {
                         (a) =>
                           a.category !== 'Aircraft' &&
                           a.status === 'Available' &&
-                          a.hours < a.next,
+                          a.hours != null && a.next != null && a.hours < a.next,
                       )
                       .map((a) => a.name),
                   ].map((item) => (
@@ -2400,16 +2412,16 @@ export default function Workspace() {
                     </div>
                     <dl className="summary-list">
                       {[
-                        ['Serial number', record.serial],
+                        ['Serial number', record.serial || 'Not supplied'],
+                        ['Source status', String(record.sourceRecord?.status ?? 'Not supplied')],
                         ['Custodian', record.pilot],
-                        ['Usage', record.hours.toFixed(2) + ' h'],
-                        ['Next service', record.next + ' h'],
+                        ['Usage', record.hours == null ? 'Not supplied' : record.hours.toFixed(2) + ' h'],
+                        ['Next service', record.next == null ? 'Not configured' : record.next + ' h'],
                         [
                           'Remaining',
-                          Math.max(0, record.next - record.hours).toFixed(1) +
-                            ' h',
+                          record.next == null || record.hours == null ? 'Not configured' : Math.max(0, record.next - record.hours).toFixed(1) + ' h',
                         ],
-                        ['Service interval', record.intervalHours + ' h'],
+                        ['Service interval', record.intervalHours == null ? 'Not configured' : record.intervalHours + ' h'],
                       ].map(([k, v]) => (
                         <div key={k}>
                           <dt>{k}</dt>
@@ -2418,7 +2430,7 @@ export default function Workspace() {
                       ))}
                     </dl>
                     <Progress
-                      value={Math.min(100, (record.hours / record.next) * 100)}
+                      value={record.next && record.hours != null ? Math.min(100, (record.hours / record.next) * 100) : 0}
                     />
                     <p>{record.notes}</p>
                     {fleet && (
@@ -2447,7 +2459,7 @@ export default function Workspace() {
                     )}
                     <h3 className="detail-heading">Linked flight history</h3>
                     {flights
-                      .filter((f) => f.aircraft === record.name)
+                      .filter((f) => f.aircraftId === record.id || f.equipmentIds?.includes(record.id) || f.aircraft === record.name)
                       .map((f) => (
                         <button
                           className="linked-item"
@@ -2467,7 +2479,7 @@ export default function Workspace() {
                     <div className="battery-passport">
                       <Battery size={45} />
                       <strong>
-                        {record.health}
+                        {record.health ?? '—'}
                         <span>%</span>
                       </strong>
                       <div>
@@ -2481,7 +2493,7 @@ export default function Workspace() {
                       </div>
                       <div>
                         <small>Latest temperature</small>
-                        <strong>{record.temp}°C</strong>
+                        <strong>{record.temp == null ? 'Unknown' : record.temp + '°C'}</strong>
                       </div>
                     </div>
                     <p>{record.notes}</p>
@@ -2506,12 +2518,16 @@ export default function Workspace() {
                         </Button>
                       </div>
                     )}
+                    <h3 className="detail-heading">Linked flights</h3>
+                    {flights.filter(f => f.batteryIds?.includes(record.id) || f.battery === record.id).map(f => (
+                      <button className="linked-item" key={f.id} onClick={() => void open('flight',f.id)}><span>{f.mission}<small>{f.date} · {f.duration}</small></span><ArrowUpRight size={16}/></button>
+                    ))}
                     <h3 className="detail-heading">Measured capacity trend</h3>
                     <BatteryHistory
                       events={items('battery_event').filter(
                         (e) => e.battery === record.id,
                       )}
-                      current={record.health}
+                      current={record.health ?? '—'}
                     />
                     <h3 className="detail-heading">
                       Usage and condition history
@@ -3448,7 +3464,7 @@ function BatteryHistory({
   current,
 }: {
   events: any[];
-  current: number;
+  current: number | null;
 }) {
   const data = events
     .filter((e) => e.health != null)
@@ -3460,7 +3476,7 @@ function BatteryHistory({
   if (!data.length)
     return (
       <p>
-        No historical measurements yet. Current capacity: {current}%. Record
+        No historical measurements yet. Current capacity: {current == null ? 'unknown' : current + '%'}. Record
         charge cycles to build the trend.
       </p>
     );

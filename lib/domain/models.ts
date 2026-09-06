@@ -44,26 +44,36 @@ export const missionSchema = z.object({
   reviewedAt: z.string().optional(),
   completedAt: z.string().optional(),
 });
+const inventorySourceFields = {
+  externalSource: z.literal('DroneLogbook').optional(),
+  externalId: z.string().max(100).optional(),
+  sourceName: z.string().optional(),
+  sourceStatus: z.union([z.string(), z.number()]).optional(),
+  sourceRecord: z.record(z.string(), z.unknown()).optional(),
+  sourceImportedAt: z.string().optional(),
+};
 export const assetSchema = z.object({
+  ...inventorySourceFields,
   id,
   name,
   category: z.enum(['Aircraft', 'Payload', 'Controller', 'Accessory']),
-  serial: name,
-  status: z.enum(['Available', 'Checked out', 'Maintenance due', 'Retired']),
-  hours: numeric(0, 100000),
+  serial: z.string().max(160),
+  status: z.enum(['Available', 'Checked out', 'Maintenance due', 'Retired', 'Unverified']),
+  hours: numeric(0, 100000).nullable(),
   pilot: z.string().default('Unassigned'),
-  next: numeric(1, 100000),
-  intervalHours: numeric(1, 10000).default(100),
+  next: numeric(1, 100000).nullable(),
+  intervalHours: numeric(1, 10000).nullable().default(100),
   notes: note,
 });
 export const batterySchema = z.object({
+  ...inventorySourceFields,
   id,
   model: name,
   aircraft: name,
   cycles: numeric(0, 100000).int(),
-  health: numeric(0, 100),
-  temp: numeric(-50, 150),
-  status: z.enum(['Healthy', 'Attention required', 'Quarantined', 'Retired']),
+  health: numeric(0, 100).nullable(),
+  temp: numeric(-50, 150).nullable(),
+  status: z.enum(['Healthy', 'Attention required', 'Quarantined', 'Retired', 'Unverified']),
   serial: z.string().max(160).optional(),
   notes: note,
 });
@@ -111,6 +121,9 @@ export const flightSchema = z.object({
     .enum(['DJI Fly', 'DJI GO 4', 'DJI Pilot 2', 'DJI FlightHub 2', 'Other'])
     .optional(),
   pilotUserId: z.uuid().optional(),
+  aircraftId: id.optional(),
+  equipmentIds: z.array(id).max(200).optional(),
+  batteryIds: z.array(id).max(200).optional(),
   plannedBoundary: z.array(point).max(5000).optional(),
   // Untimed KML geometry is separate from timestamped telemetry.
   flightTrack: z.array(z.tuple([

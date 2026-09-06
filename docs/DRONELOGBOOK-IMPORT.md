@@ -30,3 +30,25 @@ in the ignored `.local/imports/ivan-kml/` directory.
 Storage migration 202609060010 allows KML MIME attachments without changing
 bucket privacy or file size limits. This allowance was applied to the current
 project via the Storage API during the import.
+
+## Inventory and battery import
+
+The source inventory is imported by API GUID, retaining the raw source record.
+Missing health, temperature, hours and service intervals remain null. Imported
+items are Unverified (source-retired aircraft stay Retired); mission submission
+rejects unreviewed equipment or missing readiness measurements. Original source
+status is retained independently from local operational readiness.
+
+Source serials can be missing or duplicated. Imported records therefore use
+unique source GUID identity; local inventory keeps its serial uniqueness rule.
+Duplicate equipment names gain an eight-character source ID suffix. Flight links
+use GUIDs, not names or serial guesses. Battery and equipment arrays retain every
+resolved item; the legacy primary battery field references the first linked battery.
+Current source counters are retained without adding historical flight usage again.
+Private import backups, source JSON and results are under `.local/imports/inventory/`.
+
+The initial inventory import committed 56 drones, 525 batteries and 155 other
+items atomically. Fourteen retained flights resolve all source inventory links.
+Six reference one missing drone GUID and five missing equipment GUIDs; individual
+GET requests returned HTTP 204 for all six missing source records. They remain
+explicitly unresolved. No replacement inventory identities were guessed.

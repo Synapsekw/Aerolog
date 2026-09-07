@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Cross-organization equipment directory — 7 September 2026
+
+- Added manager equipment offers targeted to an exact recipient organization ID, recipient acceptance/decline, expiry and owner revocation. Inventory/Batteries show a paged sharing panel and the organization's copyable ID; no messages are sent externally.
+- Migration 042 and service-only RPCs check current org/manager access. Accepted recipients receive a minimal live projection of identity/model/firmware/status/counters, not owner flight records, notes or maintenance attachments. Owner manager membership loss also removes equipment visibility.
+- Rollback regression passed pending invisibility, acceptance, live updates, preserved retired status, private-note exclusion, expiry/revocation, org guard and RPC privileges. Temporary recipient org/profile context and equipment were fully rolled back. Production build/TypeScript passed.
+- This is the directory/access foundation, not a loan/reservation or mission authorization mechanism. Operational handover, API/browser acceptance and broader merge workflows remain open. Goal active.
+
 ### Bulk-edit API integration acceptance — 7 September 2026
 
 - Extended the isolated-organization integration runner with separate retired-aircraft/quarantined-battery bulk fixtures. Technician edits update both revisions/manufacturer fields while retaining operational status and cycles; pilot/observer requests are denied.

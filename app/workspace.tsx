@@ -20,6 +20,7 @@ import DocumentRegister from './document-register';
 import ReportCenter from './report-center';
 import MissionDocuments from './mission-documents';
 import CrewCredentials from './crew-credentials';
+import { crewFlightTotals } from '@/lib/domain/team';
 import ReadinessQueue from './readiness-queue';
 import { personnelDocumentAttention } from '@/lib/operations/readiness';
 import CrewMatrix from './crew-matrix';
@@ -344,6 +345,7 @@ export default function Workspace() {
     crew = items('crew') as Crew[],
     flights = items('flight') as Flight[],
     services = items('service') as Service[];
+  const crewTotals = crewFlightTotals(crew, app.profiles, flights);
   const assignableCrew = crew.filter((c) => crewCanBeAssigned(c, app.profiles));
   const inspectionAlerts = (
     items('inspection_plan') as InspectionPlan[]
@@ -1768,12 +1770,7 @@ export default function Workspace() {
                             <div>
                               <b>
                                 {(
-                                  flights
-                                    .filter((f) => f.pilot === c.name)
-                                    .reduce(
-                                      (n, f) => n + f.durationSeconds,
-                                      0,
-                                    ) / 3600
+                                  (crewTotals.byId.get(c.id)?.seconds || 0) / 3600
                                 ).toFixed(1)}
                                 h
                               </b>
@@ -1782,8 +1779,7 @@ export default function Workspace() {
                             <div>
                               <b>
                                 {
-                                  flights.filter((f) => f.pilot === c.name)
-                                    .length
+                                  crewTotals.byId.get(c.id)?.flights || 0
                                 }
                               </b>
                               <span>Logged flights</span>
@@ -3051,6 +3047,8 @@ export default function Workspace() {
                     <dl className="summary-list">
                       {[
                         ['Email', record.email || 'Not added'],
+                        ['Logged flights', crewTotals.byId.get(record.id)?.flights || 0],
+                        ['Logged flight time', ((crewTotals.byId.get(record.id)?.seconds || 0) / 3600).toFixed(2) + ' hours'],
                         ['Certificate', record.cert],
                         ['Expires', record.expires],
                         ['Availability', record.status],
@@ -3075,7 +3073,7 @@ export default function Workspace() {
                     {missions
                       .filter(
                         (m) =>
-                          m.pilot === record.name || m.observer === record.name,
+                          m.pilot === record.name || m.observer === record.name || m.crewAssignments?.some(a => a.name === record.name),
                       )
                       .map((m) => (
                         <button

@@ -230,3 +230,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Saved PDF job `45659336-aef5-4f6f-a847-8e998191ff0b` completed: 20 flights, 29,599 seconds, 22,461 bytes. Storage download hash and byte-for-byte regeneration from its frozen snapshot passed. The reusable saved-report verifier now supports both PDF and CSV.
 - Existing report-job DB regression and production build/TypeScript passed. PDF history with lengthy findings and additional scripts/languages still needs broader visual acceptance; no jurisdiction-specific compliance format is claimed.
 - Goal remains active; remaining adoption requirements and end-to-end/visual acceptance are not yet complete.
+
+### Personnel totals and assignment completeness — 7 September 2026
+
+- Replaced crew-card name-only flight sums with identity-first accounting. Explicit pilot IDs cannot fall back to matching names; ambiguous legacy names remain unattributed. Unique external crew without accounts retain name-based legacy attribution, and historical inactive accounts keep their hours.
+- Crew detail now shows ledger totals, and the matrix shows organization member totals even without a crew profile. Browser verified Ivan's 20 flights / 8.22 hours alongside the explicit missing-profile state.
+- Personnel mission assignments now include secondary pilots, instructors and other `crewAssignments` roles rather than only primary pilot/observer.
+- Focused identity tests cover renamed/inactive accounts, unknown explicit IDs, duplicate names and external crew. Tests and production build/TypeScript passed. No memberships, credentials or flight records changed.
+- The broader adoption goal remains active; sharing/bulk workflows and final comprehensive acceptance remain outstanding.

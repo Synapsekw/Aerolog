@@ -2,12 +2,14 @@
 import { useState, type ReactNode } from 'react';
 import { useApp } from './app-provider';
 import { Button } from '@/components/ui/button';
+import { memberFlightTotals } from '@/lib/domain/team';
 import { qualificationState } from '@/lib/operations/qualifications';
 
 export default function CrewMatrix({ children, onOpen, onCreate }: { children: ReactNode; onOpen: (id: string) => void; onCreate: (member: { id: string; display_name: string }) => void }) {
   const app = useApp();
   const [view, setView] = useState('Matrix'), [scope, setScope] = useState('Active members'), [query, setQuery] = useState('');
   const people = app.items('crew');
+  const totals = memberFlightTotals(app.profiles, app.items('flight')); 
   const today = new Intl.DateTimeFormat('en-CA', {timeZone: app.organization.settings?.timezone || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit'}).format(new Date());
   const memberFor = (person: any) => {
     const matches = app.profiles.filter(m => person.authUserId ? m.id === person.authUserId : m.display_name === person.name);
@@ -28,10 +30,11 @@ export default function CrewMatrix({ children, onOpen, onCreate }: { children: R
         <label className="field">Membership scope<select value={scope} onChange={e => setScope(e.target.value)}>{['Active members', 'Inactive members', 'All personnel'].map(v => <option key={v}>{v}</option>)}</select></label>
         <label className="field">Find a person<input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search names…" /></label>
       </div>
-      <div className="report-table-scroll"><table className="crew-matrix"><thead><tr><th scope="col">Person</th><th scope="col">Organization access</th><th scope="col">Primary certificate</th><th scope="col">Aircraft permissions</th>{names.map(name => <th scope="col" key={name}>{name}</th>)}</tr></thead><tbody>
+      <div className="report-table-scroll"><table className="crew-matrix"><thead><tr><th scope="col">Person</th><th scope="col">Organization access</th><th scope="col">Logged flights / hours</th><th scope="col">Primary certificate</th><th scope="col">Aircraft permissions</th>{names.map(name => <th scope="col" key={name}>{name}</th>)}</tr></thead><tbody>
         {rows.map(({id, name, person, member}) => <tr key={id}>
           <th scope="row">{person ? <Button variant="ghost" onClick={() => onOpen(person.id)}>{name}</Button> : name}{!person && <><small>Crew profile not recorded</small>{member?.active && ['admin', 'manager'].includes(app.profile.role) && <Button variant="outline" onClick={() => onCreate(member)}>Set up crew profile</Button>}</>}</th>
           <td>{member ? member.active ? 'Active member' : 'Inactive member' : 'No unique membership link'}</td>
+          <td>{member ? <>{totals.byId.get(member.id)?.flights || 0} flights<small>{((totals.byId.get(member.id)?.seconds || 0)/3600).toFixed(2)} h</small></> : 'See crew profile'}</td>
           <td>{!person?.cert || !person?.expires ? 'Not recorded' : <>{person.cert}<small>{person.expires < today ? 'Expired' : 'Valid through'} {person.expires}</small></>}</td>
           <td>{person?.aircraftPermission || 'Not configured'}{person?.aircraftPermission === 'Selected aircraft' && <small>{(person.authorizedAircraftIds || []).length} authorized aircraft</small>}</td>
           {names.map(name => {const entries = (person?.qualifications || []).filter((q: any) => q.name === name);return <td key={name}>{!entries.length ? 'Not recorded' : entries.map((q: any) => {

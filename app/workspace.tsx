@@ -1,5 +1,6 @@
 'use client';
 import Image from 'next/image';
+import EquipmentBulkEditor from './equipment-bulk-editor';
 import { useState, useRef } from 'react';
 import { useApp } from './app-provider';
 import MissionMap from './mission-map';
@@ -1428,6 +1429,7 @@ export default function Workspace() {
                   )}
                   {page === 'Inventory' && (
                     <section className="glass inventory-section">
+                      <EquipmentBulkEditor key={organization.id} />
                       <div className="panel-heading">
                         <div>
                           <h2>
@@ -1727,6 +1729,9 @@ export default function Workspace() {
                         </section>
                       ))}
                     </div>
+                  )}
+                  {page === 'Batteries' && (
+                    <EquipmentBulkEditor key={organization.id} />
                   )}
                   {page === 'Batteries' && (
                     <BatteryBrowser

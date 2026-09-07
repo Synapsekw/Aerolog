@@ -4473,6 +4473,10 @@ textarea {
 .calendar-sharing summary { cursor: pointer; font-weight: 600; }
 .calendar-sharing > * + * { margin-top: 16px; }
 .calendar-sharing .inspection-rule { overflow-wrap: anywhere; }
+.equipment-bulk-editor { padding: 20px; min-width: 0; margin-bottom: 20px; }
+.equipment-bulk-editor summary { cursor: pointer; font-weight: 600; }
+.equipment-bulk-editor > * + * { margin-top: 16px; }
+.equipment-bulk-editor .field { min-width: 0; }
 @media (max-width: 650px) {
   .operations-catalog { padding: 16px; }
   .calendar-weekday { padding: 5px 0; text-align: center; font-size: 10px; }

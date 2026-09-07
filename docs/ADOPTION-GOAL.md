@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Reviewed bulk equipment metadata — 7 September 2026
+
+- Added a bulk editor on Inventory/Batteries: search/select up to 100 equipment records, choose storage site/manufacturer/product model/firmware, inspect per-item before/after values, then apply the frozen selection/revisions. Removed selections must be reviewed again. Storage previews show site names and IDs.
+- API and migration 041 permit fleet roles and only the four metadata fields. The transactional RPC validates every revision before invoking existing audited equipment saves; invalid metadata/site or stale records abort the batch. Counters, operational statuses and identities are outside this edit surface.
+- Rollback database regression passed mixed-kind updates, stale-batch atomicity, preserved retired/quarantined states and counters, invalid site/field/duplicate and pilot rejection. Initial migration syntax error rolled back; corrected and applied. Production build and final TypeScript/diff checks passed.
+- Browser workflow acceptance and broader bulk edit/merge coverage remain open, along with cross-org equipment sharing and remaining source-plan acceptance. Goal active.
+
 ### Inspection calendar subscriptions — 7 September 2026
 
 - Added inspection selection to shared calendars. Migration 040 derives each day-interval due date from the latest signed rule event or original plan baseline; counter-only rules are omitted. Shared titles include equipment/rule names, while findings and other detailed evidence remain excluded.

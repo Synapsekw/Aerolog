@@ -4130,6 +4130,7 @@ textarea {
 }
 .operations-calendar {
   padding: 24px;
+  min-width: 0;
 }
 .calendar-toolbar,
 .calendar-actions {
@@ -4201,7 +4202,8 @@ textarea {
 }
 .calendar-agenda-row strong {
   flex: 1;
-  min-width: 150px;
+  min-width: min(150px, 100%);
+  overflow-wrap: anywhere;
 }
 @media (max-width: 650px) {
   .operations-calendar {
@@ -4298,6 +4300,7 @@ textarea {
 }
 .operations-catalog {
   padding: 24px;
+  min-width: 0;
 }
 .operations-catalog > .row {
   gap: 16px;
@@ -4398,11 +4401,31 @@ textarea {
 
 .report-center {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 20px;
+}
+.report-center > *,
+.operations-catalog .field {
+  min-width: 0;
+}
+.operations-catalog .field select {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.report-pagination {
+  flex-wrap: wrap;
+  gap: 12px;
 }
 .report-table-scroll {
   overflow-x: auto;
   min-width: 0;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+}
+.report-table-scroll:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 4px;
 }
 .report-table-scroll table {
   width: 100%;
@@ -4443,3 +4466,10 @@ textarea {
 .crew-matrix small { display: block; margin-top: 5px; color: var(--muted-foreground); font-weight: 400; }
 .matrix-credential + .matrix-credential { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
 .calendar-event.inspection { color: #deb6ff; background: rgba(180, 110, 240, .12); }
+@media (max-width: 650px) {
+  .operations-catalog { padding: 16px; }
+  .calendar-weekday { padding: 5px 0; text-align: center; font-size: 10px; }
+  .calendar-toolbar > *, .calendar-actions { min-width: 0; max-width: 100%; }
+  .calendar-agenda-row { gap: 8px; }
+  .report-pagination { justify-content: flex-start; }
+}

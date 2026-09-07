@@ -14,7 +14,7 @@ export default function ReportHistory({ history }: { history: NonNullable<Flight
         Completed services use completion date; open services use due date.
         Timestamped readings use UTC dates. Costs retain their original currencies.
       </p>
-      <div className="report-table-scroll">
+      <div className="report-table-scroll" role="region" aria-label="Equipment history table" tabIndex={0}>
         <table>
           <thead>
             <tr>{history.columns.map(column => <th scope="col" key={column}>{column}</th>)}</tr>
@@ -29,7 +29,7 @@ export default function ReportHistory({ history }: { history: NonNullable<Flight
         </table>
       </div>
       {!history.rows.length && <p>No equipment history falls within this period.</p>}
-      <nav className="row" aria-label="Equipment history pages">
+      <nav className="row report-pagination" aria-label="Equipment history pages">
         <Button variant="outline" disabled={current === 0} onClick={() => setPage(current - 1)}>Previous history</Button>
         <span>Page {current + 1} of {pages}</span>
         <Button variant="outline" disabled={current + 1 >= pages} onClick={() => setPage(current + 1)}>Next history</Button>

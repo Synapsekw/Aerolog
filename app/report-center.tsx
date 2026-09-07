@@ -169,7 +169,7 @@ export default function ReportCenter() {
             {report.undatedExcluded} undated flights excluded ·{' '}
             {report.unattributedPilots} flights with an unattributed pilot.
           </p>
-          <div className="report-table-scroll">
+          <div className="report-table-scroll" role="region" aria-label="Flight report table" tabIndex={0}>
             <table>
               <thead>
                 <tr>
@@ -202,7 +202,7 @@ export default function ReportCenter() {
               </tbody>
             </table>
           </div>
-          <div className="row">
+          <nav className="row report-pagination" aria-label="Flight report pages">
             <Button
               variant="outline"
               disabled={page === 0}
@@ -221,7 +221,7 @@ export default function ReportCenter() {
             >
               Next
             </Button>
-          </div>
+          </nav>
           {report.history && <ReportHistory key={generatedAt} history={report.history} />}
           {report.notes.map((note) => (
             <p className="fine-print" key={note}>

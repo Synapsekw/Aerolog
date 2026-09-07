@@ -22,6 +22,12 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Responsive report/calendar containment — 7 September 2026
+
+- Restricted report grid tracks and catalog panels to the available width, kept wide tables inside their scroll regions, constrained long native select labels, and allowed report pagination to wrap. Calendar agenda names now wrap and narrow weekday headings use reduced padding.
+- Flight and equipment-history tables are keyboard-focusable labeled regions with visible focus styling; pagination uses labeled navigation landmarks.
+- Production build, TypeScript and diff checks passed. Rechecked CUA: Mac remains locked. These are code-level layout corrections; no desktop/mobile visual pass or download acceptance is claimed. The broader goal remains active and useful local work is still available.
+
 ### Timed mission calendar export — 7 September 2026
 
 - Mission events now export UTC start/end derived from organization wall time and planned elapsed duration, including overnight/year rollover. Other calendar records remain date reminders because they have no scheduled time in this view.

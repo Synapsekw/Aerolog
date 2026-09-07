@@ -67,10 +67,6 @@ export function kitAssignment(
   const selectedAircraft = aircraft[0]?.name || currentAircraft;
   const blockers: string[] = [];
   if (kit.archived) blockers.push('This kit is archived.');
-  if (aircraft.length > 1)
-    blockers.push(
-      'This kit contains multiple aircraft. Select a single-aircraft kit until multi-aircraft assignment is enabled.',
-    );
   for (const item of contents) {
     if (!item.ready) blockers.push(`${item.name}: ${item.status}`);
     if (item.kind === 'asset') {
@@ -79,7 +75,10 @@ export function kitAssignment(
         blockers.push(`${item.name}: service counters need review`);
     } else {
       const b = batteries.find((b) => b.id === item.id);
-      if (b && b.aircraft !== selectedAircraft)
+      if (
+        b &&
+        ![selectedAircraft, ...aircraft.map((a) => a.name)].includes(b.aircraft)
+      )
         blockers.push(
           `${item.name}: not assigned to ${selectedAircraft || 'an aircraft'}`,
         );
@@ -95,6 +94,9 @@ export function kitAssignment(
   }
   return {
     aircraft: selectedAircraft,
+    additionalAircraft: aircraft
+      .map((a) => a.name)
+      .filter((n) => n !== selectedAircraft),
     equipment: kit.items.flatMap((i) =>
       i.kind === 'battery'
         ? [i.id]

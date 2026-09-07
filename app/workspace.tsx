@@ -9,6 +9,8 @@ import OrganizationPanel from './organization-panel';
 import TeamDirectory from './team-directory';
 import KitBrowser from './kit-browser';
 import MissionKitPicker from './mission-kit-picker';
+import OperationsCalendar from './operations-calendar';
+import { crewCanBeAssigned } from '@/lib/operations/assignments';
 import BatteryBrowser from './battery-browser';
 import FlightGlobe from './flight-globe';
 import ImportReview from './import-review';
@@ -17,6 +19,7 @@ import BatteryTelemetryHistory from './battery-telemetry-history';
 import { Status } from './shared';
 import {
   Camera,
+  CalendarDays,
   Gamepad2,
   Package,
   LayoutDashboard,
@@ -106,6 +109,7 @@ import { api, browserClient } from '@/lib/supabase-browser';
 const navigation = [
   ['Overview', LayoutDashboard],
   ['Missions', MapIcon],
+  ['Calendar', CalendarDays],
   ['Flight logs', BookOpen],
   ['Inventory', Drone],
   ['Maintenance', Wrench],
@@ -313,6 +317,7 @@ export default function Workspace() {
     crew = items('crew') as Crew[],
     flights = items('flight') as Flight[],
     services = items('service') as Service[];
+  const assignableCrew = crew.filter((c) => crewCanBeAssigned(c, app.profiles));
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
   const [inventoryExpanded, setInventoryExpanded] = useState(true);
   const inventoryViews = useRef<
@@ -396,6 +401,7 @@ export default function Workspace() {
     'Audit trail': 'An accountable history of operational decisions.',
     Settings: 'Workspace policies, access and local configuration.',
     Kits: 'Reusable equipment sets for mission preparation.',
+    Calendar: 'Missions, maintenance and flight history in one schedule.',
     Notifications: 'Operational changes that need your attention.',
   };
   function rememberInventory() {
@@ -443,10 +449,12 @@ export default function Workspace() {
         type: 'Inspection',
         status: 'Draft',
         pilot:
-          crew.find((c) => c.name === profile.display_name)?.name ||
-          crew[0]?.name ||
+          assignableCrew.find((c) => c.name === profile.display_name)?.name ||
+          assignableCrew[0]?.name ||
           '',
-        observer: crew.find((c) => c.name !== profile.display_name)?.name || '',
+        observer:
+          assignableCrew.find((c) => c.name !== profile.display_name)?.name ||
+          '',
         aircraft: ready[0]?.name || '',
         equipment: [],
         notes: '',
@@ -1181,6 +1189,15 @@ export default function Workspace() {
                     )}
                   </section>
                 </>
+              )}
+              {page === 'Calendar' && (
+                <OperationsCalendar
+                  today={date()}
+                  missions={missions}
+                  services={services}
+                  flights={flights}
+                  onOpen={(kind, id) => void open(kind, id)}
+                />
               )}
               {page === 'Kits' && <KitBrowser key={organization.id} />}
               {kind && (
@@ -2097,7 +2114,7 @@ export default function Workspace() {
                   <Pick
                     label="Pilot in command"
                     value={draft.pilot}
-                    options={crew
+                    options={assignableCrew
                       .filter((c) => c.status === 'Available')
                       .map((c) => c.name)}
                     onChange={(v) => update('pilot', v)}
@@ -2105,7 +2122,7 @@ export default function Workspace() {
                   <Pick
                     label="Visual observer"
                     value={draft.observer}
-                    options={crew
+                    options={assignableCrew
                       .filter(
                         (c) =>
                           c.status === 'Available' && c.name !== draft.pilot,
@@ -2118,15 +2135,120 @@ export default function Workspace() {
                   label="Aircraft"
                   value={draft.aircraft}
                   options={ready.map((a) => a.name)}
-                  onChange={(v) => update('aircraft', v)}
+                  onChange={(v) =>
+                    setDraft((d: any) => ({
+                      ...d,
+                      aircraft: v,
+                      additionalAircraft: (d.additionalAircraft || []).filter(
+                        (n: string) => n !== v,
+                      ),
+                    }))
+                  }
                 />
+                <h3 className="form-section-label">Additional aircraft</h3>
+                <div className="equipment-options">
+                  {ready
+                    .filter((a) => a.name !== draft.aircraft)
+                    .map((a) => (
+                      <label className="check-row" key={a.id}>
+                        <Checkbox
+                          checked={
+                            draft.additionalAircraft?.includes(a.name) || false
+                          }
+                          onCheckedChange={(v) =>
+                            update(
+                              'additionalAircraft',
+                              v
+                                ? [...(draft.additionalAircraft || []), a.name]
+                                : (draft.additionalAircraft || []).filter(
+                                    (n: string) => n !== a.name,
+                                  ),
+                            )
+                          }
+                        />
+                        {a.name}
+                      </label>
+                    ))}
+                </div>
+                <h3 className="form-section-label">
+                  Additional operational roles
+                </h3>
+                {(draft.crewAssignments || []).map(
+                  (assignment: any, index: number) => (
+                    <div className="form-grid" key={index}>
+                      <Pick
+                        label="Crew member"
+                        value={assignment.name}
+                        options={assignableCrew.map((c) => c.name)}
+                        onChange={(v) =>
+                          update(
+                            'crewAssignments',
+                            draft.crewAssignments.map((a: any, i: number) =>
+                              i === index ? { ...a, name: v } : a,
+                            ),
+                          )
+                        }
+                      />
+                      <Pick
+                        label="Operational role"
+                        value={assignment.role}
+                        options={[
+                          'Payload operator',
+                          'Ground support',
+                          'Instructor',
+                          'Second pilot',
+                        ]}
+                        onChange={(v) =>
+                          update(
+                            'crewAssignments',
+                            draft.crewAssignments.map((a: any, i: number) =>
+                              i === index ? { ...a, role: v } : a,
+                            ),
+                          )
+                        }
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() =>
+                          update(
+                            'crewAssignments',
+                            draft.crewAssignments.filter(
+                              (_: any, i: number) => i !== index,
+                            ),
+                          )
+                        }
+                      >
+                        Remove role
+                      </Button>
+                    </div>
+                  ),
+                )}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() =>
+                    update('crewAssignments', [
+                      ...(draft.crewAssignments || []),
+                      {
+                        name: assignableCrew[0]?.name || '',
+                        role: 'Ground support',
+                      },
+                    ])
+                  }
+                >
+                  Add operational role
+                </Button>
                 <h3 className="form-section-label">Mission equipment</h3>
                 <div className="equipment-options">
                   {[
                     ...batteries
                       .filter(
                         (b) =>
-                          b.aircraft === draft.aircraft &&
+                          [
+                            draft.aircraft,
+                            ...(draft.additionalAircraft || []),
+                          ].includes(b.aircraft) &&
                           b.health != null &&
                           b.temp != null &&
                           b.status !== 'Unverified' &&
@@ -2302,6 +2424,16 @@ export default function Workspace() {
                     ['Pilot / observer', draft.pilot + ' / ' + draft.observer],
                     ['Aircraft', draft.aircraft],
                     ['Equipment', draft.equipment?.join(', ') || 'None'],
+                    [
+                      'Additional aircraft',
+                      draft.additionalAircraft?.join(', ') || 'None',
+                    ],
+                    [
+                      'Operational roles',
+                      draft.crewAssignments
+                        ?.map((a: any) => `${a.name} (${a.role})`)
+                        .join(', ') || 'None',
+                    ],
                     [
                       'Risk controls',
                       draft.risks?.filter((r: any) => r.controlled).length +
@@ -2481,6 +2613,16 @@ export default function Workspace() {
                         ['Aircraft', record.aircraft],
                         ['Altitude', record.altitude + ' m AGL'],
                         ['Equipment', record.equipment.join(', ') || 'None'],
+                        [
+                          'Additional aircraft',
+                          record.additionalAircraft?.join(', ') || 'None',
+                        ],
+                        [
+                          'Operational roles',
+                          record.crewAssignments
+                            ?.map((a: any) => `${a.name} (${a.role})`)
+                            .join(', ') || 'None',
+                        ],
                         [
                           'Kit snapshots',
                           record.kitSnapshots

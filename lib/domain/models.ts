@@ -33,6 +33,21 @@ export const missionSchema = z.object({
   observer: name,
   aircraft: name,
   equipment: z.array(z.string().max(160)).max(100),
+  additionalAircraft: z.array(name).max(20).default([]),
+  crewAssignments: z
+    .array(
+      z.object({
+        name,
+        role: z.enum([
+          'Payload operator',
+          'Ground support',
+          'Instructor',
+          'Second pilot',
+        ]),
+      }),
+    )
+    .max(40)
+    .default([]),
   notes: note,
   risks: z.array(riskSchema).max(50),
   history: z.array(z.string()).default([]),

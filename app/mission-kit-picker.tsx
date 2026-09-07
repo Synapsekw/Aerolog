@@ -60,6 +60,12 @@ export default function MissionKitPicker({
             onClick={() => {
               onApply({
                 aircraft: preview.aircraft,
+                additionalAircraft: [
+                  ...new Set([
+                    ...(draft.additionalAircraft || []),
+                    ...preview.additionalAircraft,
+                  ]),
+                ].filter((n) => n !== preview.aircraft),
                 equipment: [
                   ...new Set([
                     ...(draft.equipment || []),

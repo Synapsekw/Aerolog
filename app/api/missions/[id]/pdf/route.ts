@@ -95,7 +95,14 @@ export async function GET(
     section('Crew and equipment');
     line('Pilot in command: ' + m.pilot);
     line('Visual observer: ' + m.observer);
-    line('Aircraft: ' + m.aircraft);
+    line(
+      'Aircraft: ' + [m.aircraft, ...(m.additionalAircraft || [])].join(', '),
+    );
+    for (const a of m.crewAssignments || []) line(a.role + ': ' + a.name);
+    for (const k of m.kitSnapshots || []) {
+      line('Kit: ' + k.name + ' (version ' + k.revision + ')');
+      for (const i of k.items) line('  ' + i.name + ' / ' + i.serial);
+    }
     line('Equipment: ' + (m.equipment.join(', ') || 'None'));
     section('Operating notes');
     line(m.notes || 'No notes provided.');

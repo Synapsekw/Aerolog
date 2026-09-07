@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useApp } from './app-provider';
 import ReportJobs from './report-jobs';
+import ReportHistory from './report-history';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -219,7 +220,7 @@ export default function ReportCenter() {
               Next
             </Button>
           </div>
-          {report.history && <section><h3>Equipment history · {report.history.rows.length} records</h3><p>Completed services use completion date; open services use due date. Timestamped readings use UTC dates. Costs retain their original currencies. Full history is included in the CSV.</p><div className="report-table-scroll"><table><thead><tr>{report.history.columns.map(c=><th key={c}>{c}</th>)}</tr></thead><tbody>{report.history.rows.slice(0,25).map(r=><tr key={String(r[2])+String(r[3])}>{r.map((v,i)=><td key={i}>{v}</td>)}</tr>)}</tbody></table></div><p>{report.history.undatedExcluded} undated history records excluded. Showing first 25 records.</p></section>}
+          {report.history && <ReportHistory key={generatedAt} history={report.history} />}
           {report.notes.map((note) => (
             <p className="fine-print" key={note}>
               {note}

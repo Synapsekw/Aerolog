@@ -208,3 +208,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Added history tests for exact equipment type/ID, completion-date selection, timezone boundaries, currency/decimal retention and optional history. All 62 unit tests and production build/TypeScript passed.
 - Browser queued battery report `4c74473f-8816-4b30-9dff-558e25084415`; storage download hash and byte-for-byte snapshot reproduction passed (empty history for the selected battery/date range). Ivan's earlier 20-flight/29,599-second report still reproduces exactly. Populated real-history browser acceptance and snapshot regression for later history edits remain to be completed.
 - Broader goal remains active, including the remaining workflow/visual acceptance and adoption-plan requirements.
+
+### History report persistence and preview acceptance — 7 September 2026
+
+- Added independent 25-row history pagination; previews no longer truncate access to later history rows. The frozen preview is retained while paging and CSV still contains all rows.
+- New rollback report-history regression creates a typed aircraft/service source, queues and claims a report, edits the source task/cost/due date, expires the lease, and reclaims it. Original source revision, decimal cost and CSV bytes remain unchanged after recovery. Test passed; all fixtures rolled back.
+- Production build/TypeScript passed. Browser verified a populated existing local-sample aircraft report: the airframe/propeller work order appears with scheduled due-date basis and technician, and one-page history disables both paging controls. No real work orders or flight links were altered.
+- Remaining goal work includes broader end-to-end/visual checks, multi-page history browser acceptance, review of remaining adoption requirements and any gaps those checks uncover.

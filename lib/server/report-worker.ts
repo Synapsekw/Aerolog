@@ -2,6 +2,8 @@ import 'server-only';
 import { createHash } from 'node:crypto';
 import { reportPdf } from '@/lib/reports/report-pdf';
 import { adminClient } from './supabase';
+import { reportJobRequestSchema } from '@/lib/reports/job-request';
+import { organizationCosts, organizationCostsCsv } from '@/lib/reports/organization-costs';
 import {
   createFlightReport,
   reportCsv,
@@ -25,15 +27,18 @@ export async function processReport(
   try {
     if (job.snapshot.version !== 1)
       throw Error('Unsupported report snapshot version');
-    const report = createFlightReport(
-      reportRequestSchema.parse(job.request),
+    const request = reportJobRequestSchema.parse(job.request);
+    const costReport = request.type === 'Maintenance costs' ? organizationCosts(job.snapshot.records, request.from, request.to) : null;
+    const report = costReport ? null : createFlightReport(
+      reportRequestSchema.parse(request),
       job.snapshot.records,
       job.snapshot.members,
     );
     const isPdf = job.request.format === 'PDF';
-    const bytes = isPdf
-      ? Buffer.from(await reportPdf(report, job.snapshot.organization, job.created_at))
-      : Buffer.from(reportCsv(report, job.snapshot.organization, job.created_at), 'utf8');
+    const bytes = costReport
+      ? Buffer.from(organizationCostsCsv(costReport, job.snapshot.organization, job.created_at), 'utf8')
+      : isPdf ? Buffer.from(await reportPdf(report!, job.snapshot.organization, job.created_at))
+      : Buffer.from(reportCsv(report!, job.snapshot.organization, job.created_at), 'utf8');
     const sha256 = createHash('sha256').update(bytes).digest('hex');
     const extension = isPdf ? 'pdf' : 'csv';
     const mime = isPdf ? 'application/pdf' : 'text/csv';
@@ -52,17 +57,22 @@ export async function processReport(
         artifact: {
           id,
           path,
-          name: `aerolog-${report.request.type.toLowerCase()}-${report.request.from}-${report.request.to}.${extension}`,
+          name: `aerolog-${request.type.toLowerCase().replaceAll(' ', '-')}-${request.from}-${request.to}.${extension}`,
           size: bytes.length,
           type: mime,
         },
-        result_summary: {
-          flightCount: report.flightCount,
-          durationSeconds: report.durationSeconds,
-          distanceKm: report.distanceKm,
-          undatedExcluded: report.undatedExcluded,
-          entityName: report.entityName,
-          calculationVersion: report.version,
+        result_summary: costReport ? {
+          serviceCount: costReport.serviceCount, totals: costReport.totals,
+          missingCost: costReport.missingCost, missingCurrency: costReport.missingCurrency,
+          invalidCost: costReport.invalidCost, undatedExcluded: costReport.undatedExcluded,
+          entityName: 'Organization maintenance costs', calculationVersion: costReport.version,
+        } : {
+          flightCount: report!.flightCount,
+          durationSeconds: report!.durationSeconds,
+          distanceKm: report!.distanceKm,
+          undatedExcluded: report!.undatedExcluded,
+          entityName: report!.entityName,
+          calculationVersion: report!.version,
         },
         content_hash: sha256,
         failure: null,

@@ -6,7 +6,7 @@ import {
   failure,
   ApiError,
 } from '@/lib/server/supabase';
-import { reportRequestSchema } from '@/lib/reports/flight-report';
+import { reportJobRequestSchema } from '@/lib/reports/job-request';
 import { processReport } from '@/lib/server/report-worker';
 export async function GET(request: Request) {
   try {
@@ -39,7 +39,7 @@ export async function POST(request: Request) {
         z.object({
           action: z.literal('create'),
           id: z.uuid(),
-          request: reportRequestSchema,
+          request: reportJobRequestSchema,
         }),
         z.object({ action: z.literal('resume'), id: z.uuid() }),
       ])

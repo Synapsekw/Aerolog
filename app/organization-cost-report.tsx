@@ -4,6 +4,7 @@ import { useApp } from './app-provider';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { organizationCosts, organizationCostsCsv } from '@/lib/reports/organization-costs';
+import ReportJobs from './report-jobs';
 
 export default function OrganizationCostReport() {
   const app = useApp();
@@ -16,6 +17,7 @@ export default function OrganizationCostReport() {
     <div className="form-grid"><label className="field">Costs from<Input type="date" value={from} onInput={e=>{setFrom(e.currentTarget.value);setSnapshot(null)}} /></label><label className="field">Costs through<Input type="date" value={to} onInput={e=>{setTo(e.currentTarget.value);setSnapshot(null)}} /></label></div>
     <Button variant="outline" onClick={()=>{try{setSnapshot({report:organizationCosts(app.records,from,to),at:new Date().toISOString(),organization:app.organization.name});setPage(0);setError('')}catch(e){setError((e as Error).message)}}}>Preview organization costs</Button>
     {error && <p role="alert">{error}</p>}
+    <ReportJobs request={{type:'Maintenance costs',from,to,format:'CSV'}} />
     {snapshot && <>
       <p>{snapshot.report.serviceCount} work orders · {snapshot.report.missingCost} missing costs · {snapshot.report.missingCurrency} missing or invalid currencies · {snapshot.report.invalidCost} invalid amounts · {snapshot.report.undatedExcluded} undated excluded.</p>
       <p className="fine-print">Currencies remain separate. Missing costs are excluded; recorded zero costs are included. These are work-order amounts, not payment or recognized expense totals.</p>

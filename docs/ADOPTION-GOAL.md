@@ -22,6 +22,14 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Persisted organization cost CSV jobs — 7 September 2026
+
+- Organization maintenance costs can now be queued through the shared saved-report API/UI. Migration 037 captures service-only source snapshots for this report type. Existing org authorization, private attachments, leases, resumption and hashes apply unchanged.
+- Added a separate job request union so flight report calculations remain unchanged. Financial CSV summaries retain service counts, per-currency totals and data-quality counts; financial PDF is explicitly unsupported pending implementation.
+- Rollback DB test verifies original task/cost/date/revision and identical CSV after source edits and expired-lease recovery. Request validation test and production build/TypeScript passed.
+- Actual local API job `36e8e0b4-bd2a-4656-9d8a-57e8a5742efd` completed for 2026: one existing work order, 905-byte CSV. Download SHA-256 and exact frozen-snapshot regeneration both passed. No operational work order was changed; only the requested report artifact was created.
+- Project attribution, financial PDF, sharing, bulk workflows and final browser acceptance remain open. Goal remains active.
+
 ### Reporting regression checkpoint — 7 September 2026
 
 - Full current unit suite passed: 72 tests, including calendar time handling, organization costs and maintenance decimal totals alongside existing flight/import/readiness tests.

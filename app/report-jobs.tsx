@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useApp } from './app-provider';
 import { api } from '@/lib/supabase-browser';
 import { Button } from '@/components/ui/button';
-import { reportRequestSchema } from '@/lib/reports/flight-report';
+import { reportJobRequestSchema } from '@/lib/reports/job-request';
 export default function ReportJobs({ request }: { request: unknown }) {
   const app = useApp(),
     [jobs, setJobs] = useState<any[]>([]),
@@ -38,7 +38,7 @@ export default function ReportJobs({ request }: { request: unknown }) {
     setBusy(true);
     setError('');
     try {
-      const parsed = reportRequestSchema.safeParse(request);
+      const parsed = reportJobRequestSchema.safeParse(request);
       if (!parsed.success)
         throw Error(parsed.error.issues.map((i) => i.message).join('. '));
       const signature = JSON.stringify(parsed.data);
@@ -92,8 +92,7 @@ export default function ReportJobs({ request }: { request: unknown }) {
           </p>
           {job.summary && (
             <p>
-              {job.summary.entityName} · {job.summary.flightCount} flights ·{' '}
-              {(job.summary.durationSeconds / 3600).toFixed(2)} hours
+              {job.summary.entityName} · {job.request.type === 'Maintenance costs' ? `${job.summary.serviceCount} work orders` : `${job.summary.flightCount} flights · ${(job.summary.durationSeconds / 3600).toFixed(2)} hours`}
             </p>
           )}
           {job.error && <p role="status">{job.error}</p>}

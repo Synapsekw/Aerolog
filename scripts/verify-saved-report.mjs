@@ -8,6 +8,7 @@ import { createClient } from '@supabase/supabase-js';
 import { loadEnv } from './env.mjs';
 import { reportPdf } from '../lib/reports/report-pdf.ts';
 import { createFlightReport, reportCsv } from '../lib/reports/flight-report.ts';
+import { organizationCosts, organizationCostsCsv } from '../lib/reports/organization-costs.ts';
 
 const id = process.argv[2];
 assert.match(id || '', /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
@@ -36,6 +37,13 @@ try {
   const bytes = Buffer.from(await download.data.arrayBuffer());
   assert.equal(bytes.length, attachment.size);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), job.sha256);
+  if (job.request.type === 'Maintenance costs') {
+    const report = organizationCosts(job.snapshot.records, job.request.from, job.request.to);
+    assert.ok(bytes.equals(Buffer.from(organizationCostsCsv(report, job.snapshot.organization, job.created_at), 'utf8')));
+    assert.equal(report.serviceCount, job.summary.serviceCount);
+    assert.deepEqual(report.totals, job.summary.totals);
+    console.log(JSON.stringify({id,workOrders:report.serviceCount,bytes:bytes.length,sha256Verified:true,snapshotReproductionVerified:true}));
+  } else {
   const report = createFlightReport(job.request, job.snapshot.records, job.snapshot.members);
   const reproduced = job.request.format === 'PDF' ? Buffer.from(await reportPdf(report, job.snapshot.organization, job.created_at)) : Buffer.from(reportCsv(report, job.snapshot.organization, job.created_at), 'utf8');
   assert.ok(bytes.equals(reproduced), 'Saved bytes differ from snapshot reproduction');
@@ -43,6 +51,7 @@ try {
   assert.equal(report.durationSeconds, job.summary.durationSeconds);
   console.log(JSON.stringify({ id, flights: report.flightCount, seconds: report.durationSeconds,
     bytes: bytes.length, sha256Verified: true, snapshotReproductionVerified: true }));
+  }
 } finally {
   await db.end();
 }

@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Inspection calendar subscriptions — 7 September 2026
+
+- Added inspection selection to shared calendars. Migration 040 derives each day-interval due date from the latest signed rule event or original plan baseline; counter-only rules are omitted. Shared titles include equipment/rule names, while findings and other detailed evidence remain excluded.
+- Feed descriptions explicitly state that counters may make work due earlier. These are calendar deadlines, not a claim of current equipment readiness.
+- Rollback fixture verifies February 1 signed baseline plus 30 days produces March 3, only the selected category appears, counter-only rules are absent and private findings are not projected. Existing calendar role/org/expiry/revocation regression also passes. Production build/TypeScript passed.
+- The first migration attempt rolled back on a reserved alias syntax error; corrected alias and applied successfully. No operational inspection records changed. External calendar-client and browser acceptance, equipment sharing and bulk workflows remain open; goal active.
+
 ### Calendar link management paging — 7 September 2026
 
 - Removed the newest-100 management cutoff. Manager listing now pages 25 links with stable created-time/ID ordering, next-page detection, refresh and loading/empty states; old links remain reachable for revocation.

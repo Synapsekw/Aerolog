@@ -14,7 +14,7 @@ export async function POST(request: Request) {
   try {
     const {profile}=await requireUser(request);requireRole(profile,['admin','manager']);
     const input=z.discriminatedUnion('action',[
-      z.object({action:z.literal('create'),label:z.string().trim().min(1).max(120),from:z.iso.date(),to:z.iso.date(),expiresAt:z.iso.datetime(),kinds:z.array(z.enum(['mission','service','flight'])).min(1).max(3)}),
+      z.object({action:z.literal('create'),label:z.string().trim().min(1).max(120),from:z.iso.date(),to:z.iso.date(),expiresAt:z.iso.datetime(),kinds:z.array(z.enum(['mission','service','flight','inspection'])).min(1).max(4)}),
       z.object({action:z.literal('revoke'),id:z.uuid()}),
     ]).parse(await request.json());
     if(input.action==='create' && input.from>input.to)throw new ApiError('End date must follow start date');

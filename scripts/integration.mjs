@@ -10,7 +10,8 @@ const env = loadEnv(),
   prefix = 'TEST-' + crypto.randomUUID().slice(0, 8),
   sessions = {},
   clients = {},
-  testUsers = [];
+  testUsers = [],
+  evidenceFiles = [];
 let org,
   passed = 0,
   externalOrg,
@@ -152,6 +153,38 @@ try {
     notes: '',
   };
   await command('technician', 'battery', battery);
+  const document = {id:prefix+'-DOC',name:'QA evidence document',category:'Other',targetKind:'Organization',targetId:'',expires:'2035-01-01'};
+  await api('admin','documents',{action:'save',data:document,revision:0,submit:false});
+  const incident = {id:prefix+'-INC',title:'QA evidence incident',occurredAt:new Date().toISOString(),severity:'Low',status:'Reported',narrative:'Temporary integration evidence incident'};
+  await api('pilot','incidents',{data:incident,revision:0});
+  const evidenceForm = (targetKind,targetId,contents) => {
+    const form = new FormData();form.set('targetKind',targetKind);form.set('targetId',targetId);
+    form.set('file',new File([contents], 'QA evidence.txt',{type:'text/plain'}));return form;
+  };
+  for(const [endpoint,kind,id,role] of [['equipment-files','asset',aircraft.id,'technician'],['equipment-files','battery',battery.id,'technician'],['crew-files','crew',pilot.id,'manager'],['document-files','document',document.id,'admin'],['incident-files','incident',incident.id,'pilot']]) {
+    const contents=prefix+' exact '+kind+' bytes';
+    const uploaded=await api(role,endpoint,evidenceForm(kind,id,contents));evidenceFiles.push(uploaded);
+    const listed=await api('observer',endpoint+'?targetKind='+kind+'&targetId='+encodeURIComponent(id));
+    assert.ok(listed.files.some(f=>f.id===uploaded.id));
+    const signed=await api('observer','files/'+uploaded.id);
+    assert.equal(await (await fetch(signed.url)).text(),contents);
+    pass(kind+' evidence uploads, lists and downloads with exact content');
+  }
+  await api('pilot','crew-files',evidenceForm('crew',pilot.id,'denied'),403);
+  await api('pilot','document-files',evidenceForm('document',document.id,'denied'),403);
+  await api('observer','equipment-files',evidenceForm('asset',aircraft.id,'denied'),403);
+  const documentEvidence=evidenceFiles.find(f=>f.targetKind==='document');
+  await api('admin','documents',{action:'save',data:{...document,attachmentId:documentEvidence.id},revision:1,submit:true});
+  await api('admin','documents',{action:'review',id:document.id,revision:2,decision:'Approved',note:'QA self review denied'},400);
+  const reviewed=await api('manager','documents',{action:'review',id:document.id,revision:2,decision:'Approved',note:'QA independent review'});
+  assert.equal(reviewed.status,'Approved');assert.equal(reviewed.attachmentId,documentEvidence.id);
+  pass('evidence upload roles and independent document approval retain exact file');
+  await api('manager','incidents',{data:{...incident,status:'Closed',resolution:'QA verification completed',actions:[]},revision:1});
+  await api('pilot','incident-files',evidenceForm('incident',incident.id,'closed incident denied'),400);
+  const storedIncidentFiles=check(await db.storage.from('aerolog-files').list(org+'/incidents'));
+  assert.equal(storedIncidentFiles.length,1);
+  pass('closed incident rejects further evidence without leaving orphan uploads');
+
   const mission = {
     id: prefix + '-M',
     name: prefix + ' mission',
@@ -476,7 +509,8 @@ try {
   const outside = await api('outsider', 'bootstrap');
   assert.equal(outside.records.length, 0);
   await api('outsider', 'files/' + attachment.id, null, 404);
-  pass('cross-workspace records and attachments isolated');
+  for(const file of evidenceFiles) await api('outsider','files/'+file.id,null,404);
+  pass('cross-workspace records and all evidence attachments isolated');
   const guestEmail = prefix.toLowerCase() + '-member@aerolog.example';
   await api(
     'pilot',
@@ -528,10 +562,6 @@ try {
         .select('id,data')
         .eq('organization_id', org)
         .eq('kind', 'attachment'),
-    ).filter(
-      (x) =>
-        x.data.mission?.startsWith(prefix) ||
-        x.data.flights?.some((id) => id.startsWith(prefix)),
     );
     if (files.length) {
       await db

@@ -246,3 +246,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - All 38 organization API checks passed, including branding, invitations, membership isolation, pilot attribution and stale-tab protection.
 - Read-only post-run checks confirmed e& still has exactly two active members; Ivan retains exactly 20 flights, 29,599 seconds and 29,532 track points. No temporary test organizations remain.
 - These checks cover the original core flows; newer document/incident/evidence uploads and complete desktop/mobile acceptance still need their own direct verification. Broader follow-on requirements remain open; goal not complete.
+
+### Evidence upload/download workflow acceptance — 7 September 2026
+
+- Expanded isolated API integration coverage to aircraft, battery, crew, document and incident evidence. Each test uploads a real text file through the public app endpoint, lists it, obtains an authorized signed URL and checks downloaded bytes exactly.
+- Verified pilot/observer upload restrictions, document submission with the uploaded file, denied self-review and successful independent manager approval retaining the exact attachment ID. Closed incidents reject new evidence and leave no orphan upload in their storage folder.
+- Cross-organization requests cannot obtain download URLs for any of the five new evidence types. Cleanup now removes all attachments in the isolated test organization, including the newer target-based records.
+- All 30 integration checks passed and cleanup finished successfully. Tests use disposable data; no operational documents, incidents, credentials or equipment were modified.
+- These API round-trips close the prior missing upload/download evidence for the newer modules. Their full browser UX, mobile layouts, sharing/bulk workflows and remaining adoption acceptance still need completion. Goal remains active.

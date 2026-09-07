@@ -9,7 +9,8 @@ const env = loadEnv(),
   }),
   prefix = 'TEST-' + crypto.randomUUID().slice(0, 8),
   sessions = {},
-  clients = {};
+  clients = {},
+  testUsers = [];
 let org,
   passed = 0,
   externalOrg,
@@ -61,18 +62,20 @@ function pass(name) {
   console.log('PASS ' + name);
 }
 try {
+  org = check(await db.from('aerolog_organizations').insert({name:prefix+' integration'}).select().single()).id;
   for (const role of ['admin', 'manager', 'pilot', 'technician', 'observer']) {
     const c = createClient(
       env.NEXT_PUBLIC_SUPABASE_URL,
       env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
       { auth: { persistSession: false, autoRefreshToken: false } },
     );
-    const d = check(
-      await c.auth.signInWithPassword({
-        email: env['LOCAL_TEST_' + role.toUpperCase() + '_EMAIL'],
-        password: env['LOCAL_TEST_' + role.toUpperCase() + '_PASSWORD'],
-      }),
-    );
+    const email = prefix.toLowerCase() + '-' + role + '@aerolog.example';
+    const password = crypto.randomBytes(24).toString('base64url');
+    const user = check(await db.auth.admin.createUser({email,password,email_confirm:true})).user;
+    testUsers.push(user.id);
+    check(await db.from('aerolog_profiles').insert({id:user.id,organization_id:org,display_name:prefix+' '+role,role,active:true}));
+    check(await db.from('aerolog_memberships').upsert({organization_id:org,user_id:user.id,display_name:prefix+' '+role,role,active:true}));
+    const d = check(await c.auth.signInWithPassword({email,password}));
     sessions[role] = d.session.access_token;
     clients[role] = c;
   }
@@ -127,6 +130,7 @@ try {
       name: prefix + ' pilot',
       initials: 'TP',
       role: 'Pilot',
+      aircraftPermission: 'All aircraft',
       cert: 'Test',
       expires: '2035-01-01',
       status: 'Available',
@@ -583,5 +587,11 @@ try {
   if (externalUser) await db.auth.admin.deleteUser(externalUser);
   if (externalOrg)
     await db.from('aerolog_organizations').delete().eq('id', externalOrg);
-  console.log('Temporary test records cleaned up.');
+  if (org) {
+    for (const table of ['aerolog_report_jobs','aerolog_email_outbox','aerolog_audit','aerolog_notifications','aerolog_records','aerolog_invitations','aerolog_profiles','aerolog_memberships'])
+      check(await db.from(table).delete().eq('organization_id',org));
+  }
+  for (const id of testUsers) check(await db.auth.admin.deleteUser(id));
+  if(org) check(await db.from('aerolog_organizations').delete().eq('id',org));
+  console.log('Temporary test records and isolated organization cleaned up.');
 }

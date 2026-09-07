@@ -238,3 +238,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Personnel mission assignments now include secondary pilots, instructors and other `crewAssignments` roles rather than only primary pilot/observer.
 - Focused identity tests cover renamed/inactive accounts, unknown explicit IDs, duplicate names and external crew. Tests and production build/TypeScript passed. No memberships, credentials or flight records changed.
 - The broader adoption goal remains active; sharing/bulk workflows and final comprehensive acceptance remain outstanding.
+
+### Broad local workflow regression — 7 September 2026
+
+- Reworked the integration runner to create its own temporary organization and disposable five-role accounts, instead of relying on disabled historical users in e&. Fixture pilots now explicitly authorize aircraft. Cleanup removes the isolated records, identities and organization.
+- All 23 integration checks passed: authentication/roles, direct-write blocking, risk requirements, actual private-file upload/download, independent approval, submitted attachment locks, resource conflicts, optimistic concurrency, mission PDF/debrief, import accounting/deduplication, quarantine retention, maintenance sign-off, import preview, source archival, cross-org access, account provisioning and revocation.
+- All 38 organization API checks passed, including branding, invitations, membership isolation, pilot attribution and stale-tab protection.
+- Read-only post-run checks confirmed e& still has exactly two active members; Ivan retains exactly 20 flights, 29,599 seconds and 29,532 track points. No temporary test organizations remain.
+- These checks cover the original core flows; newer document/incident/evidence uploads and complete desktop/mobile acceptance still need their own direct verification. Broader follow-on requirements remain open; goal not complete.

@@ -7,6 +7,8 @@ import {
   reconcileEquipmentCounter,
   type CounterDecision,
 } from '@/lib/operations/equipment-merge-reconciliation';
+import { mergeInspectionImpact } from '@/lib/operations/equipment-merge-inspections';
+import type { ReportRecord } from '@/lib/reports/flight-report';
 import { api } from '@/lib/supabase-browser';
 export default function EquipmentMergeReview() {
   const [counterSource, setCounterSource] = useState<
@@ -27,9 +29,11 @@ export default function EquipmentMergeReview() {
     [duplicate, setDuplicate] = useState(''),
     [review, setReview] = useState<
       | (ReturnType<typeof equipmentMergeReview> & {
+          inspectionContext: ReportRecord[];
           reportReferences: any[];
           shareReferences: any[];
           capturedAt: string;
+          reviewDate: string;
           reviewHash: string;
         })
       | null
@@ -296,6 +300,55 @@ export default function EquipmentMergeReview() {
             remain part of merge execution review.
           </p>
         </>
+      )}
+      {review && counterPreview && (
+        <section className="inspection-rule">
+          <h3>Inspection impact of the proposed register</h3>
+          <p>
+            Compares a direct counter replacement against current signed
+            baselines. Changed intervals must be reconciled before applying a
+            merge; this preview leaves flight counts and calendar dates
+            unchanged.
+          </p>
+          {(() => {
+            const impacts = mergeInspectionImpact(
+              review.inspectionContext,
+              review,
+              counterPreview,
+              review.reviewDate,
+            );
+            return impacts.length ? (
+              impacts.map((impact) => (
+                <article key={impact.planId + ':' + impact.ruleId}>
+                  <h4>
+                    {impact.ruleName} · {impact.targetId}
+                  </h4>
+                  <p>
+                    {impact.beforeStatus} → {impact.afterStatus}
+                    {impact.requiresReconciliation
+                      ? ' · Baseline reconciliation required'
+                      : ''}
+                  </p>
+                  {impact.changes.map((change) => (
+                    <p key={change.unit}>
+                      {change.unit}: {change.before ?? 'Unknown'} →{' '}
+                      {change.after ?? 'Unknown'} remaining
+                      {change.postponed ? ' · Would postpone inspection' : ''}
+                    </p>
+                  ))}
+                  <small>
+                    Plan {impact.planId} · revision {impact.planRevision}
+                  </small>
+                </article>
+              ))
+            ) : (
+              <p>
+                No inspection profiles are assigned to these two equipment
+                records.
+              </p>
+            );
+          })()}
+        </section>
       )}
     </details>
   );

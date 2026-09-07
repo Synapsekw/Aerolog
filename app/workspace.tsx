@@ -363,6 +363,8 @@ export default function Workspace() {
           ...batteries.map((b) => ({ ...b, kind: 'battery' })),
         ],
         flights,
+        app.inspectionMeterRoutes,
+        app.equipmentAliases,
       ),
       date(),
     )

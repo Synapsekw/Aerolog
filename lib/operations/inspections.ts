@@ -1,3 +1,9 @@
+import { equipmentPassportHistory } from '@/lib/domain/equipment-passport-history';
+import type { EquipmentAlias } from '@/lib/domain/equipment-identity';
+import {
+  routedInspectionMeters,
+  type InspectionMeterRoute,
+} from './inspection-meter-routing';
 import { z } from 'zod';
 const id = z.string().min(1).max(100),
   text = z.string().trim().min(1).max(160),
@@ -127,7 +133,26 @@ export function inspectionMeters(
   plan: InspectionPlan,
   equipment: any[],
   flights: any[],
+  routes: InspectionMeterRoute[] = [],
+  aliases: EquipmentAlias[] = [],
 ) {
+  const route = routes.find((r) => r.plan_id === plan.id);
+  if (route) {
+    const target = equipment.find(
+      (e) => e.kind === route.target_kind && e.id === route.target_id,
+    );
+    const family = equipmentPassportHistory(
+      { kind: route.target_kind, id: route.target_id },
+      aliases,
+      (kind) =>
+        kind === 'flight' ? flights : equipment.filter((e) => e.kind === kind),
+    );
+    return routedInspectionMeters(route, {
+      hours: target?.hours ?? null,
+      cycles: target?.cycles ?? null,
+      flights: family.flights.length,
+    });
+  }
   const eq = equipment.find(
     (a) => a.kind === plan.targetKind && a.id === plan.targetId,
   );

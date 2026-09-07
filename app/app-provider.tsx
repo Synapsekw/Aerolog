@@ -17,11 +17,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import OrganizationPanel from './organization-panel';
 import { Crosshair, ArrowRight, ShieldCheck } from 'lucide-react';
+import type { InspectionMeterRoute } from '@/lib/operations/inspection-meter-routing';
 type Store = {
   profile: Profile & { email: string };
   organization: any;
   records: RecordEnvelope[];
   equipmentAliases: EquipmentAlias[];
+  inspectionMeterRoutes: InspectionMeterRoute[];
   profiles: Profile[];
   notifications: any[];
   audit: any[];

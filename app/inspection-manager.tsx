@@ -63,7 +63,13 @@ export default function InspectionManager({ today }: { today: string }) {
     }
   }
   const current = (plan: InspectionPlan) =>
-    inspectionMeters(plan, equipment, app.items('flight'));
+    inspectionMeters(
+      plan,
+      equipment,
+      app.items('flight'),
+      app.inspectionMeterRoutes,
+      app.equipmentAliases,
+    );
   return (
     <section className="glass inspection-manager">
       <div className="row">
@@ -463,6 +469,23 @@ export default function InspectionManager({ today }: { today: string }) {
               <p>
                 {p.profileSnapshot.name} · version {p.profileRevision}
               </p>
+              {(app.inspectionMeterRoutes || [])
+                .filter((route) => route.plan_id === p.id)
+                .map((route) => (
+                  <p className="fine-print" key={route.plan_id}>
+                    Usage continues from{' '}
+                    {equipment.find(
+                      (e) =>
+                        e.kind === route.target_kind &&
+                        e.id === route.target_id,
+                    )?.name || route.target_id}
+                    . Inspection readings retain the original meter scale:{' '}
+                    {current(p).hours ?? 'Unknown'} hours ·{' '}
+                    {current(p).cycles ?? 'Unknown'} cycles ·{' '}
+                    {current(p).flights ?? 'Unknown'} flights. These can differ
+                    from the consolidated equipment register.
+                  </p>
+                ))}
               {inspectionDue(p, events, current(p), today).map((d) => (
                 <div className="inspection-rule" key={d.rule.id}>
                   <strong>

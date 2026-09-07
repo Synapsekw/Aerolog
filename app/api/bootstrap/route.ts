@@ -27,6 +27,20 @@ export async function GET(request: Request) {
       equipmentAliases.push(...result.data);
       if (result.data.length < 500) break;
     }
+    const inspectionMeterRoutes: any[] = [];
+    for (let offset = 0; ; offset += 500) {
+      const result = await client
+        .from('aerolog_inspection_meter_routes')
+        .select(
+          'plan_id,target_kind,target_id,hours_anchor,cycles_anchor,flights_anchor,hours_base,cycles_base,flights_base',
+        )
+        .eq('organization_id', profile.organization_id)
+        .order('plan_id')
+        .range(offset, offset + 499);
+      if (result.error) throw result.error;
+      inspectionMeterRoutes.push(...result.data);
+      if (result.data.length < 500) break;
+    }
     const results = await Promise.all([
       client
         .from('aerolog_organizations')
@@ -61,6 +75,7 @@ export async function GET(request: Request) {
       notifications: results[3].data,
       audit: results[4].data,
       equipmentAliases,
+      inspectionMeterRoutes,
     });
   } catch (e) {
     return failure(e);

@@ -177,3 +177,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Amount/currency/reference appear in work-order detail; equipment maintenance history shows recorded cost. Migration 032 adds database validation for numeric range, required currency and reference length; application schema enforces the same cost requirements.
 - Focused schema and rollback database tests passed for unknown/zero/decimal persistence, invoice reference and invalid inputs. Production build/TypeScript passed. Browser verified blank cost fields and explanatory text; no real expenses were recorded.
 - Broader maintenance acceptance remains open: lifecycle/status enhancements and fully typed battery/equipment targets need review. Extended history reporting and final adoption acceptance also remain.
+
+### Typed maintenance equipment targets — 7 September 2026
+
+- Work orders now select aircraft/equipment or batteries by kind and stable record ID. Equipment passports link history using both fields; legacy asset-name matching is retained only for records without IDs. Battery passports expose Schedule service.
+- Migration 033 validates organization-scoped target existence and resolves unique legacy asset names when saving. Sign-off uses exact targets. Battery sign-off retains condition, health and counters; asset sign-off preserves Retired/Checked out and refuses interval reset when hours are unknown.
+- Battery forms explain separate inspection/charge workflows and hide the irrelevant hourly reset field. Completion notifications distinguish battery sign-off from asset interval updates.
+- Rollback regression exercised the actual command RPC for save and signed completion of both target kinds, retained costs, missing-target rejection, unchanged battery quarantine/cycles and retained aircraft retirement. Updated cost fixtures to include required equipment counters; both DB scripts passed. Production build/TypeScript passed. Browser verified selecting a TB65 and the battery-specific form; draft closed unsaved.
+- Broader adoption goal remains active: maintenance lifecycle enhancements, extended history reports and final end-to-end/visual acceptance are still open.

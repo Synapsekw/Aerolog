@@ -622,7 +622,7 @@ export default function Workspace() {
         action === 'review'
           ? 'Review recorded.'
           : action === 'service_complete'
-            ? 'Service signed off and interval updated.'
+            ? (data.targetKind === 'battery' ? 'Battery service signed off. Counters and condition retained.' : 'Service signed off and interval updated.')
             : 'Record updated.',
       );
     } catch (e) {
@@ -892,7 +892,8 @@ export default function Workspace() {
                 edit('service');
                 setDraft((d: any) => ({
                   ...d,
-                  asset: record.name,
+                  asset: record.name || record.sourceName || record.model || record.id,
+                  targetKind: detail.kind, targetId: record.id,
                   intervalHours: record.intervalHours || 100,
                 }));
               }}
@@ -2979,7 +2980,7 @@ export default function Workspace() {
                         ['Equipment', record.asset],
                         ['Due', record.due],
                         ['Technician', record.technician],
-                        ['Next interval', record.intervalHours + ' h'],
+                        ['Next interval', record.targetKind === 'battery' ? 'Managed by battery inspection plan' : record.intervalHours + ' h'],
                         ['Recorded cost', record.cost == null ? 'Not recorded' : record.currency + ' ' + record.cost],
                         ['Cost reference', record.costReference || 'Not recorded'],
                       ].map(([k, v]) => (
@@ -3324,12 +3325,17 @@ export default function Workspace() {
           )}
           {dialog === 'service' && (
             <>
-              <Pick
-                label="Equipment"
-                value={draft.asset}
-                options={assets.map((a) => a.name)}
-                onChange={(v) => update('asset', v)}
-              />
+              <label className="field">Equipment
+                <select value={draft.targetKind && draft.targetId ? draft.targetKind + ':' + draft.targetId : ''} onChange={(e) => {
+                  const [targetKind, ...parts] = e.target.value.split(':');
+                  const targetId = parts.join(':');
+                  const target = items(targetKind).find(a => a.id === targetId);
+                  setDraft((d: any) => ({...d, targetKind, targetId, asset: target?.name || target?.sourceName || target?.model || targetId}));
+                }}>
+                  <option value="">{draft.asset ? 'Select equipment · currently ' + draft.asset : 'Select equipment'}</option>
+                  {['asset','battery'].map(k => <optgroup key={k} label={k === 'battery' ? 'Batteries' : 'Aircraft & equipment'}>{items(k).map(a => <option key={a.id} value={k+':'+a.id}>{a.name || a.sourceName || a.model} · {a.serial || a.id}</option>)}</optgroup>)}
+                </select>
+              </label>
               <Field
                 label="Service task"
                 required
@@ -3349,14 +3355,15 @@ export default function Workspace() {
                 options={crew.map((c) => c.name)}
                 onChange={(v) => update('technician', v)}
               />
-              <Field
+              {draft.targetKind !== 'battery' && <Field
                 label="Next interval after sign-off (hours)"
                 type="number"
                 value={draft.intervalHours}
                 onChange={(v) =>
                   update('intervalHours', v === '' ? null : Number(v))
                 }
-              />
+              />}
+              {draft.targetKind === 'battery' && <p className="fine-print">Battery sign-off records the work performed. Charge counters, inspection baselines and battery condition are updated separately from their own workflows.</p>}
               <div className="form-grid">
                 <Field label="Recorded cost" type="number" value={draft.cost ?? ''} onChange={(v) => update('cost', v === '' ? null : Number(v))} />
                 <Field label="Currency code" value={draft.currency || ''} onChange={(v) => update('currency', v.toUpperCase())} />

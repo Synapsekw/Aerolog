@@ -182,6 +182,8 @@ export const crewSchema = z.object({
 export const serviceSchema = z.object({
   id,
   asset: name,
+  targetKind: z.enum(['asset', 'battery']).optional(),
+  targetId: id.optional(),
   task: name,
   cost: numeric(0, 1000000000).nullable().optional(),
   currency: z.string().regex(/^[A-Z]{3}$/).optional().or(z.literal('')),

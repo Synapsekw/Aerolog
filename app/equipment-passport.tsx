@@ -52,7 +52,7 @@ export default function EquipmentPassport({
       .filter((f) => f.targetKind === kind && f.targetId === record.id),
     services = app
       .items('service')
-      .filter((s) => s.asset === record.name || s.targetId === record.id),
+      .filter((s) => s.targetId ? s.targetKind === kind && s.targetId === record.id : kind === 'asset' && s.asset === record.name),
     plans = app
       .items('inspection_plan')
       .filter((p) => p.targetKind === kind && p.targetId === record.id),
@@ -100,11 +100,8 @@ export default function EquipmentPassport({
               <Button variant="outline" onClick={onCycle}>
                 Record completed charge cycle
               </Button>
-            ) : (
-              <Button variant="outline" onClick={onService}>
-                Schedule service
-              </Button>
-            )}
+            ) : null}
+            <Button variant="outline" onClick={onService}>Schedule service</Button>
           </>
         )}
         <Button variant="outline" onClick={onInspections}>

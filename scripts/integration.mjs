@@ -473,6 +473,13 @@ try {
   );
   assert.equal(assetRow.data.next, 60.167);
   pass('maintenance sign-off advances interval once');
+  const typedWork={...service,id:prefix+'-BATTERY-SERVICE',asset:bulkBattery.model,targetKind:'battery',targetId:bulkBattery.id};
+  const savedWork=await command('technician','service',typedWork);
+  await command('technician','service',savedWork.data,savedWork.revision,'service_complete','Battery inspection completed');
+  const afterBatteryService=check(await db.from('aerolog_records').select('data').eq('organization_id',org).eq('kind','battery').eq('id',bulkBattery.id).single()).data;
+  assert.equal(afterBatteryService.cycles,bulkBattery.cycles);assert.equal(afterBatteryService.status,'Quarantined');
+  pass('typed battery maintenance sign-off preserves battery counters and quarantine');
+
   const csv = new FormData();
   csv.set(
     'file',

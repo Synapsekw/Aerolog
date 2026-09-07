@@ -19,6 +19,7 @@ export default function EquipmentPassport({
   onCycle,
   onOpen,
   onInspections,
+  onCanonical,
 }: {
   kind: 'asset' | 'battery';
   record: any;
@@ -28,6 +29,7 @@ export default function EquipmentPassport({
   onCycle: () => void;
   onOpen: (kind: 'flight' | 'service', id: string) => void;
   onInspections: () => void;
+  onCanonical: (id: string) => void;
 }) {
   const app = useApp(),
     [tab, setTab] = useState('Overview'),
@@ -35,13 +37,16 @@ export default function EquipmentPassport({
     [error, setError] = useState('');
   const battery = kind === 'battery';
   const name = record.name || record.sourceName || record.model;
-  const allowed = ['admin', 'manager', 'technician'].includes(app.profile.role);
+
   const history = equipmentPassportHistory(
     { kind, id: record.id },
     app.equipmentAliases || [],
     app.items,
   );
   const { flights, files, services, plans, events } = history;
+  const isSource = history.canonical.id !== record.id;
+  const allowed =
+    !isSource && ['admin', 'manager', 'technician'].includes(app.profile.role);
   const storageSite = app
     .items('site')
     .find((s) => s.id === record.storageSiteId);
@@ -87,6 +92,19 @@ export default function EquipmentPassport({
               {source.id === history.canonical.id ? ' · Canonical record' : ''}
             </p>
           ))}
+        </section>
+      )}
+      {isSource && (
+        <section className="glass passport-list">
+          <h2>Historical source record</h2>
+          <p>
+            This equipment identity is retained for its original history. Open
+            the canonical record to edit equipment, schedule work or record
+            usage.
+          </p>
+          <Button onClick={() => onCanonical(history.canonical.id)}>
+            Open canonical equipment
+          </Button>
         </section>
       )}
       <div className="passport-actions">
@@ -397,7 +415,7 @@ export default function EquipmentPassport({
                   {source.name || source.model} · {source.id}
                 </h2>
               )}
-              <BatteryReadingLedger battery={source} />
+              <BatteryReadingLedger battery={source} readOnly={isSource} />
             </div>
           ))}
           <section className="glass passport-list">

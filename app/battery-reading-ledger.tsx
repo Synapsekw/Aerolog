@@ -16,7 +16,13 @@ import {
   latestDeviceCycles,
   type BatteryReadingRecord,
 } from '@/lib/battery/readings';
-export default function BatteryReadingLedger({ battery }: { battery: any }) {
+export default function BatteryReadingLedger({
+  battery,
+  readOnly = false,
+}: {
+  battery: any;
+  readOnly?: boolean;
+}) {
   const app = useApp(),
     readings = (app.items('battery_reading') as BatteryReadingRecord[])
       .filter((r) => r.batteryId === battery.id)
@@ -25,7 +31,13 @@ export default function BatteryReadingLedger({ battery }: { battery: any }) {
     [error, setError] = useState(''),
     [saving, setSaving] = useState(false),
     [metric, setMetric] = useState('health');
-  const allowed = ['admin', 'manager', 'technician'].includes(app.profile.role);
+  const isSource = (app.equipmentAliases || []).some(
+    (alias) => alias.kind === 'battery' && alias.source_id === battery.id,
+  );
+  const allowed =
+    !readOnly &&
+    !isSource &&
+    ['admin', 'manager', 'technician'].includes(app.profile.role);
   async function save() {
     setError('');
     setSaving(true);
@@ -52,6 +64,12 @@ export default function BatteryReadingLedger({ battery }: { battery: any }) {
         <div>
           <span className="eyebrow">MEASURED BATTERY HISTORY</span>
           <h2>Reading ledger</h2>
+          {isSource && (
+            <p>
+              Historical source readings. Record new measurements against the
+              canonical battery.
+            </p>
+          )}
           <p>
             Register: {battery.cycles} cycles · Latest device reading:{' '}
             {latestDeviceCycles(readings) ?? 'Unknown'}

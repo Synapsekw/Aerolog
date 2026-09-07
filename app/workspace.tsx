@@ -913,6 +913,7 @@ export default function Workspace() {
               }}
               onOpen={(k, id) => void open(k, id)}
               onInspections={() => navigate('Inspections')}
+              onCanonical={(id) => void open(detail.kind, id)}
             />
           ) : detail?.kind === 'flight' && record ? (
             <article className="flight-page">

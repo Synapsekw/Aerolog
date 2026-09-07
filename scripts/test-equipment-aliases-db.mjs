@@ -9,7 +9,7 @@ try{
  await reject(()=>add('QA-ALIAS-C','QA-ALIAS-A'),/cycle/);
  await reject(()=>add('QA-ALIAS-C','missing'),/foreign key/);
  await reject(()=>db.query("update aerolog_equipment_aliases set canonical_id='QA-ALIAS-C' where organization_id=$1 and source_id='QA-ALIAS-A'",[org]),/immutable/);
- await reject(()=>db.query("delete from aerolog_records where organization_id=$1 and kind='asset' and id='QA-ALIAS-A'",[org]),/foreign key/);
+ await reject(()=>db.query("delete from aerolog_records where organization_id=$1 and kind='asset' and id='QA-ALIAS-A'",[org]),/merged source record/);
  assert.equal((await db.query("select has_table_privilege('authenticated','aerolog_equipment_aliases','insert') allowed")).rows[0].allowed,false);
  await db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor]);await db.query('set local role authenticated');
  assert.equal((await db.query('select count(*)::int n from aerolog_equipment_aliases where organization_id=$1',[org])).rows[0].n,2);

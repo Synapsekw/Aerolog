@@ -1,7 +1,7 @@
 import fs from 'node:fs';import pg from 'pg';import assert from 'node:assert/strict';import {loadEnv} from './env.mjs';
 const env=loadEnv(),url=new URL(fs.readFileSync('supabase/.temp/pooler-url','utf8').trim());url.password=env.SUPABASE_DB_PASSWORD;const db=new pg.Client({connectionString:url.toString(),ssl:{rejectUnauthorized:false}});await db.connect();
 try{
- await db.query('begin');if(process.argv.includes('--preview-migration'))await db.query(fs.readFileSync('supabase/migrations/202609070049_canonical_flight_import.sql','utf8'));
+ await db.query('begin');if(process.argv.includes('--preview-migration')){await db.query(fs.readFileSync('supabase/migrations/202609070049_canonical_flight_import.sql','utf8'));await db.query(fs.readFileSync('supabase/migrations/202609070050_restore_typed_service_completion.sql','utf8'));}if(process.argv.includes('--preview-source-guard'))await db.query(fs.readFileSync('supabase/migrations/202609070051_merged_source_write_guard.sql','utf8'));
  const org='2d1005c8-bea7-4a46-b863-c1afe8f31446',actor='30dd24a8-3fe1-48c4-b5ff-271cf663f223';await db.query("select set_config('request.jwt.claim.sub',$1,true)",[actor]);
  const insert=(kind,id,data)=>db.query('insert into aerolog_records(organization_id,kind,id,data) values($1,$2,$3,$4)',[org,kind,id,{id,...data}]);
  for(const id of ['QA-IMPORT-OLD','QA-IMPORT-NEW'])await insert('asset',id,{name:id,category:'Aircraft',hours:10,next:100,intervalHours:100,status:'Available'});
@@ -19,6 +19,7 @@ try{
  await reject({...flight,id:'QA-DUPLICATE-FLIGHT'},/duplicate key/);assert.equal((await get('asset','QA-IMPORT-NEW')).data.hours,10.167);
  await reject({...flight,id:'QA-BAD-FLIGHT',aircraftId:'foreign-id'},/Register this aircraft/);
  await reject({...flight,id:'QA-BAD-PACK',batteryIds:['foreign-pack']},/Equipment identity not found/);
+ for(const probe of [()=>db.query("update aerolog_records set data=jsonb_set(data,'{hours}','12') where organization_id=$1 and kind='asset' and id='QA-IMPORT-OLD'",[org]),()=>insert('battery_reading','QA-OLD-READING',{batteryId:'QA-PACK-OLD'})]){await db.query('savepoint old_write');try{await probe();assert.fail('Merged source accepted a write')}catch(e){assert.match(e.message,/merged source record/)}finally{await db.query('rollback to savepoint old_write')}}
  assert.equal((await db.query("select has_function_privilege('authenticated','public.aerolog_route_flight_equipment(uuid,jsonb)','execute') allowed")).rows[0].allowed,false);
  await db.query('rollback');console.log('Canonical flight import passed: retained original identity, typed resolution, deduplicated multi-pack events, canonical-only hours, unchanged cycles/quarantine, duplicate rollback and foreign identity rejection. Fixtures rolled back.');
 }catch(e){await db.query('rollback');console.error(e.message);process.exitCode=1}finally{await db.end()}

@@ -1,7 +1,7 @@
 import fs from 'node:fs';import pg from 'pg';import assert from 'node:assert/strict';import {loadEnv} from './env.mjs';
 const e=loadEnv(),u=new URL(fs.readFileSync('supabase/.temp/pooler-url','utf8').trim());u.password=e.SUPABASE_DB_PASSWORD;const c=new pg.Client({connectionString:u.toString(),ssl:{rejectUnauthorized:false}});await c.connect();
 try{
- await c.query('begin');const org='2d1005c8-bea7-4a46-b863-c1afe8f31446';
+ await c.query('begin');if(process.argv.includes('--preview-repair'))await c.query(fs.readFileSync('supabase/migrations/202609070050_restore_typed_service_completion.sql','utf8'));const org='2d1005c8-bea7-4a46-b863-c1afe8f31446';
  await c.query("select set_config('request.jwt.claim.sub',$1,true)",['30dd24a8-3fe1-48c4-b5ff-271cf663f223']);
  const insert=(kind,data)=>c.query('insert into aerolog_records(organization_id,kind,id,data) values($1,$2,$3,$4)',[org,kind,data.id,data]);
  const get=async(kind,id)=>(await c.query('select * from aerolog_records where organization_id=$1 and kind=$2 and id=$3',[org,kind,id])).rows[0];

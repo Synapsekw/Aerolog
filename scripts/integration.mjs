@@ -153,6 +153,28 @@ try {
     notes: '',
   };
   await command('technician', 'battery', battery);
+  const bulkAircraft={...aircraft,id:prefix+'-BULK-A',name:prefix+' bulk aircraft',serial:prefix+'-BULK-SERIAL',status:'Retired'};
+  const bulkBattery={...battery,id:prefix+'-BULK-B',status:'Quarantined'};
+  await command('technician','asset',bulkAircraft);
+  await command('technician','battery',bulkBattery);
+  const bulkItems=[{kind:'asset',id:bulkAircraft.id,revision:1},{kind:'battery',id:bulkBattery.id,revision:1}];
+  const bulkBody={items:bulkItems,patch:{manufacturer:'QA bulk manufacturer'}};
+  await api('pilot','equipment-bulk',bulkBody,403);
+  await api('observer','equipment-bulk',bulkBody,403);
+  const bulkResult=await api('technician','equipment-bulk',bulkBody);
+  assert.equal(bulkResult.updated,2);
+  const readBulk=async()=>check(await db.from('aerolog_records').select('kind,id,revision,data').eq('organization_id',org).in('id',[bulkAircraft.id,bulkBattery.id]));
+  let bulkRows=await readBulk();
+  assert.ok(bulkRows.every(r=>r.revision===2&&r.data.manufacturer==='QA bulk manufacturer'));
+  assert.equal(bulkRows.find(r=>r.kind==='asset').data.status,'Retired');
+  assert.equal(bulkRows.find(r=>r.kind==='battery').data.status,'Quarantined');
+  assert.equal(bulkRows.find(r=>r.kind==='battery').data.cycles,10);
+  pass('bulk metadata API applies mixed-kind changes and preserves operational state');
+  await api('technician','equipment-bulk',{items:[{...bulkItems[0],revision:2},bulkItems[1]],patch:{firmware:'must not persist'}},409);
+  await api('technician','equipment-bulk',{items:bulkItems.map(i=>({...i,revision:2})),patch:{cycles:0}},400);
+  await api('technician','equipment-bulk',{items:bulkItems.map(i=>({...i,revision:2})),patch:{storageSiteId:'unknown-storage-site'}},400);
+  bulkRows=await readBulk();assert.ok(bulkRows.every(r=>r.revision===2&&!r.data.firmware));
+  pass('bulk metadata rejects stale revisions, counter edits and unavailable sites atomically');
   const document = {id:prefix+'-DOC',name:'QA evidence document',category:'Other',targetKind:'Organization',targetId:'',expires:'2035-01-01'};
   await api('admin','documents',{action:'save',data:document,revision:0,submit:false});
   const incident = {id:prefix+'-INC',title:'QA evidence incident',occurredAt:new Date().toISOString(),severity:'Low',status:'Reported',narrative:'Temporary integration evidence incident'};

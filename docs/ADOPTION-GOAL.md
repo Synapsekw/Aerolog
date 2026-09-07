@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Bulk-edit API integration acceptance — 7 September 2026
+
+- Extended the isolated-organization integration runner with separate retired-aircraft/quarantined-battery bulk fixtures. Technician edits update both revisions/manufacturer fields while retaining operational status and cycles; pilot/observer requests are denied.
+- Real API requests reject mixed stale revisions (409), attempted cycle edits and unknown storage sites, preserving both records at their prior revisions with no partial firmware change.
+- All 32 integration checks passed, including existing evidence, mission review/PDF, imports, usage accounting, maintenance and tenant isolation. Temporary test records/accounts/organization were cleaned up. The first attempt caught a duplicated fixture serial; cleanup succeeded before retrying with a unique serial.
+- CUA recheck still reports the Mac locked. No browser acceptance is claimed. Broader merge/sharing work and final source-plan acceptance remain open; goal active.
+
 ### Reviewed bulk equipment metadata — 7 September 2026
 
 - Added a bulk editor on Inventory/Batteries: search/select up to 100 equipment records, choose storage site/manufacturer/product model/firmware, inspect per-item before/after values, then apply the frozen selection/revisions. Removed selections must be reviewed again. Storage previews show site names and IDs.

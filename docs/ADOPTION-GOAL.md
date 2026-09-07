@@ -193,3 +193,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Extended rollback service regression covers actual save/start/sign-off commands, anti-spoof start stamping, rejected status reversal and retained start time. An isolated trigger probe verifies detection of active work for both asset and battery IDs. Full mission submission integration for this new gate remains to be tested. Production build/TypeScript passed.
 - Corrected the service detail sign-off explanation to match battery behavior and preserved retired/checked-out asset states. No real jobs were started or completed during testing.
 - Goal remains active; wider reports and remaining workflow/visual acceptance are still outstanding.
+
+### Maintenance gate through mission submission — 7 September 2026
+
+- Extended the mission resource regression through the actual `aerolog_command('save', ...)` submission path. In-progress work on a selected battery and an additional aircraft each blocks submission; signing off the corresponding work order allows the same request to succeed.
+- Updated the disabled-membership fixture to reuse a historical crew profile rather than attempting a newly forbidden link to an inactive account. Temporary fixture credential adjustments and all mission/service writes are rolled back.
+- The full mission-resource regression passed, covering resource conflicts, adjacent windows, disabled access, compatibility and the maintenance gate. Dashboard attention now includes every In progress work order, including those not overdue, without duplicating overdue entries. TypeScript passed.
+- This closes the previously noted isolated-test limitation for new mission submissions. It does not imply existing approved missions are automatically revoked after maintenance starts. Final operational acceptance and the broader reporting/UI deliverables remain open.

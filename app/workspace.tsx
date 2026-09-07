@@ -1134,7 +1134,8 @@ export default function Workspace() {
                     <ReadinessQueue entries={[
                       ...personnelDocumentAttention(crew, app.profiles, items('document'), date()),
                       ...pending.map(m => ({key:'mission:'+m.id,category:'Missions',title:m.name,reason:'Awaiting operations review',kind:'mission',id:m.id,priority:1})),
-                      ...overdue.map(s => ({key:'service:'+s.id,category:'Equipment',title:s.task,reason:'Service overdue: '+s.due,kind:'service',id:s.id,priority:0})),
+                      ...overdue.filter(s => s.status !== 'In progress').map(s => ({key:'service:'+s.id,category:'Equipment',title:s.task,reason:'Service overdue: '+s.due,kind:'service',id:s.id,priority:0})),
+                      ...services.filter(s => s.status === 'In progress').map(s => ({key:'service:'+s.id,category:'Equipment',title:s.task,reason:'Work in progress · ' + s.asset + (s.due < date() ? ' · overdue' : ''),kind:'service',id:s.id,priority:0})),
                       ...batteryAlerts.map(b => ({key:'battery:'+b.id,category:'Equipment',title:b.sourceName||b.model||b.id,reason:b.status,kind:'battery',id:b.id,priority:1})),
                       ...serviceAlerts.map(a => ({key:'asset:'+a.id,category:'Equipment',title:a.name,reason:a.hours != null && a.next != null && a.hours >= a.next ? 'Maintenance due' : 'Maintenance approaching',kind:'asset',id:a.id,priority:a.hours != null && a.next != null && a.hours >= a.next ? 0 : 2})),
                       ...inspectionAlerts.map(d => ({key:'inspection:'+d.plan.id+':'+d.rule.id,category:'Inspections',title:d.plan.profileSnapshot.name,reason:d.rule.name+' · '+d.status,kind:d.plan.targetKind,id:d.plan.targetId,priority:d.status === 'Due' ? 0 : 1})),

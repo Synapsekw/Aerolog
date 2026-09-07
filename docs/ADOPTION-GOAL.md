@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Project cost filtering and exports — 7 September 2026
+
+- Financial previews and saved CSV/PDF jobs support all-project, explicit-project-ID and unallocated scopes. Ledger exports include the work order's captured project name/reference/revision; names are not used for attribution. Archived projects remain selectable for historical reports.
+- Optional scope preserves older snapshot export bytes when no project data exists. The prior saved financial PDF still passes stored hash and byte-for-byte reproduction (13,847 bytes).
+- Focused tests passed same-name project separation, unallocated costs, identity/revision export and existing date/cost tests. Updated rollback saved-cost regression includes project selection and captured project details; snapshot bytes remain identical after service edits/recovery. Production build/TypeScript passed.
+- Rendered and visually inspected the project-scoped PDF: project identity/revision, scope, totals and source ledger fit without clipping. Application browser acceptance remains open, alongside sharing/bulk workflows and remaining source-plan requirements. Goal active.
+
 ### Explicit work-order project attribution — 7 September 2026
 
 - Maintenance work orders now offer optional project selection and display their captured project name. Unallocated organization overhead remains explicit; no equipment/flight-name guessing allocates costs.

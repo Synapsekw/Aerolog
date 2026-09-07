@@ -36,6 +36,7 @@ export async function costPdf(report: ReturnType<typeof organizationCosts>, orga
   }
   function section(title: string){reserve(60);y-=10;text(title,13,teal);y-=4;}
   text(organization,16); text(`${report.from} to ${report.to}`,12); text(`Snapshot: ${snapshotAt}`,9,muted);
+  if(report.scopeLabel) text(report.scopeLabel,10);
   text('Recorded work-order amounts. No currency conversion. These totals do not establish payment or recognized accounting expenses.',9,muted);
   section('Currency totals');
   for(const t of report.totals){text(`${t.currency} | Completed: ${t.completed} (${t.completedCount} work orders)`,11);text(`Open: ${t.open} (${t.openCount} work orders)`,10);}
@@ -50,6 +51,7 @@ export async function costPdf(report: ReturnType<typeof organizationCosts>, orga
     text(`${r[0]} | ${r[4]}`,11);
     text(`${r[5]} | ${r[1]}`,9,muted);
     text(`Equipment: ${r[12] || 'Not recorded'} | ${r[10]} ${r[11] || 'No stable equipment ID'}`,9);
+    if(report.projectColumns)text(`Project: ${r[15]} | ${r[14] || 'Unallocated'}${r[17] !== '' ? ` | revision ${r[17]}` : ''}`,9);
     text(`Cost: ${r[7] === '' ? 'Not recorded' : `${r[8] || 'Currency missing'} ${r[7]}`}`,10);
     text(`Technician: ${r[6] || 'Not recorded'} | Cost reference: ${r[13] || 'Not recorded'}`,9);
     text(`Source: service ${r[3]} | revision ${r[9]}`,8,muted);y-=10;

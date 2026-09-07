@@ -29,7 +29,7 @@ export async function processReport(
     if (job.snapshot.version !== 1)
       throw Error('Unsupported report snapshot version');
     const request = reportJobRequestSchema.parse(job.request);
-    const costReport = request.type === 'Maintenance costs' ? organizationCosts(job.snapshot.records, request.from, request.to) : null;
+    const costReport = request.type === 'Maintenance costs' ? organizationCosts(job.snapshot.records, request.from, request.to, request.projectScope) : null;
     const report = costReport ? null : createFlightReport(
       reportRequestSchema.parse(request),
       job.snapshot.records,

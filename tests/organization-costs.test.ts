@@ -2,6 +2,15 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { organizationCosts, organizationCostsCsv } from '../lib/reports/organization-costs';
 const service = (id: string, data: object) => ({ id, kind: 'service', revision: 4, data });
+test('project reports use explicit identity and recorded project details, keeping overhead separate', () => {
+  const base = {due:'2026-09-07',status:'Completed',cost:10,currency:'AED'};
+  const records = [service('p1',{...base,projectId:'one',projectSnapshot:{name:'Original name',revision:3,reference:'REF'}}),service('p2',{...base,projectId:'two',projectSnapshot:{name:'Original name',revision:1}}),service('overhead',base)];
+  const report = organizationCosts(records,'2026-09-01','2026-09-30',{mode:'project',projectId:'one'});
+  assert.equal(report.serviceCount,1);assert.equal(report.rows[0][14],'one');assert.equal(report.rows[0][15],'Original name');assert.equal(report.rows[0][17],3);
+  assert.equal(organizationCosts(records,'2026-09-01','2026-09-30',{mode:'unallocated'}).rows[0][3],'overhead');
+  assert.equal(organizationCosts(records,'2026-09-01','2026-09-30',{mode:'all'}).serviceCount,3);
+  const csv=organizationCostsCsv(report,'Org','snapshot');assert.ok(csv.includes('Project ID: one'));assert.ok(csv.includes('"Project revision"'));assert.ok(csv.includes('"Original name"'));
+});
 test('organization cost report uses completion UTC date and includes every equipment kind once', () => {
   const records = [service('a', { completedAt: '2026-09-08T01:00:00+04:00', due: '2020-01-01', status: 'Completed', cost: 10, currency: 'AED', targetKind: 'asset', targetId: 'same' }), service('b', { due: '2026-09-07', status: 'In progress', cost: 20, currency: 'AED', targetKind: 'battery', targetId: 'same' }), service('invalid', { due: '2026-02-30', cost: 99 }), service('later', { due: '2026-09-08', cost: 99 })];
   const report = organizationCosts(records, '2026-09-07', '2026-09-07');

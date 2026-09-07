@@ -39,7 +39,7 @@ try {
   assert.equal(bytes.length, attachment.size);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), job.sha256);
   if (job.request.type === 'Maintenance costs') {
-    const report = organizationCosts(job.snapshot.records, job.request.from, job.request.to);
+    const report = organizationCosts(job.snapshot.records, job.request.from, job.request.to, job.request.projectScope);
     const reproduced = job.request.format === 'PDF' ? Buffer.from(await costPdf(report, job.snapshot.organization, job.created_at)) : Buffer.from(organizationCostsCsv(report, job.snapshot.organization, job.created_at), 'utf8');
     assert.ok(bytes.equals(reproduced));
     assert.equal(report.serviceCount, job.summary.serviceCount);

@@ -22,6 +22,12 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Timed mission calendar export — 7 September 2026
+
+- Mission events now export UTC start/end derived from organization wall time and planned elapsed duration, including overnight/year rollover. Other calendar records remain date reminders because they have no scheduled time in this view.
+- Invalid zones, missing durations and DST gaps/repeated wall times fall back explicitly to date reminders; the download notification counts affected missions. No uncertain offset is silently selected. Resolving ambiguous local mission schedules in planning remains a follow-up.
+- Four calendar serializer tests pass, including Dubai/UTC overnight conversions, New York summer offset, DST gaps and overlaps, identity/scope and UTF-8 escaping. Production build and TypeScript passed. Browser/download acceptance and live scoped calendar sharing remain open; full goal remains active.
+
 ### Calendar snapshot export — 7 September 2026
 
 - Added an iCalendar download scoped to the calendar's displayed dates and selected category, including inspection dates. Stable organization/type/record UIDs distinguish records; exported entries are private, transparent all-day reminders with original schedule text and status in the description.

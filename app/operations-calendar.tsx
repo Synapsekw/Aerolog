@@ -15,6 +15,7 @@ type Entry = {
   date: string;
   time: string;
   status: string;
+  durationMinutes?: number;
 };
 const shift = (date: string, n: number) =>
   new Date(Date.parse(date + 'T12:00:00Z') + n * 86400000)
@@ -48,6 +49,7 @@ export default function OperationsCalendar({
         name: m.name,
         date: m.date,
         time: m.time,
+        durationMinutes: m.durationMinutes,
         status: m.status,
       })),
       ...services.map((s) => ({
@@ -179,14 +181,15 @@ export default function OperationsCalendar({
             <option value="inspection">Inspections</option>
           </select>
           <Button variant="outline" onClick={() => {
-            const exported = calendarExport(entries, { organizationId: app.organization.id, from: days[0], through: days[days.length - 1], kind: type });
+            const exported = calendarExport(entries, { organizationId: app.organization.id, from: days[0], through: days[days.length - 1], kind: type, timezone: app.organization.settings?.timezone });
             const url = URL.createObjectURL(new Blob([exported.content], { type: 'text/calendar;charset=utf-8' }));
             const link = document.createElement('a');
             link.href = url;
             link.download = `aerolog-${type.toLowerCase()}-${days[0]}.ics`;
             link.click();
+            app.notify(`Exported ${exported.count} calendar entries.${exported.dateOnlyMissions ? ` ${exported.dateOnlyMissions} missions use date-only reminders because their time cannot be resolved uniquely.` : ''}`);
             setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }}>Export dates (.ics)</Button>
+          }}>Export calendar (.ics)</Button>
         </div>
       </div>
       <p>
@@ -196,7 +199,7 @@ export default function OperationsCalendar({
         Dates follow the organization schedule; imported flights with no date
         are excluded.
       </p>
-      <p className="fine-print">Calendar export includes the displayed date range and category as all-day reminders. Scheduled times remain in each description. Downloads are snapshots and do not update automatically.</p>
+      <p className="fine-print">Calendar export includes the displayed date range and category. Missions use the organization time zone and planned duration; other entries are all-day reminders. Missing or ambiguous mission times remain date-only. Downloads are snapshots and do not update automatically.</p>
       <p className="fine-print">Inspection dates show calendar intervals; hours, flights or cycles may make an inspection due earlier. {inspections.withoutCalendarDate} inspection rules have no calendar interval and remain in the inspection readiness view.</p>
       <div className="calendar-grid" role="group" aria-label="Operations dates">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (

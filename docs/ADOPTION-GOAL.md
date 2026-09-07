@@ -485,3 +485,9 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Database rollback acceptance passed before and after migration application: original service/flight inclusion, chained merge/new flight totals, frozen earlier CSV bytes and preserved maintenance-cost scope. All fixtures rolled back. All 91 unit tests, production build, TypeScript and diff checks passed.
 - Five existing saved exports reproduced byte-for-byte with verified hashes: Ivan CSV/PDF (20 flights, 29,599 seconds), equipment-history CSV and maintenance-cost CSV/PDF. Read-only audit confirmed zero operational equipment aliases or merge receipts.
 - Browser/mobile acceptance remains pending while the Mac is locked. This completes the report-family implementation slice, not the full adoption goal; the full completion ledger remains open.
+
+### Category-specific inventory filter correction — 7 September 2026
+
+- Acceptance review found that storage-site filtering leaked across inventory categories although search/status/page already had per-category state. Each category now retains its own storage-site selection, defaulting to all sites on its first visit. Direct Batteries navigation uses the same restore path.
+- Status options now come from the selected category's canonical equipment instead of unrelated categories and merged source records, avoiding irrelevant empty-result choices.
+- Production build, TypeScript and diff checks passed. Browser access was rechecked and the Mac remains locked; interactive switching and responsive layout acceptance are still unverified. Goal remains active with the full ledger unchanged.

@@ -377,7 +377,7 @@ export default function Workspace() {
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
   const [inventoryExpanded, setInventoryExpanded] = useState(true);
   const inventoryViews = useRef<
-    Record<string, { search: string; filter: string; page: number }>
+    Record<string, { search: string; filter: string; page: number; storage: string }>
   >({});
   const [inventoryPage, setInventoryPage] = useState(1);
   const [flightView, setFlightView] = useState('list');
@@ -473,7 +473,7 @@ export default function Workspace() {
     if (page === 'Inventory' || page === 'Batteries')
       inventoryViews.current[
         page === 'Batteries' ? 'Battery' : inventoryCategory
-      ] = { search, filter, page: inventoryPage };
+      ] = { search, filter, page: inventoryPage, storage: storageFilter };
   }
   function navigateInventory(category: string) {
     rememberInventory();
@@ -483,12 +483,13 @@ export default function Workspace() {
     setSearch(saved?.search || '');
     setFilter(saved?.filter || 'All');
     setInventoryPage(saved?.page || 1);
+    setStorageFilter(saved?.storage || 'all');
     setDetail(null);
     setError('');
   }
   function navigate(next: string) {
-    if (next === 'Inventory') {
-      navigateInventory(inventoryCategory);
+    if (next === 'Inventory' || next === 'Batteries') {
+      navigateInventory(next === 'Batteries' ? 'Battery' : inventoryCategory);
       return;
     }
     rememberInventory();
@@ -1314,7 +1315,10 @@ export default function Workspace() {
                         options={[
                           'All',
                           ...new Set(
-                            items(kind)
+                            (kind === 'asset' || kind === 'battery'
+                              ? app.canonicalItems(kind)
+                              : items(kind))
+                              .filter((d) => page !== 'Inventory' || d.category === inventoryCategory)
                               .map((d) =>
                                 page === 'Inventory'
                                   ? d.status

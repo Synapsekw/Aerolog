@@ -1837,7 +1837,12 @@ export default function Workspace() {
                     />
                   )}
                   {page === 'Crew' && (
-                    <CrewMatrix onOpen={(id) => void open('crew', id)}>
+                    <CrewMatrix onOpen={(id) => void open('crew', id)} onCreate={(member) => edit('crew', {
+                      id: newId('CREW'), name: member.display_name, authUserId: member.id,
+                      initials: initials(member.display_name), role: 'Pilot', hours: 0, flights: 0,
+                      cert: '', expires: '', status: 'Unavailable', email: '', notes: '',
+                      aircraftPermission: 'Not configured', authorizedAircraftIds: [], qualifications: [],
+                    })}>
                     <div className="crew-grid">
                       {visible.map((c) => (
                         <section className="glass crew-card" key={c.id}>
@@ -3372,9 +3377,10 @@ export default function Workspace() {
           )}
           {dialog === 'crew' && (
             <>
+              {draft.authUserId && <p className="fine-print">Linked to organization member {draft.name}. Enter verified credentials before saving. Availability starts as unavailable; aircraft permissions require explicit configuration.</p>}
               <Field
                 label="Full name"
-                disabled={app.revision('crew', draft.id) > 0}
+                disabled={app.revision('crew', draft.id) > 0 || Boolean(draft.authUserId)}
                 required
                 value={draft.name}
                 onChange={(v) => update('name', v)}

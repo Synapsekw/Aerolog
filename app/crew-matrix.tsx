@@ -4,7 +4,7 @@ import { useApp } from './app-provider';
 import { Button } from '@/components/ui/button';
 import { qualificationState } from '@/lib/operations/qualifications';
 
-export default function CrewMatrix({ children, onOpen }: { children: ReactNode; onOpen: (id: string) => void }) {
+export default function CrewMatrix({ children, onOpen, onCreate }: { children: ReactNode; onOpen: (id: string) => void; onCreate: (member: { id: string; display_name: string }) => void }) {
   const app = useApp();
   const [view, setView] = useState('Matrix'), [scope, setScope] = useState('Active members'), [query, setQuery] = useState('');
   const people = app.items('crew');
@@ -30,7 +30,7 @@ export default function CrewMatrix({ children, onOpen }: { children: ReactNode; 
       </div>
       <div className="report-table-scroll"><table className="crew-matrix"><thead><tr><th scope="col">Person</th><th scope="col">Organization access</th><th scope="col">Primary certificate</th><th scope="col">Aircraft permissions</th>{names.map(name => <th scope="col" key={name}>{name}</th>)}</tr></thead><tbody>
         {rows.map(({id, name, person, member}) => <tr key={id}>
-          <th scope="row">{person ? <Button variant="ghost" onClick={() => onOpen(person.id)}>{name}</Button> : name}{!person && <small>Crew profile not recorded</small>}</th>
+          <th scope="row">{person ? <Button variant="ghost" onClick={() => onOpen(person.id)}>{name}</Button> : name}{!person && <><small>Crew profile not recorded</small>{member?.active && ['admin', 'manager'].includes(app.profile.role) && <Button variant="outline" onClick={() => onCreate(member)}>Set up crew profile</Button>}</>}</th>
           <td>{member ? member.active ? 'Active member' : 'Inactive member' : 'No unique membership link'}</td>
           <td>{!person?.cert || !person?.expires ? 'Not recorded' : <>{person.cert}<small>{person.expires < today ? 'Expired' : 'Valid through'} {person.expires}</small></>}</td>
           <td>{person?.aircraftPermission || 'Not configured'}{person?.aircraftPermission === 'Selected aircraft' && <small>{(person.authorizedAircraftIds || []).length} authorized aircraft</small>}</td>

@@ -200,3 +200,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Updated the disabled-membership fixture to reuse a historical crew profile rather than attempting a newly forbidden link to an inactive account. Temporary fixture credential adjustments and all mission/service writes are rolled back.
 - The full mission-resource regression passed, covering resource conflicts, adjacent windows, disabled access, compatibility and the maintenance gate. Dashboard attention now includes every In progress work order, including those not overdue, without duplicating overdue entries. TypeScript passed.
 - This closes the previously noted isolated-test limitation for new mission submissions. It does not imply existing approved missions are automatically revoked after maintenance starts. Final operational acceptance and the broader reporting/UI deliverables remain open.
+
+### Equipment history in saved reports — 7 September 2026
+
+- Aircraft and battery reports optionally include maintenance, inspection events, dated battery readings and charge events. History rows retain date basis, actor, record IDs/revisions, findings/readings and original cost currency. UTC dates are explicit for timestamped events; completed work uses completion date and open work uses due date.
+- Migration 035 freezes history records alongside flight summaries when requested. Existing flight-only snapshots and CSV bytes remain unchanged. Report previews show the first 25 history rows; CSV includes the full selected period. More extensive preview paging remains a UI follow-up.
+- Added history tests for exact equipment type/ID, completion-date selection, timezone boundaries, currency/decimal retention and optional history. All 62 unit tests and production build/TypeScript passed.
+- Browser queued battery report `4c74473f-8816-4b30-9dff-558e25084415`; storage download hash and byte-for-byte snapshot reproduction passed (empty history for the selected battery/date range). Ivan's earlier 20-flight/29,599-second report still reproduces exactly. Populated real-history browser acceptance and snapshot regression for later history edits remain to be completed.
+- Broader goal remains active, including the remaining workflow/visual acceptance and adoption-plan requirements.

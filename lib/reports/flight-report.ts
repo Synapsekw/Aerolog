@@ -1,11 +1,14 @@
 import { z } from 'zod';
+import { equipmentHistory } from './equipment-history';
 export const reportRequestSchema = z
   .object({
     type: z.enum(['Organization', 'Pilot', 'Aircraft', 'Battery']),
     from: z.iso.date(),
     to: z.iso.date(),
     entityId: z.string().max(100).default(''),
+    includeHistory: z.boolean().optional(),
   })
+  .refine(r => !r.includeHistory || ['Aircraft','Battery'].includes(r.type), 'History requires an aircraft or battery report')
   .refine((r) => r.from <= r.to, 'Report end date must follow the start date')
   .refine(
     (r) => r.type === 'Organization' || r.entityId.length > 0,
@@ -20,6 +23,7 @@ export type ReportRecord = {
 };
 export type ReportMember = { id: string; display_name: string };
 export type FlightReport = {
+  history?: ReturnType<typeof equipmentHistory>;
   version: 1;
   request: ReportRequest;
   entityName: string;
@@ -120,6 +124,7 @@ export function createFlightReport(
     r.revision,
   ]);
   return {
+    ...(input.includeHistory ? {history: equipmentHistory(input, records)} : {}),
     version: 1,
     request: input,
     entityName,
@@ -190,6 +195,10 @@ export function reportCsv(
     [],
     report.columns,
     ...report.rows,
+    ...(report.history ? [[], ['Equipment history'], ['Undated history excluded', report.history.undatedExcluded],
+      ['History dates', 'Completed work uses completion date; other work uses due date. Timestamped readings use UTC dates. Costs remain in their original currencies. Cycle counters are not added together.'],
+      report.history.columns, ...report.history.rows,
+      [], ['History source kind','Source ID','Source revision'], ...report.history.sourceReferences.map(r=>[r.kind,r.id,r.revision])] : []),
   ];
   return (
     '\uFEFF' +

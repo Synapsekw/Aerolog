@@ -21,6 +21,7 @@ export default function ReportCenter() {
     }).format(new Date());
   const [type, setType] = useState('Organization'),
     [entityId, setEntityId] = useState(''),
+    [includeHistory, setIncludeHistory] = useState(false),
     [from, setFrom] = useState(today.slice(0, 4) + '-01-01'),
     [to, setTo] = useState(today),
     [report, setReport] = useState<FlightReport | null>(null),
@@ -99,12 +100,14 @@ export default function ReportCenter() {
           />
         </label>
       </div>
+      {['Aircraft','Battery'].includes(type) && <label className="field"><span><input type="checkbox" checked={includeHistory} onChange={e=>{setIncludeHistory(e.target.checked);setReport(null)}} /> Include maintenance, inspections and battery history</span></label>}
       <Button
         onClick={() => {
           setError('');
           try {
             const parsed = reportRequestSchema.safeParse({
               type,
+              includeHistory: includeHistory && ['Aircraft','Battery'].includes(type),
               entityId,
               from,
               to,
@@ -126,7 +129,7 @@ export default function ReportCenter() {
       >
         Preview report
       </Button>
-      <ReportJobs request={{ type, entityId, from, to }} />
+      <ReportJobs request={{ type, entityId, from, to, includeHistory: includeHistory && ['Aircraft','Battery'].includes(type) }} />
       {error && <p role="alert">{error}</p>}
       {report && (
         <>
@@ -216,6 +219,7 @@ export default function ReportCenter() {
               Next
             </Button>
           </div>
+          {report.history && <section><h3>Equipment history · {report.history.rows.length} records</h3><p>Completed services use completion date; open services use due date. Timestamped readings use UTC dates. Costs retain their original currencies. Full history is included in the CSV.</p><div className="report-table-scroll"><table><thead><tr>{report.history.columns.map(c=><th key={c}>{c}</th>)}</tr></thead><tbody>{report.history.rows.slice(0,25).map(r=><tr key={String(r[2])+String(r[3])}>{r.map((v,i)=><td key={i}>{v}</td>)}</tr>)}</tbody></table></div><p>{report.history.undatedExcluded} undated history records excluded. Showing first 25 records.</p></section>}
           {report.notes.map((note) => (
             <p className="fine-print" key={note}>
               {note}

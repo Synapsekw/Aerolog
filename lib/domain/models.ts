@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { documentSelectionSchema } from '@/lib/operations/documents';
 import { missionFormSchema } from '@/lib/operations/forms';
 import { qualificationSchema } from '@/lib/operations/qualifications';
 import {
@@ -21,6 +22,11 @@ export const riskSchema = z.object({
   residualSeverity: numeric(1, 5).int().optional(),
 });
 export const missionSchema = z.object({
+  documentSelections: z.array(documentSelectionSchema).max(50).default([]),
+  documentSnapshots: z
+    .array(z.record(z.string(), z.unknown()))
+    .max(50)
+    .default([]),
   forms: z.array(missionFormSchema).max(20).default([]),
   formSnapshots: z.array(z.record(z.string(), z.unknown())).max(20).default([]),
   id,

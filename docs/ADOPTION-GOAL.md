@@ -104,3 +104,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Voided entries no longer contribute to either external totals or recency eligibility. They cannot be restored or modified, and voiding cannot alter their original totals. A corrected replacement is entered as a new evidence-backed record.
 - Migration 027 applied. Rollback currency regression verifies void attribution, retained totals, recency recalculation, stale-revision rejection and unvoid rejection. 51 unit tests, typecheck and production build passed. No real external entries were created or voided.
 - Broader goal remains open: central document controls, reproducible report jobs, unified readiness/qualification presentation and complete acceptance audit.
+
+### Central document register — 7 September 2026
+
+- Added document register with category, linked organization/person/equipment/project/mission, valid-from/expiry, private files, archive filtering and immutable revision records. Managers save drafts, submit, approve or reject; the workspace self-approval rule applies. Editing an approved document creates a fresh draft/version.
+- Mission package preparation selects exact document revisions. Submission checks active status, approval, dates and applicability to assigned entities. Submitted packages preserve the chosen document/file snapshot even when the register changes; review UI and PDF identify those versions.
+- Migration 028 applied. Database tests cover manager permissions, self-review policy, required files, authoritative snapshots, stale selections, approved-but-expired rejection, unrelated mission scope and version retention. All fixtures and temporary test policy changes rolled back.
+- 51 unit tests and production build/type checking passed. Browser verified document creation fields without saving a fixture document. Registered-document downloads use the existing organization-scoped signed-file endpoint.
+- Remaining goal work includes reproducible report jobs, unified readiness/qualification views, final UI and workflow acceptance (including actual upload/download round-trips), and remaining items in the adoption plan.

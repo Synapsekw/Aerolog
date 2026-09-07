@@ -162,6 +162,17 @@ export async function GET(
         );
       }
     }
+    section('Registered document versions');
+    for (const doc of m.documentSnapshots || []) {
+      line(doc.name + ' / version ' + doc.revision + ' / ' + doc.status);
+      line(
+        'Valid from: ' +
+          (doc.validFrom || 'Not specified') +
+          ' | Expiry: ' +
+          (doc.expires || 'None'),
+      );
+      line('File reference: ' + doc.attachmentId);
+    }
     section('Attachments');
     line(
       attachments?.length

@@ -15,6 +15,8 @@ import EquipmentPassport from './equipment-passport';
 import OperationsCatalog from './operations-catalog';
 import FormTemplateManager from './form-template-manager';
 import IncidentManager from './incident-manager';
+import DocumentRegister from './document-register';
+import MissionDocuments from './mission-documents';
 import CrewCredentials from './crew-credentials';
 import MissionForms from './mission-forms';
 import EquipmentMetadataFields from './equipment-metadata-fields';
@@ -126,6 +128,7 @@ const navigation = [
   ['Sites', MapIcon],
   ['Customers', Users],
   ['Form templates', FileText],
+  ['Documents', FileText],
   ['Flight logs', BookOpen],
   ['Inventory', Drone],
   ['Maintenance', Wrench],
@@ -436,6 +439,7 @@ export default function Workspace() {
     Batteries: 'A measured history of every power pack.',
     Crew: 'The people behind your operations.',
     Incidents: 'Report, investigate and follow through.',
+    Documents: 'Versioned evidence, expiry and review.',
     Integrations: 'Connected services and flight-log import.',
     'Audit trail': 'An accountable history of operational decisions.',
     Settings: 'Workspace policies, access and local configuration.',
@@ -1283,6 +1287,9 @@ export default function Workspace() {
                     )}
                   </section>
                 </>
+              )}
+              {page === 'Documents' && (
+                <DocumentRegister key={organization.id} />
               )}
               {page === 'Incidents' && (
                 <IncidentManager
@@ -2616,6 +2623,12 @@ export default function Workspace() {
             )}
             {step === 3 && (
               <>
+                <MissionDocuments
+                  mission={draft}
+                  onChange={(patch) =>
+                    setDraft((d: any) => ({ ...d, ...patch }))
+                  }
+                />
                 <MissionForms mission={draft} />
                 <div className="package-cover">
                   <FileText size={35} />
@@ -2862,6 +2875,7 @@ export default function Workspace() {
                     </dl>
                     <h3 className="detail-heading">Operating notes</h3>
                     <p>{record.notes || 'No notes added.'}</p>
+                    <MissionDocuments mission={record} />
                     <MissionForms mission={record} />
                     <h3 className="detail-heading">Risk assessment</h3>
                     {record.risks.map((r: any, i: number) => (

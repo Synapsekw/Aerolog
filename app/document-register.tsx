@@ -5,9 +5,9 @@ import { api } from '@/lib/supabase-browser';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { documentSchema } from '@/lib/operations/documents';
-export default function DocumentRegister() {
+export default function DocumentRegister({ initialId = '' }: { initialId?: string }) {
   const app = useApp(),
-    [selected, setSelected] = useState(''),
+    [selected, setSelected] = useState(initialId),
     [draft, setDraft] = useState<any>(null),
     [revision, setRevision] = useState(0),
     [search, setSearch] = useState(''),

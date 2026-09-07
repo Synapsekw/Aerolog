@@ -19,6 +19,8 @@ import DocumentRegister from './document-register';
 import ReportCenter from './report-center';
 import MissionDocuments from './mission-documents';
 import CrewCredentials from './crew-credentials';
+import ReadinessQueue from './readiness-queue';
+import { personnelDocumentAttention } from '@/lib/operations/readiness';
 import CrewMatrix from './crew-matrix';
 import MissionForms from './mission-forms';
 import EquipmentMetadataFields from './equipment-metadata-fields';
@@ -361,6 +363,7 @@ export default function Workspace() {
       .filter((d) => d.status !== 'Within limits')
       .map((d) => ({ ...d, plan })),
   );
+  const [documentFocus, setDocumentFocus] = useState('');
   const [storageFilter, setStorageFilter] = useState('all');
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
   const [inventoryExpanded, setInventoryExpanded] = useState(true);
@@ -480,6 +483,7 @@ export default function Workspace() {
       return;
     }
     rememberInventory();
+    if (next !== 'Documents') setDocumentFocus('');
     setPage(next);
     setSearch('');
     setFilter('All');
@@ -1125,128 +1129,17 @@ export default function Workspace() {
                         </span>
                       </div>
                     </section>
-                    <section className="glass attention">
-                      <div className="panel-heading">
-                        <h2>Needs your attention</h2>
-                        <span className="count">
-                          {pending.length +
-                            overdue.length +
-                            batteryAlerts.length +
-                            serviceAlerts.length}
-                        </span>
-                      </div>
-                      {pending.slice(0, 3).map((m) => (
-                        <button
-                          className="attention-item"
-                          key={m.id}
-                          onClick={() => void open('mission', m.id)}
-                        >
-                          <span className="attention-icon">
-                            <ShieldCheck size={18} />
-                          </span>
-                          <div>
-                            <h3>{m.name}</h3>
-                            <p>Awaiting operations review</p>
-                            <span>
-                              Review package <ArrowRight size={13} />
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                      {inspectionAlerts.slice(0, 3).map((d) => (
-                        <button
-                          className="attention-item"
-                          key={d.plan.id + d.rule.id}
-                          onClick={() => navigate('Inspections')}
-                        >
-                          <span className="attention-icon">
-                            <ShieldCheck size={18} />
-                          </span>
-                          <div>
-                            <h3>{d.plan.profileSnapshot.name}</h3>
-                            <p>
-                              {d.rule.name} · {d.status}
-                            </p>
-                            <span>
-                              Review inspection limits <ArrowRight size={13} />
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                      {overdue.slice(0, 2).map((s) => (
-                        <button
-                          className="attention-item"
-                          key={s.id}
-                          onClick={() => void open('service', s.id)}
-                        >
-                          <span className="attention-icon">
-                            <Wrench size={18} />
-                          </span>
-                          <div>
-                            <h3>{s.asset}</h3>
-                            <p>{s.task}</p>
-                            <span>Overdue · {s.due}</span>
-                          </div>
-                        </button>
-                      ))}
-                      {batteryAlerts.slice(0, 2).map((b) => (
-                        <button
-                          className="attention-item"
-                          key={b.id}
-                          onClick={() => void open('battery', b.id)}
-                        >
-                          <span className="attention-icon">
-                            <Battery size={18} />
-                          </span>
-                          <div>
-                            <h3>{b.id}</h3>
-                            <p>
-                              {b.health ?? '—'}% health ·{' '}
-                              {b.temp == null ? 'Unknown' : b.temp + '°C'} ·{' '}
-                              {b.status}
-                            </p>
-                            <span>Inspect battery</span>
-                          </div>
-                        </button>
-                      ))}
-                      {serviceAlerts.slice(0, 2).map((a) => (
-                        <button
-                          className="attention-item"
-                          key={a.id}
-                          onClick={() => void open('asset', a.id)}
-                        >
-                          <span className="attention-icon">
-                            <Wrench size={18} />
-                          </span>
-                          <div>
-                            <h3>{a.name}</h3>
-                            <p>
-                              {Math.max(
-                                0,
-                                (a.next ?? 0) - (a.hours ?? 0),
-                              ).toFixed(1)}{' '}
-                              hours until service
-                            </p>
-                            <span>
-                              {a.next != null &&
-                              a.hours != null &&
-                              a.hours >= a.next
-                                ? 'Maintenance due'
-                                : 'Service approaching'}
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                      {!pending.length &&
-                        !overdue.length &&
-                        !batteryAlerts.length &&
-                        !serviceAlerts.length && (
-                          <Empty
-                            label="All caught up"
-                            description="Approval requests and overdue services will appear here."
-                          />
-                        )}
-                    </section>
+                    <ReadinessQueue entries={[
+                      ...personnelDocumentAttention(crew, app.profiles, items('document'), date()),
+                      ...pending.map(m => ({key:'mission:'+m.id,category:'Missions',title:m.name,reason:'Awaiting operations review',kind:'mission',id:m.id,priority:1})),
+                      ...overdue.map(s => ({key:'service:'+s.id,category:'Equipment',title:s.task,reason:'Service overdue: '+s.due,kind:'service',id:s.id,priority:0})),
+                      ...batteryAlerts.map(b => ({key:'battery:'+b.id,category:'Equipment',title:b.sourceName||b.model||b.id,reason:b.status,kind:'battery',id:b.id,priority:1})),
+                      ...serviceAlerts.map(a => ({key:'asset:'+a.id,category:'Equipment',title:a.name,reason:a.hours != null && a.next != null && a.hours >= a.next ? 'Maintenance due' : 'Maintenance approaching',kind:'asset',id:a.id,priority:a.hours != null && a.next != null && a.hours >= a.next ? 0 : 2})),
+                      ...inspectionAlerts.map(d => ({key:'inspection:'+d.plan.id+':'+d.rule.id,category:'Inspections',title:d.plan.profileSnapshot.name,reason:d.rule.name+' · '+d.status,kind:d.plan.targetKind,id:d.plan.targetId,priority:d.status === 'Due' ? 0 : 1})),
+                    ]} onOpen={(kind,id) => {
+                      if(kind === 'document') {setDocumentFocus(id);navigate('Documents');}
+                      else void open(kind as Kind,id);
+                    }} />
                   </div>
                   <section className="glass">
                     <div className="panel-heading">
@@ -1294,7 +1187,7 @@ export default function Workspace() {
               )}
               {page === 'Reports' && <ReportCenter key={organization.id} />}
               {page === 'Documents' && (
-                <DocumentRegister key={organization.id} />
+                <DocumentRegister key={organization.id+documentFocus} initialId={documentFocus} />
               )}
               {page === 'Incidents' && (
                 <IncidentManager

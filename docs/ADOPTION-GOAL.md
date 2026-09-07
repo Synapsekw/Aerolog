@@ -148,3 +148,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Migration 031 validates new membership links against an active member of the same organization, rejects mismatched names and duplicate linked profiles, and prevents reassignment/removal of established identity links. Upsert loads the existing record; unchanged historical links remain editable after access removal.
 - Rollback DB regression passed for organization scope, identity mismatch, upsert retention, duplicates and immutable links. Production build/TypeScript passed. Browser verified Ivan's correctly linked unsaved draft and closed it without creating a real crew record.
 - The broader goal remains active. Unified readiness, planned-versus-flown comparison, work-order costs and wider history reporting remain outstanding, alongside final workflow/visual acceptance.
+
+### Unified dashboard attention — 7 September 2026
+
+- Replaced the dashboard's truncated attention lists with one prioritized, paginated queue and category filters. It combines mission reviews, overdue services, battery/aircraft alerts, inspection thresholds, crew credentials/permissions and document approval/expiry.
+- Inspection links open the affected equipment record rather than the generic inspection landing page. Documents open their exact register record. Existing mission/service/person/equipment links remain record-specific.
+- Personnel attention excludes inactive linked members; document attention excludes archived entries. Expiry today is distinguished from already expired, and credentials expiring within 30 days surface ahead of expiry. Missing evidence stays explicit. This summarizes recorded issues and does not replace mission submission guards.
+- 55 unit tests and production build/TypeScript passed. Browser verified category filtering and Danijel's unconfigured-aircraft-permission attention entry. Document populated-state navigation and full narrow-screen visual acceptance remain to be exercised.
+- Remaining broader scope includes planned-versus-flown overlays, work-order enhancements, extended history reporting and final requirement-by-requirement acceptance.

@@ -3,6 +3,7 @@ import Image from 'next/image';
 import { useState, useRef } from 'react';
 import { useApp } from './app-provider';
 import MissionMap from './mission-map';
+import MissionFlightComparison from './mission-flight-comparison';
 import FlightAnalysis from './flight-analysis';
 import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
@@ -2723,11 +2724,7 @@ export default function Workspace() {
                 {detail?.kind === 'mission' && (
                   <>
                     <div style={{ marginTop: 20 }}>
-                      <MissionMap
-                        key={record.id}
-                        points={record.geometry || []}
-                        height={260}
-                      />
+                      <MissionFlightComparison key={record.id} mission={record} onFlight={(id) => void open('flight', id)} />
                     </div>
                     <dl className="summary-list">
                       {[

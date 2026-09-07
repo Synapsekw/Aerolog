@@ -156,3 +156,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Personnel attention excludes inactive linked members; document attention excludes archived entries. Expiry today is distinguished from already expired, and credentials expiring within 30 days surface ahead of expiry. Missing evidence stays explicit. This summarizes recorded issues and does not replace mission submission guards.
 - 55 unit tests and production build/TypeScript passed. Browser verified category filtering and Danijel's unconfigured-aircraft-permission attention entry. Document populated-state navigation and full narrow-screen visual acceptance remain to be exercised.
 - Remaining broader scope includes planned-versus-flown overlays, work-order enhancements, extended history reporting and final requirement-by-requirement acceptance.
+
+### Planned area and recorded flight comparison — 7 September 2026
+
+- Mission detail now combines the planned boundary with a selected actual flight track, lists flights linked by stable mission ID, and opens full flight analysis. No name-based matching or invented track is used.
+- Added recorded-position outside-area counts with boundary-inclusive handling, reversed-ring support, and explicit rejection of missing/degenerate, polar and antimeridian-spanning inputs. Counts represent samples, not duration or every possible crossing between them. Altitude comparisons remain unavailable when reference datums cannot be reconciled.
+- 57 unit tests passed and production build/TypeScript passed. Browser verified the unlinked-mission empty state. Real imported flights were not relinked merely for testing. Populated overlay visual QA, complex/self-intersecting polygon handling and broader final acceptance remain outstanding.
+- Broader goal remains active: work-order enhancements, extended equipment/battery reporting and remaining workflow/UI checks still need completion.

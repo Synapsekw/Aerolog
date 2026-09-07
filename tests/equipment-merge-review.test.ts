@@ -14,3 +14,9 @@ test('merge review refuses identical, mixed-kind or absent records',()=>{
  assert.throws(()=>equipmentMergeReview(records,{kind:'asset',id:'a'},{kind:'asset',id:'a'}));
  assert.throws(()=>equipmentMergeReview(records,{kind:'asset',id:'a'},{kind:'asset',id:'missing'}));
 });
+
+test('merge review includes historical references from an existing identity family',()=>{
+ const records:any[]=[{kind:'asset',id:'a',revision:1,data:{name:'Source'}},{kind:'asset',id:'b',revision:2,data:{name:'Canonical'}},{kind:'asset',id:'c',revision:1,data:{name:'Other'}},{kind:'flight',id:'old-flight',revision:1,data:{aircraftId:'a'}},{kind:'flight',id:'new-flight',revision:1,data:{aircraftId:'b'}},{kind:'flight',id:'wrong',revision:1,data:{equipmentIds:['c'],aircraft:'Source'}}];
+ const result=equipmentMergeReview(records,{kind:'asset',id:'b'},{kind:'asset',id:'c'},[{kind:'asset',source_id:'a',canonical_id:'b'}]);
+ assert.deepEqual(result.keepReferences.map(r=>r.id).sort(),['new-flight','old-flight']);
+});

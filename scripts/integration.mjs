@@ -597,6 +597,16 @@ try {
   const mergeAfter=check(await db.from('aerolog_records').select('id,revision,data').eq('organization_id',org).in('id',[aircraft.id,bulkAircraft.id]).order('id'));
   assert.deepEqual(mergeAfter,mergeBefore);
   pass('merge review API verifies owned identities, history/shares and read-only behavior');
+  assert.match(mergeReview.contextFingerprint,/^[a-f0-9]{32}$/);
+  const mergeApply={...mergeRequest,operationId:crypto.randomUUID(),contextFingerprint:mergeReview.contextFingerprint,counterSource:'keep',reason:'Verified test identity evidence for guarded API checks',physicalIdentityConfirmed:true};
+  await api('pilot','equipment-merge',mergeApply,403);await api('technician','equipment-merge',mergeApply,403);await api('outsider','equipment-merge',mergeApply,400);
+  await api('admin','equipment-merge',{...mergeApply,physicalIdentityConfirmed:false},400);
+  await api('admin','equipment-merge',{...mergeApply,contextFingerprint:'0'.repeat(32)},409);
+  await api('admin','equipment-merge',mergeApply,400);
+  await api('admin','equipment-merge?id='+crypto.randomUUID(),undefined,404);
+  assert.deepEqual(check(await db.from('aerolog_records').select('id,revision,data').eq('organization_id',org).in('id',[aircraft.id,bulkAircraft.id]).order('id')),mergeBefore);
+  pass('merge apply API enforces roles, confirmation, fresh context, serial identity and receipt scope');
+
   const guestEmail = prefix.toLowerCase() + '-member@aerolog.example';
   await api(
     'pilot',

@@ -11,6 +11,9 @@ import { mergeInspectionImpact } from '@/lib/operations/equipment-merge-inspecti
 import type { ReportRecord } from '@/lib/reports/flight-report';
 import { api } from '@/lib/supabase-browser';
 export default function EquipmentMergeReview() {
+  const [physicalConfirmed, setPhysicalConfirmed] = useState(false),
+    [operationId, setOperationId] = useState(''),
+    [receipt, setReceipt] = useState<any>(null);
   const [counterSource, setCounterSource] = useState<
       CounterDecision['source'] | ''
     >(''),
@@ -20,6 +23,8 @@ export default function EquipmentMergeReview() {
     > | null>(null);
   const resetCounter = () => {
     setCounterSource('');
+    setPhysicalConfirmed(false);
+    setOperationId(crypto.randomUUID());
     setCounterReason('');
     setCounterPreview(null);
   };
@@ -30,6 +35,9 @@ export default function EquipmentMergeReview() {
     [review, setReview] = useState<
       | (ReturnType<typeof equipmentMergeReview> & {
           inspectionContext: ReportRecord[];
+          contextFingerprint: string;
+          aliases: import('@/lib/domain/equipment-identity').EquipmentAlias[];
+          inspectionMeterRoutes: import('@/lib/operations/inspection-meter-routing').InspectionMeterRoute[];
           reportReferences: any[];
           shareReferences: any[];
           capturedAt: string;
@@ -53,8 +61,8 @@ export default function EquipmentMergeReview() {
       <summary>Review possible inventory duplicates</summary>
       <p>
         Compare identities, counters and linked records before consolidation.
-        This review does not merge or delete equipment; applying a merge is not
-        available yet.
+        Merge only records for the same physical item. Original records and
+        signed history are retained; new assignments use the canonical record.
       </p>
       <div className="form-grid">
         <label className="field">
@@ -105,6 +113,7 @@ export default function EquipmentMergeReview() {
         disabled={busy || !keep || !duplicate || keep === duplicate}
         onClick={async () => {
           setBusy(true);
+          setReceipt(null);
           setReview(null);
           resetCounter();
           try {
@@ -181,6 +190,7 @@ export default function EquipmentMergeReview() {
               <label className="field">
                 Counter source
                 <select
+                  disabled={busy}
                   value={counterSource}
                   onChange={(e) => {
                     setCounterSource(
@@ -204,6 +214,7 @@ export default function EquipmentMergeReview() {
               <label className="field">
                 Evidence and reason
                 <textarea
+                  disabled={busy}
                   maxLength={1000}
                   value={counterReason}
                   onChange={(e) => {
@@ -216,7 +227,9 @@ export default function EquipmentMergeReview() {
             </div>
             <Button
               variant="outline"
-              disabled={!counterSource || counterReason.trim().length < 10}
+              disabled={
+                busy || !counterSource || counterReason.trim().length < 10
+              }
               onClick={() => {
                 try {
                   setCounterPreview(
@@ -245,14 +258,14 @@ export default function EquipmentMergeReview() {
                 {counterPreview.lowerThanOther && (
                   <p>
                     This is below the other record’s counter. Applying a merge
-                    will require explicit reconciliation of inspection
-                    baselines; a lower counter must not postpone due work.
+                    will preserve accrued inspection usage through counter
+                    mapping; signed baselines are retained.
                   </p>
                 )}
                 <p>
-                  Equipment status, inspection baselines and canonical
-                  operational routing still require validation before a merge
-                  can be applied.
+                  The merge retains the more restrictive equipment condition and
+                  earliest service limit. Active mission packages, open work
+                  orders and active shares must be resolved first.
                 </p>
               </div>
             )}
@@ -302,19 +315,19 @@ export default function EquipmentMergeReview() {
             Server snapshot: {review.capturedAt}. Equipment revisions:{' '}
             {review.keep.revision} / {review.duplicate.revision}. Saved report
             matches are conservative ID matches, not permission to rewrite
-            exports. Unknown legacy relationships and counter reconciliation
-            remain part of merge execution review.
+            exports. Source records and report snapshots are retained after a
+            merge.
           </p>
         </>
       )}
       {review && counterPreview && (
         <section className="inspection-rule">
-          <h3>Inspection impact of the proposed register</h3>
+          <h3>Inspection comparison before counter mapping</h3>
           <p>
             Compares a direct counter replacement against current signed
-            baselines. Changed intervals must be reconciled before applying a
-            merge; this preview leaves flight counts and calendar dates
-            unchanged.
+            baselines. The merge preserves original inspection usage through
+            counter mapping. This comparison shows the risk of a direct
+            replacement; calendar dates stay unchanged.
           </p>
           {(() => {
             const impacts = mergeInspectionImpact(
@@ -322,6 +335,8 @@ export default function EquipmentMergeReview() {
               review,
               counterPreview,
               review.reviewDate,
+              review.inspectionMeterRoutes,
+              review.aliases,
             );
             return impacts.length ? (
               impacts.map((impact) => (
@@ -332,7 +347,7 @@ export default function EquipmentMergeReview() {
                   <p>
                     {impact.beforeStatus} → {impact.afterStatus}
                     {impact.requiresReconciliation
-                      ? ' · Baseline reconciliation required'
+                      ? ' · Counter mapping will preserve original usage'
                       : ''}
                   </p>
                   {impact.changes.map((change) => (
@@ -354,6 +369,91 @@ export default function EquipmentMergeReview() {
               </p>
             );
           })()}
+        </section>
+      )}
+      {review && counterPreview && (
+        <section className="inspection-rule">
+          <h3>Apply the reviewed merge</h3>
+          <p>
+            The keep record retains its name and metadata. Its selected usage
+            counter, conservative readiness values, earliest service limit and
+            inspection mappings are saved together. Source records remain
+            immutable, and existing kits/drafts may need equipment reselection.
+            This merge cannot be undone from the app.
+          </p>
+          <label className="field">
+            <span>
+              <input
+                type="checkbox"
+                checked={physicalConfirmed}
+                disabled={busy}
+                onChange={(e) => setPhysicalConfirmed(e.target.checked)}
+              />{' '}
+              I verified that both records represent the same physical
+              equipment.
+            </span>
+          </label>
+          <Button
+            disabled={busy || !physicalConfirmed || review.conflicts.length > 0}
+            onClick={async () => {
+              setBusy(true);
+              setError('');
+              const body = {
+                operationId,
+                kind,
+                keepId: keep,
+                duplicateId: duplicate,
+                contextFingerprint: review.contextFingerprint,
+                counterSource,
+                reason: counterPreview.reason,
+                physicalIdentityConfirmed: true,
+              };
+              try {
+                let result;
+                try {
+                  result = await api('equipment-merge', {
+                    method: 'POST',
+                    body: JSON.stringify(body),
+                  });
+                } catch (originalError) {
+                  try {
+                    result = await api('equipment-merge?id=' + operationId);
+                  } catch {
+                    throw originalError;
+                  }
+                }
+                setReceipt(result);
+                setReview(null);
+                setCounterPreview(null);
+                setDuplicate('');
+                setPhysicalConfirmed(false);
+                await app.refresh();
+                app.notify('Equipment merged. Source history retained.');
+              } catch (e) {
+                setError((e as Error).message);
+              } finally {
+                setBusy(false);
+              }
+            }}
+          >
+            {busy ? 'Applying reviewed merge…' : 'Merge equipment'}
+          </Button>
+        </section>
+      )}
+      {receipt && (
+        <section className="inspection-rule" role="status">
+          <h3>Merge completed</h3>
+          <p>
+            {receipt.duplicateId} → {receipt.keepId} ·{' '}
+            {receipt.equipment.status}
+          </p>
+          <p>
+            {receipt.inspectionPlans} inspection profiles retain their original
+            meter scale.
+          </p>
+          <small>
+            Receipt {receipt.id} · {receipt.createdAt}
+          </small>
         </section>
       )}
     </details>

@@ -1,3 +1,8 @@
+import {
+  equipmentIdentityFamily,
+  type EquipmentAlias,
+} from '@/lib/domain/equipment-identity';
+import type { InspectionMeterRoute } from './inspection-meter-routing';
 import type { ReportRecord } from '@/lib/reports/flight-report';
 import {
   inspectionDue,
@@ -13,8 +18,22 @@ export function mergeInspectionImpact(
   review: ReturnType<typeof equipmentMergeReview>,
   proposal: ReturnType<typeof reconcileEquipmentCounter>,
   today: string,
+  routes: InspectionMeterRoute[] = [],
+  aliases: EquipmentAlias[] = [],
 ) {
-  const ids = new Set([review.keep.id, review.duplicate.id]);
+  const ids = new Set([
+    ...equipmentIdentityFamily(
+      { kind: review.keep.kind as 'asset' | 'battery', id: review.keep.id },
+      aliases,
+    ).ids,
+    ...equipmentIdentityFamily(
+      {
+        kind: review.duplicate.kind as 'asset' | 'battery',
+        id: review.duplicate.id,
+      },
+      aliases,
+    ).ids,
+  ]);
   const equipment = records
     .filter((r) => r.kind === 'asset' || r.kind === 'battery')
     .map((r) => ({ ...r.data, id: r.id, kind: r.kind }));
@@ -31,7 +50,13 @@ export function mergeInspectionImpact(
     )
     .flatMap((record) => {
       const plan = { ...record.data, id: record.id } as InspectionPlan;
-      const current = inspectionMeters(plan, equipment, flights);
+      const current = inspectionMeters(
+        plan,
+        equipment,
+        flights,
+        routes,
+        aliases,
+      );
       const proposed = { ...current, [proposal.field]: proposal.value };
       const before = inspectionDue(plan, events, current, today),
         after = inspectionDue(plan, events, proposed, today);

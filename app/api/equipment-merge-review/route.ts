@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       })
       .parse(await request.json());
     const result = await adminClient()
-      .rpc('aerolog_equipment_merge_context', {
+      .rpc('aerolog_equipment_merge_preflight', {
         actor: profile.id,
         expected_org: profile.organization_id,
         equipment_kind: input.kind,
@@ -29,12 +29,21 @@ export async function POST(request: Request) {
       })
       .retry(false);
     if (result.error) throw new ApiError(result.error.message);
-    const { records, reportReferences, shareReferences, capturedAt, reviewDate } =
-      result.data;
+    const {
+      records,
+      reportReferences,
+      shareReferences,
+      capturedAt,
+      reviewDate,
+      contextFingerprint,
+      aliases,
+      inspectionMeterRoutes,
+    } = result.data;
     const review = equipmentMergeReview(
       records,
       { kind: input.kind, id: input.keepId },
       { kind: input.kind, id: input.duplicateId },
+      aliases,
     );
     const inspectionContext = records.filter((r: any) =>
       [
@@ -49,6 +58,9 @@ export async function POST(request: Request) {
       {
         ...review,
         inspectionContext,
+        contextFingerprint,
+        aliases,
+        inspectionMeterRoutes,
         reviewDate,
         reportReferences,
         shareReferences,

@@ -33,8 +33,12 @@ export default function EquipmentSharing() {
     };
   }, [allowed, app.organization.id, page, refresh]);
   if (!allowed) return null;
-  const items = app.records.filter((r) =>
-    ['asset', 'battery'].includes(r.kind),
+  const items = app.records.filter(
+    (r) =>
+      ['asset', 'battery'].includes(r.kind) &&
+      !(app.equipmentAliases || []).some(
+        (alias) => alias.kind === r.kind && alias.source_id === r.id,
+      ),
   );
   async function action(body: any) {
     setBusy(true);

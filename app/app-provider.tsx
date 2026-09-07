@@ -11,6 +11,7 @@ import {
   api,
   setActiveOrganization,
 } from '@/lib/supabase-browser';
+import type { EquipmentAlias } from '@/lib/domain/equipment-identity';
 import type { Profile, RecordEnvelope, Kind } from '@/lib/domain/models';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -20,6 +21,7 @@ type Store = {
   profile: Profile & { email: string };
   organization: any;
   records: RecordEnvelope[];
+  equipmentAliases: EquipmentAlias[];
   profiles: Profile[];
   notifications: any[];
   audit: any[];

@@ -400,3 +400,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Cross-organization requests cannot obtain download URLs for any of the five new evidence types. Cleanup now removes all attachments in the isolated test organization, including the newer target-based records.
 - All 30 integration checks passed and cleanup finished successfully. Tests use disposable data; no operational documents, incidents, credentials or equipment were modified.
 - These API round-trips close the prior missing upload/download evidence for the newer modules. Their full browser UX, mobile layouts, sharing/bulk workflows and remaining adoption acceptance still need completion. Goal remains active.
+
+### Canonical identity passport history — 7 September 2026
+
+- Bootstrap now loads all organization-scoped equipment aliases in ordered 500-row pages and exposes them through the app store.
+- Passports project flights, services, inspection plans/events, evidence and battery events across an equipment identity family without rewriting original records. Flights referencing multiple family members appear once. Explicit aircraft IDs take precedence over legacy names; ambiguous names remain unattributed.
+- Linked source IDs and canonical identity are displayed. Battery readings and telemetry remain separate per source, preserving counter provenance rather than summing counters.
+- Four focused identity/history tests, TypeScript, production build and diff checks passed. Actual authenticated e& bootstrap returned 792 records and zero aliases. No real equipment links or counters were changed.
+- Merge execution, canonical operational write/readiness routing, handover semantics and broader browser/mobile acceptance remain open. Browser access is still blocked by the locked Mac; goal remains active.

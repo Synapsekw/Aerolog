@@ -8,6 +8,7 @@ import { Status } from './shared';
 import BatteryReadingLedger from './battery-reading-ledger';
 import BatteryTelemetryHistory from './battery-telemetry-history';
 import MissionMap from './mission-map';
+import { equipmentPassportHistory } from '@/lib/domain/equipment-passport-history';
 import { flightLocation } from '@/lib/flight/location';
 export default function EquipmentPassport({
   kind,
@@ -35,30 +36,12 @@ export default function EquipmentPassport({
   const battery = kind === 'battery';
   const name = record.name || record.sourceName || record.model;
   const allowed = ['admin', 'manager', 'technician'].includes(app.profile.role);
-  const flights = app
-    .items('flight')
-    .filter((f) =>
-      battery
-        ? f.battery === record.id || f.batteryIds?.includes(record.id)
-        : f.aircraftId === record.id ||
-          f.equipmentIds?.includes(record.id) ||
-          f.aircraft === record.name,
-    )
-    .sort((a, b) =>
-      (b.startedAt || b.date).localeCompare(a.startedAt || a.date),
-    );
-  const files = app
-      .items('attachment')
-      .filter((f) => f.targetKind === kind && f.targetId === record.id),
-    services = app
-      .items('service')
-      .filter((s) => s.targetId ? s.targetKind === kind && s.targetId === record.id : kind === 'asset' && s.asset === record.name),
-    plans = app
-      .items('inspection_plan')
-      .filter((p) => p.targetKind === kind && p.targetId === record.id),
-    events = app
-      .items('inspection_event')
-      .filter((e) => plans.some((p) => p.id === e.planId));
+  const history = equipmentPassportHistory(
+    { kind, id: record.id },
+    app.equipmentAliases || [],
+    app.items,
+  );
+  const { flights, files, services, plans, events } = history;
   const storageSite = app
     .items('site')
     .find((s) => s.id === record.storageSiteId);
@@ -90,6 +73,22 @@ export default function EquipmentPassport({
         </div>
         <Status>{record.status}</Status>
       </div>
+      {history.ids.length > 1 && (
+        <section className="glass passport-list">
+          <h2>Linked equipment identities</h2>
+          <p>
+            History includes {history.ids.length} source records. Original IDs
+            and counters are retained; battery measurements remain separated by
+            source.
+          </p>
+          {history.sources.map((source) => (
+            <p key={source.id}>
+              {source.name || source.model} · {source.id}
+              {source.id === history.canonical.id ? ' · Canonical record' : ''}
+            </p>
+          ))}
+        </section>
+      )}
       <div className="passport-actions">
         {allowed && (
           <>
@@ -101,7 +100,9 @@ export default function EquipmentPassport({
                 Record completed charge cycle
               </Button>
             ) : null}
-            <Button variant="outline" onClick={onService}>Schedule service</Button>
+            <Button variant="outline" onClick={onService}>
+              Schedule service
+            </Button>
           </>
         )}
         <Button variant="outline" onClick={onInspections}>
@@ -282,7 +283,12 @@ export default function EquipmentPassport({
                 {s.task}
                 <small>
                   {s.due} · {s.technician}
-                  {s.cost != null && <> · {s.currency} {s.cost}</>}
+                  {s.cost != null && (
+                    <>
+                      {' '}
+                      · {s.currency} {s.cost}
+                    </>
+                  )}
                 </small>
               </span>
               <Status>{s.status}</Status>
@@ -384,41 +390,56 @@ export default function EquipmentPassport({
       )}
       {battery && tab === 'Battery readings' && (
         <>
-          <BatteryReadingLedger battery={record} />
+          {history.sources.map((source) => (
+            <div key={source.id}>
+              {history.ids.length > 1 && (
+                <h2>
+                  {source.name || source.model} · {source.id}
+                </h2>
+              )}
+              <BatteryReadingLedger battery={source} />
+            </div>
+          ))}
           <section className="glass passport-list">
             <h2>Charge and usage events</h2>
-            {app
-              .items('battery_event')
-              .filter((e) => e.battery === record.id)
-              .map((e) => (
-                <div className="linked-item" key={e.id}>
-                  <span>
-                    {e.flightId
-                      ? 'Recorded flight usage'
-                      : 'Completed charge cycle'}
-                    <small>
-                      {e.date} · {e.recordedBy}
-                    </small>
-                    <small>{e.notes}</small>
-                  </span>
-                  <span>
-                    {e.cycles != null ? `${e.cycles} register cycles` : ''}
-                    {e.health != null ? ` · ${e.health}% health` : ''}
-                    {e.temp != null ? ` · ${e.temp}°C` : ''}
-                  </span>
-                </div>
-              ))}
+            {history.batteryEvents.map((e) => (
+              <div className="linked-item" key={e.id}>
+                <span>
+                  {e.flightId
+                    ? 'Recorded flight usage'
+                    : 'Completed charge cycle'}
+                  <small>
+                    {e.date} · {e.recordedBy} · {e.battery}
+                  </small>
+                  <small>{e.notes}</small>
+                </span>
+                <span>
+                  {e.cycles != null ? `${e.cycles} register cycles` : ''}
+                  {e.health != null ? ` · ${e.health}% health` : ''}
+                  {e.temp != null ? ` · ${e.temp}°C` : ''}
+                </span>
+              </div>
+            ))}
           </section>
         </>
       )}
-      {battery && tab === 'Telemetry' && (
-        <BatteryTelemetryHistory
-          battery={record}
-          inventory={app.items('battery')}
-          flights={app.items('flight')}
-          onFlight={(id) => onOpen('flight', id)}
-        />
-      )}
+      {battery &&
+        tab === 'Telemetry' &&
+        history.sources.map((source) => (
+          <section key={source.id}>
+            {history.ids.length > 1 && (
+              <h2>
+                {source.name || source.model} · {source.id}
+              </h2>
+            )}
+            <BatteryTelemetryHistory
+              battery={source}
+              inventory={app.items('battery')}
+              flights={app.items('flight')}
+              onFlight={(id) => onOpen('flight', id)}
+            />
+          </section>
+        ))}
     </article>
   );
 }

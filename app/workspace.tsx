@@ -13,6 +13,7 @@ import OperationsCalendar from './operations-calendar';
 import InspectionManager from './inspection-manager';
 import EquipmentPassport from './equipment-passport';
 import OperationsCatalog from './operations-catalog';
+import EquipmentMetadataFields from './equipment-metadata-fields';
 import {
   inspectionDue,
   inspectionMeters,
@@ -348,6 +349,7 @@ export default function Workspace() {
       .filter((d) => d.status !== 'Within limits')
       .map((d) => ({ ...d, plan })),
   );
+  const [storageFilter, setStorageFilter] = useState('all');
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
   const [inventoryExpanded, setInventoryExpanded] = useState(true);
   const inventoryViews = useRef<
@@ -523,11 +525,11 @@ export default function Workspace() {
       battery: {
         id: newId('BAT'),
         model: '',
-        aircraft: aircraft[0]?.name || '',
+        aircraft: 'Unassigned',
         cycles: 0,
-        health: 100,
-        temp: 25,
-        status: 'Healthy',
+        health: null,
+        temp: null,
+        status: 'Unverified',
         notes: '',
       },
       crew: {
@@ -636,6 +638,11 @@ export default function Workspace() {
             (page !== 'Inventory' ||
               inventoryCategory === 'Battery' ||
               d.category === inventoryCategory) &&
+            (!['asset', 'battery'].includes(kind) ||
+              storageFilter === 'all' ||
+              (storageFilter === 'unassigned'
+                ? !d.storageSiteId
+                : d.storageSiteId === storageFilter)) &&
             Object.values(d)
               .filter((v) => typeof v === 'string')
               .join(' ')
@@ -1280,6 +1287,7 @@ export default function Workspace() {
                         : 'customer'
                   }
                   onMission={(id) => void open('mission', id)}
+                  onEquipment={(kind, id) => void open(kind, id)}
                 />
               )}
               {page === 'Inspections' && (
@@ -1340,6 +1348,27 @@ export default function Workspace() {
                       />
                     </div>
                     <div className="data-toolbar">
+                      {['asset', 'battery'].includes(kind) && (
+                        <label className="field">
+                          Storage site
+                          <select
+                            value={storageFilter}
+                            onChange={(e) => {
+                              setStorageFilter(e.target.value);
+                              setInventoryPage(1);
+                            }}
+                          >
+                            <option value="all">All storage sites</option>
+                            <option value="unassigned">Not assigned</option>
+                            {items('site').map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name}
+                                {s.archived ? ' (archived)' : ''}
+                              </option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
                       <Pick
                         label="Filter"
                         value={filter}
@@ -3213,6 +3242,7 @@ export default function Workspace() {
                   update('intervalHours', v === '' ? null : Number(v))
                 }
               />
+              <EquipmentMetadataFields draft={draft} update={update} />
               <Note
                 label="Equipment notes"
                 value={draft.notes}
@@ -3230,7 +3260,7 @@ export default function Workspace() {
                 onChange={(v) => update('id', v)}
               />
               <Field
-                label="Model"
+                label="Battery display name"
                 required
                 value={draft.model}
                 onChange={(v) => update('model', v)}
@@ -3238,7 +3268,7 @@ export default function Workspace() {
               <Pick
                 label="Compatible aircraft"
                 value={draft.aircraft}
-                options={aircraft.map((a) => a.name)}
+                options={['Unassigned', ...aircraft.map((a) => a.name)]}
                 onChange={(v) => update('aircraft', v)}
               />
               <div className="form-grid">
@@ -3270,10 +3300,12 @@ export default function Workspace() {
                   'Healthy',
                   'Attention required',
                   'Quarantined',
+                  'Unverified',
                   'Retired',
                 ]}
                 onChange={(v) => update('status', v)}
               />
+              <EquipmentMetadataFields draft={draft} update={update} battery />
               <Note
                 label="Inspection notes"
                 value={draft.notes}
@@ -3391,7 +3423,7 @@ export default function Workspace() {
               <Pick
                 label="Aircraft"
                 value={draft.aircraft}
-                options={aircraft.map((a) => a.name)}
+                options={['Unassigned', ...aircraft.map((a) => a.name)]}
                 onChange={(v) => update('aircraft', v)}
               />
               <Pick

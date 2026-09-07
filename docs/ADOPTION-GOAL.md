@@ -55,3 +55,12 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Mission context is stamped from authoritative catalog records when drafting/submitting and preserved through review/approval. Customer/project/site details appear in mission review and PDF packages. Later catalog edits do not rewrite submitted history.
 - Migration 020 applied. Rollback DB tests passed for relationships, revision conflicts, pilot rejection, invalid sites, authoritative snapshots and service-only RPC. All fixtures rolled back. Typecheck, 42 unit tests and production build passed; browser opened project and site forms without saving fixture data.
 - The wider adoption goal remains open: versioned forms/documents, personnel qualifications/permissions, incidents and report jobs still need implementation and acceptance checks. Storage-site records exist; assigning physical inventory to them is still pending.
+
+### Equipment identity and storage — 7 September 2026
+
+- Added explicit manufacturer, product model, firmware and storage-site fields to aircraft/accessories/payloads/controllers and batteries. Battery rated capacity/nominal voltage are separate from measured readings; grouping prefers explicitly recorded product model and keeps legacy inference as a fallback.
+- Equipment editing offers active storage/both-purpose sites. Passports show assigned storage separately from last flight location; site cards link assigned equipment. Inventory and battery pages filter by storage site or unassigned.
+- New battery forms leave health/temperature unknown and condition Unverified; compatibility is initially unassigned. Source imports were not rewritten.
+- Migration 021 validates metadata and organization-scoped storage references through the existing save RPC. Archived sites cannot receive new assignments; existing assignments can be edited or cleared. A regression test caught and fixed BEFORE INSERT behavior on the save RPC's upsert.
+- DB regression fixtures rolled back. Typecheck, 42 unit tests and production build passed. Browser verified battery filters and the expanded register form; no equipment changes saved during UI QA.
+- Remaining larger adoption work includes reusable forms/documents, personnel qualifications/permissions, incidents, report jobs and the full final acceptance audit.

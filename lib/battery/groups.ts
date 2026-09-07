@@ -1,4 +1,9 @@
-export function batteryGroup(b: { model: string; sourceName?: string }) {
+export function batteryGroup(b: {
+  model: string;
+  sourceName?: string;
+  productModel?: string;
+}) {
+  if (b.productModel?.trim()) return b.productModel.trim();
   const name = `${b.model} ${b.sourceName || ''}`;
   const code = name.match(/\b(TB\d{2,3}S?|WB\d{2})\b/i);
   if (code) return code[1].toUpperCase();

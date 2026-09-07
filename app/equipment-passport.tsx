@@ -59,6 +59,9 @@ export default function EquipmentPassport({
     events = app
       .items('inspection_event')
       .filter((e) => plans.some((p) => p.id === e.planId));
+  const storageSite = app
+    .items('site')
+    .find((s) => s.id === record.storageSiteId);
   const lastFlight = flights.find((f) => flightLocation(f));
   const point = lastFlight ? flightLocation(lastFlight) : undefined;
   const tabs = [
@@ -139,6 +142,16 @@ export default function EquipmentPassport({
               {[
                 ['Name', name],
                 ['Serial', record.serial || 'Unknown'],
+                ['Manufacturer', record.manufacturer || 'Unknown'],
+                ['Product model', record.productModel || 'Not recorded'],
+                ['Firmware', record.firmware || 'Unknown'],
+                [
+                  'Storage site',
+                  storageSite
+                    ? storageSite.name +
+                      (storageSite.archived ? ' (archived)' : '')
+                    : 'Not assigned',
+                ],
                 ['Source', record.externalSource || 'AeroLog'],
                 [
                   'Custodian / aircraft',
@@ -150,6 +163,18 @@ export default function EquipmentPassport({
                 ],
                 ...(battery
                   ? [
+                      [
+                        'Rated capacity',
+                        record.ratedCapacityMah == null
+                          ? 'Unknown'
+                          : record.ratedCapacityMah + ' mAh',
+                      ],
+                      [
+                        'Nominal voltage',
+                        record.nominalVoltage == null
+                          ? 'Unknown'
+                          : record.nominalVoltage + ' V',
+                      ],
                       ['Register cycles', record.cycles],
                       [
                         'Reported health',
@@ -188,6 +213,21 @@ export default function EquipmentPassport({
             <p>{record.notes || 'No additional notes.'}</p>
           </section>
           <section className="glass">
+            <h2>Assigned storage</h2>
+            {storageSite ? (
+              <>
+                <p>
+                  {storageSite.name}
+                  {storageSite.archived ? ' (archived)' : ''} ·{' '}
+                  {storageSite.address}
+                </p>
+                {storageSite.geometry?.length > 0 && (
+                  <MissionMap points={storageSite.geometry} height={240} />
+                )}
+              </>
+            ) : (
+              <p>No storage site assigned.</p>
+            )}
             <h2>Last observed flight location</h2>
             {point ? (
               <>

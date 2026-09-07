@@ -9,9 +9,11 @@ import { catalogSchemas, type CatalogKind } from '@/lib/operations/catalog';
 export default function OperationsCatalog({
   kind,
   onMission,
+  onEquipment,
 }: {
   kind: CatalogKind;
   onMission: (id: string) => void;
+  onEquipment: (kind: 'asset' | 'battery', id: string) => void;
 }) {
   const app = useApp(),
     [draft, setDraft] = useState<any>(null),
@@ -327,6 +329,36 @@ export default function OperationsCatalog({
                     )}
                   </>
                 )}
+                {kind === 'site' &&
+                  (() => {
+                    const equipment = (['asset', 'battery'] as const).flatMap(
+                      (kind) =>
+                        app
+                          .items(kind)
+                          .filter((e) => e.storageSiteId === r.id)
+                          .map((e) => ({ ...e, kind })),
+                    );
+                    return (
+                      <div>
+                        <p>{equipment.length} equipment assigned to storage</p>
+                        {equipment.slice(0, 8).map((e) => (
+                          <button
+                            key={e.kind + e.id}
+                            className="linked-item"
+                            onClick={() => onEquipment(e.kind, e.id)}
+                          >
+                            {e.name || e.sourceName || e.model}
+                            <span>{e.status}</span>
+                          </button>
+                        ))}
+                        {equipment.length > 8 && (
+                          <p>
+                            Filter inventory by this site to view all equipment.
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })()}
                 <p>{r.notes}</p>
                 <p>
                   {missions.length} linked missions · {flights.length} linked

@@ -94,8 +94,15 @@ const inventorySourceFields = {
   sourceRecord: z.record(z.string(), z.unknown()).optional(),
   sourceImportedAt: z.string().optional(),
 };
+const equipmentMetadata = {
+  manufacturer: z.string().trim().max(100).optional(),
+  productModel: z.string().trim().max(120).optional(),
+  firmware: z.string().trim().max(100).optional(),
+  storageSiteId: z.string().max(100).optional(),
+};
 export const assetSchema = z.object({
   ...inventorySourceFields,
+  ...equipmentMetadata,
   id,
   name,
   category: z.enum(['Aircraft', 'Payload', 'Controller', 'Accessory']),
@@ -114,7 +121,10 @@ export const assetSchema = z.object({
   notes: note,
 });
 export const batterySchema = z.object({
+  ratedCapacityMah: numeric(1, 1000000).nullable().optional(),
+  nominalVoltage: numeric(0.1, 1000).nullable().optional(),
   ...inventorySourceFields,
+  ...equipmentMetadata,
   id,
   model: name,
   aircraft: name,

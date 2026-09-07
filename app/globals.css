@@ -4309,3 +4309,26 @@ textarea {
 .operations-catalog .kit-grid article {
   min-width: 0;
 }
+
+.equipment-metadata-fields {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+.equipment-metadata-fields legend {
+  padding: 0 6px;
+  font-size: 13px;
+}
+.data-toolbar > .field {
+  min-width: 150px;
+  max-width: 260px;
+}
+@media (max-width: 640px) {
+  .data-toolbar > .field {
+    max-width: 100%;
+    flex: 1 1 100%;
+  }
+}

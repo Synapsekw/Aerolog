@@ -11,6 +11,7 @@ import KitBrowser from './kit-browser';
 import MissionKitPicker from './mission-kit-picker';
 import OperationsCalendar from './operations-calendar';
 import InspectionManager from './inspection-manager';
+import EquipmentPassport from './equipment-passport';
 import {
   inspectionDue,
   inspectionMeters,
@@ -21,7 +22,6 @@ import BatteryBrowser from './battery-browser';
 import FlightGlobe from './flight-globe';
 import ImportReview from './import-review';
 import { duplicateMatches } from '@/lib/flight/duplicates';
-import BatteryTelemetryHistory from './battery-telemetry-history';
 import { Status } from './shared';
 import {
   Camera,
@@ -846,7 +846,31 @@ export default function Workspace() {
           </div>
         </header>
         <div className="content">
-          {detail?.kind === 'flight' && record ? (
+          {detail && ['asset', 'battery'].includes(detail.kind) && record ? (
+            <EquipmentPassport
+              key={detail.kind + record.id}
+              kind={detail.kind as 'asset' | 'battery'}
+              record={record}
+              onBack={() => setDetail(null)}
+              onEdit={() => edit(detail.kind, record)}
+              onService={() => {
+                edit('service');
+                setDraft((d: any) => ({
+                  ...d,
+                  asset: record.name,
+                  intervalHours: record.intervalHours || 100,
+                }));
+              }}
+              onCycle={() => {
+                setDraft({ ...record });
+                setDialog('cycle');
+                setNote('');
+                setError('');
+              }}
+              onOpen={(k, id) => void open(k, id)}
+              onInspections={() => navigate('Inspections')}
+            />
+          ) : detail?.kind === 'flight' && record ? (
             <article className="flight-page">
               <Button variant="outline" onClick={() => setDetail(null)}>
                 ← Back to flight logs
@@ -2607,7 +2631,7 @@ export default function Workspace() {
         </DialogContent>
       </Dialog>
       <Sheet
-        open={!!detail && detail.kind !== 'flight'}
+        open={!!detail && !['flight', 'asset', 'battery'].includes(detail.kind)}
         onOpenChange={(o) => {
           if (!o) setDetail(null);
         }}
@@ -2877,218 +2901,6 @@ export default function Workspace() {
                         </Button>
                       </div>
                     )}
-                  </>
-                )}
-                {detail?.kind === 'asset' && (
-                  <>
-                    <div className="equipment-hero">
-                      <Drone size={60} />
-                      <span>{record.category}</span>
-                    </div>
-                    <dl className="summary-list">
-                      {[
-                        ['Serial number', record.serial || 'Not supplied'],
-                        [
-                          'Source status',
-                          String(record.sourceRecord?.status ?? 'Not supplied'),
-                        ],
-                        ['Custodian', record.pilot],
-                        [
-                          'Usage',
-                          record.hours == null
-                            ? 'Not supplied'
-                            : record.hours.toFixed(2) + ' h',
-                        ],
-                        [
-                          'Next service',
-                          record.next == null
-                            ? 'Not configured'
-                            : record.next + ' h',
-                        ],
-                        [
-                          'Remaining',
-                          record.next == null || record.hours == null
-                            ? 'Not configured'
-                            : Math.max(0, record.next - record.hours).toFixed(
-                                1,
-                              ) + ' h',
-                        ],
-                        [
-                          'Service interval',
-                          record.intervalHours == null
-                            ? 'Not configured'
-                            : record.intervalHours + ' h',
-                        ],
-                      ].map(([k, v]) => (
-                        <div key={k}>
-                          <dt>{k}</dt>
-                          <dd>{v}</dd>
-                        </div>
-                      ))}
-                    </dl>
-                    {record.next != null && record.hours != null && (
-                      <Progress
-                        value={Math.min(
-                          100,
-                          (record.hours / record.next) * 100,
-                        )}
-                      />
-                    )}
-                    <p>{record.notes}</p>
-                    {fleet && (
-                      <div className="action-footer">
-                        <Button
-                          className="primary"
-                          onClick={() => edit('asset', record)}
-                        >
-                          Edit equipment / custody
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => {
-                            const name = record.name;
-                            edit('service');
-                            setDraft((d: any) => ({
-                              ...d,
-                              asset: name,
-                              intervalHours: record.intervalHours,
-                            }));
-                          }}
-                        >
-                          Schedule service
-                        </Button>
-                      </div>
-                    )}
-                    <h3 className="detail-heading">Linked flight history</h3>
-                    {flights
-                      .filter(
-                        (f) =>
-                          f.aircraftId === record.id ||
-                          f.equipmentIds?.includes(record.id) ||
-                          f.aircraft === record.name,
-                      )
-                      .map((f) => (
-                        <button
-                          className="linked-item"
-                          key={f.id}
-                          onClick={() => void open('flight', f.id)}
-                        >
-                          {f.id}
-                          <span>
-                            {f.date} · {f.duration}
-                          </span>
-                        </button>
-                      ))}
-                  </>
-                )}
-                {detail?.kind === 'battery' && (
-                  <>
-                    <div className="battery-passport">
-                      <Battery size={45} />
-                      <strong>
-                        {record.health ?? '—'}
-                        <span>%</span>
-                      </strong>
-                      <div>
-                        Measured state of health<Status>{record.status}</Status>
-                      </div>
-                    </div>
-                    <div className="detail-grid">
-                      <div>
-                        <small>Charge cycles</small>
-                        <strong>{record.cycles}</strong>
-                      </div>
-                      <div>
-                        <small>Latest temperature</small>
-                        <strong>
-                          {record.temp == null ? 'Unknown' : record.temp + '°C'}
-                        </strong>
-                      </div>
-                    </div>
-                    <p>{record.notes}</p>
-                    {fleet && (
-                      <div className="action-footer">
-                        <Button
-                          className="primary"
-                          onClick={() => {
-                            setDraft({ ...record });
-                            setDialog('cycle');
-                            setNote('');
-                            setError('');
-                          }}
-                        >
-                          <Plus size={15} /> Record charge cycle
-                        </Button>
-                        <Button
-                          variant="outline"
-                          onClick={() => edit('battery', record)}
-                        >
-                          Edit / quarantine
-                        </Button>
-                      </div>
-                    )}
-                    <h3 className="detail-heading">Linked flights</h3>
-                    {flights
-                      .filter(
-                        (f) =>
-                          f.batteryIds?.includes(record.id) ||
-                          f.battery === record.id,
-                      )
-                      .map((f) => (
-                        <button
-                          className="linked-item"
-                          key={f.id}
-                          onClick={() => void open('flight', f.id)}
-                        >
-                          <span>
-                            {f.mission}
-                            <small>
-                              {f.date} · {f.duration}
-                            </small>
-                          </span>
-                          <ArrowUpRight size={16} />
-                        </button>
-                      ))}
-                    <BatteryTelemetryHistory
-                      battery={record}
-                      inventory={batteries}
-                      flights={flights}
-                      onFlight={(id) => void open('flight', id)}
-                    />
-                    <h3 className="detail-heading">Measured capacity trend</h3>
-                    <BatteryHistory
-                      events={items('battery_event').filter(
-                        (e) => e.battery === record.id,
-                      )}
-                      current={record.health ?? null}
-                    />
-                    <h3 className="detail-heading">
-                      Usage and condition history
-                    </h3>
-                    {items('battery_event')
-                      .filter((e) => e.battery === record.id)
-                      .map((e) => (
-                        <div className="linked-item" key={e.id}>
-                          <span>
-                            {e.flightId
-                              ? 'Flight ' + e.flightId
-                              : 'Charge cycle ' + e.cycles}
-                            <small>
-                              {new Date(e.date).toLocaleString()} ·{' '}
-                              {e.recordedBy}
-                            </small>
-                            {e.notes && <small>{e.notes}</small>}
-                          </span>
-                          <span>
-                            {e.health != null
-                              ? e.health + '% health'
-                              : e.start != null
-                                ? e.start + '% → ' + e.end + '%'
-                                : 'Usage recorded'}
-                            {e.temp != null ? ' · ' + e.temp + '°C' : ''}
-                          </span>
-                        </div>
-                      ))}
                   </>
                 )}
                 {detail?.kind === 'service' && (
@@ -4073,45 +3885,3 @@ import {
   LineChart,
   Line,
 } from 'recharts';
-function BatteryHistory({
-  events,
-  current,
-}: {
-  events: any[];
-  current: number | null;
-}) {
-  const data = events
-    .filter((e) => e.health != null)
-    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
-    .map((e) => ({
-      date: new Date(e.date).toLocaleDateString(),
-      health: e.health,
-    }));
-  if (!data.length)
-    return (
-      <p>
-        No historical measurements yet. Current capacity:{' '}
-        {current == null ? 'unknown' : current + '%'}. Record charge cycles to
-        build the trend.
-      </p>
-    );
-  return (
-    <ChartContainer
-      className="activity-chart"
-      config={{ health: { label: 'Measured health (%)', color: '#d0f68b' } }}
-    >
-      <LineChart data={data}>
-        <CartesianGrid vertical={false} stroke="#ffffff10" />
-        <XAxis dataKey="date" minTickGap={40} />
-        <YAxis domain={[0, 100]} width={35} />
-        <ChartTooltip content={<ChartTooltipContent />} />
-        <Line
-          type="monotone"
-          dataKey="health"
-          stroke="#d0f68b"
-          dot={{ r: 4 }}
-        />
-      </LineChart>
-    </ChartContainer>
-  );
-}

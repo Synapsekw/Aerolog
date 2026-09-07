@@ -4253,3 +4253,46 @@ textarea {
 .inspection-meters .field {
   min-width: 0;
 }
+.equipment-passport-page {
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+}
+.passport-actions,
+.passport-tabs {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.passport-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+.passport-columns > .glass,
+.passport-list,
+.battery-reading-ledger {
+  padding: 24px;
+  min-width: 0;
+}
+.passport-list h2 {
+  margin-bottom: 16px;
+}
+.battery-reading-ledger > .row {
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.equipment-passport-page h1,
+.equipment-passport-page .linked-item {
+  overflow-wrap: anywhere;
+}
+@media (max-width: 800px) {
+  .passport-columns {
+    grid-template-columns: 1fr;
+  }
+  .passport-columns > .glass,
+  .passport-list,
+  .battery-reading-ledger {
+    padding: 16px;
+  }
+}

@@ -51,3 +51,57 @@ export function kitContents(kit: Kit, assets: Asset[], batteries: Battery[]) {
     };
   });
 }
+
+export function kitAssignment(
+  kit: Kit,
+  assets: Asset[],
+  batteries: Battery[],
+  currentAircraft: string,
+  rules: { batteryMinHealth: number; batteryMaxTemperature: number },
+) {
+  const contents = kitContents(kit, assets, batteries);
+  const aircraft = kit.items
+    .filter((i) => i.kind === 'asset')
+    .map((i) => assets.find((a) => a.id === i.id))
+    .filter((a): a is Asset => Boolean(a && a.category === 'Aircraft'));
+  const selectedAircraft = aircraft[0]?.name || currentAircraft;
+  const blockers: string[] = [];
+  if (kit.archived) blockers.push('This kit is archived.');
+  if (aircraft.length > 1)
+    blockers.push(
+      'This kit contains multiple aircraft. Select a single-aircraft kit until multi-aircraft assignment is enabled.',
+    );
+  for (const item of contents) {
+    if (!item.ready) blockers.push(`${item.name}: ${item.status}`);
+    if (item.kind === 'asset') {
+      const a = assets.find((a) => a.id === item.id);
+      if (a && (a.hours == null || a.next == null || a.hours >= a.next))
+        blockers.push(`${item.name}: service counters need review`);
+    } else {
+      const b = batteries.find((b) => b.id === item.id);
+      if (b && b.aircraft !== selectedAircraft)
+        blockers.push(
+          `${item.name}: not assigned to ${selectedAircraft || 'an aircraft'}`,
+        );
+      if (
+        b &&
+        (b.health == null ||
+          b.temp == null ||
+          b.health < rules.batteryMinHealth ||
+          b.temp > rules.batteryMaxTemperature)
+      )
+        blockers.push(`${item.name}: battery measurements need review`);
+    }
+  }
+  return {
+    aircraft: selectedAircraft,
+    equipment: kit.items.flatMap((i) =>
+      i.kind === 'battery'
+        ? [i.id]
+        : assets
+            .filter((a) => a.id === i.id && a.category !== 'Aircraft')
+            .map((a) => a.name),
+    ),
+    blockers,
+  };
+}

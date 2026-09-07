@@ -8,6 +8,7 @@ import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
 import TeamDirectory from './team-directory';
 import KitBrowser from './kit-browser';
+import MissionKitPicker from './mission-kit-picker';
 import BatteryBrowser from './battery-browser';
 import FlightGlobe from './flight-globe';
 import ImportReview from './import-review';
@@ -2086,6 +2087,12 @@ export default function Workspace() {
             )}
             {step === 1 && (
               <>
+                <MissionKitPicker
+                  draft={draft}
+                  onApply={(patch) =>
+                    setDraft((d: any) => ({ ...d, ...patch }))
+                  }
+                />
                 <div className="form-grid">
                   <Pick
                     label="Pilot in command"
@@ -2474,6 +2481,15 @@ export default function Workspace() {
                         ['Aircraft', record.aircraft],
                         ['Altitude', record.altitude + ' m AGL'],
                         ['Equipment', record.equipment.join(', ') || 'None'],
+                        [
+                          'Kit snapshots',
+                          record.kitSnapshots
+                            ?.map(
+                              (k: any) =>
+                                `${k.name} · v${k.revision} · ${k.items.length} items`,
+                            )
+                            .join('; ') || 'No kit used',
+                        ],
                       ].map(([k, v]) => (
                         <div key={k}>
                           <dt>{k}</dt>

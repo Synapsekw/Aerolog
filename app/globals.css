@@ -4117,3 +4117,14 @@ textarea {
   padding: 20px;
   overflow-wrap: anywhere;
 }
+.mission-kit-picker {
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 12px;
+}
+.mission-kit-picker .row {
+  gap: 12px;
+  flex-wrap: wrap;
+}

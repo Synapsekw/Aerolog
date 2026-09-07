@@ -38,6 +38,30 @@ export const missionSchema = z.object({
   history: z.array(z.string()).default([]),
   geometry: z.array(point).max(500).default([]),
   altitude: numeric(1, 500).default(60),
+  kitSelections: z
+    .array(z.object({ id, revision: z.number().int().positive() }))
+    .max(20)
+    .default([]),
+  kitSnapshots: z
+    .array(
+      z.object({
+        id,
+        revision: z.number().int().positive(),
+        name,
+        capturedAt: z.string(),
+        items: z.array(
+          z.object({
+            kind: z.enum(['asset', 'battery']),
+            id,
+            name: z.string(),
+            serial: z.string(),
+            status: z.string(),
+          }),
+        ),
+      }),
+    )
+    .max(20)
+    .default([]),
   reviewNote: note.optional(),
   debrief: note.optional(),
   reviewedBy: z.string().optional(),

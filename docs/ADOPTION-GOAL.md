@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Authoritative merge-review context — 7 September 2026
+
+- Merge comparison now loads server context under the organization lock, with current record revisions, saved-report ID matches and equipment-sharing relationships. Browser selections are disabled while the request is pending; review displays its capture time.
+- Migration 043 projects only the relationship/identity/counter fields needed for review and checks active manager/org access. Raw source payloads, notes and geometry are omitted. API returns comparison results and a review hash; this is not yet an executable merge token.
+- Rollback regression passed updated revisions, captured report/share dependencies, reduced payload and pilot/wrong-org/private-RPC restrictions. Production build and final TypeScript passed.
+- Actual consolidation, counter reconciliation, unknown legacy relationships, operational handover and visual acceptance remain open. No equipment or history was merged. Goal active.
+
 ### Inventory merge review foundation — 7 September 2026
 
 - Added a clearly read-only duplicate comparison on Inventory/Batteries. Managers choose two same-kind records and inspect identity/metadata/counter differences, category/serial conflicts and loaded-record dependencies before any consolidation.

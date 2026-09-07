@@ -1,0 +1,13 @@
+create function public.aerolog_equipment_merge_context(actor uuid,expected_org uuid,equipment_kind text,keep_id text,duplicate_id text) returns jsonb language plpgsql security definer set search_path='' as $$
+declare p public.aerolog_profiles;records jsonb;reports jsonb;shares jsonb;
+begin
+ perform pg_advisory_xact_lock(hashtextextended(expected_org::text,0));select * into p from public.aerolog_profiles where id=actor and active for update;
+ if p.id is null or p.organization_id<>expected_org or p.role not in ('admin','manager') then raise exception 'Organization manager required' using errcode='42501';end if;
+ if equipment_kind not in ('asset','battery') or keep_id=duplicate_id or (select count(*) from public.aerolog_records where organization_id=expected_org and kind=equipment_kind and id in (keep_id,duplicate_id))<>2 then raise exception 'Choose two owned records of the same equipment kind';end if;
+ select coalesce(jsonb_agg(jsonb_build_object('kind',r.kind,'id',r.id,'revision',r.revision,'data',coalesce((select jsonb_object_agg(key,value) from jsonb_each(r.data) where key=any(array['name','sourceName','category','serial','manufacturer','productModel','model','firmware','status','hours','cycles','health','temp','storageSiteId','source','externalId','aircraftId','equipmentIds','aircraft','battery','batteryIds','equipment','additionalAircraft','kitSnapshots','items','targetKind','targetId','asset','planId','batteryId','authorizedAircraftIds','task','title'])),'{}')) order by r.kind,r.id),'[]') into records from public.aerolog_records r where organization_id=expected_org;
+ select coalesce(jsonb_agg(jsonb_build_object('id',id,'status',status,'request',request,'createdAt',created_at) order by id),'[]') into reports from public.aerolog_report_jobs where organization_id=expected_org and jsonb_path_exists(snapshot,'$.** ? (@ == $keep || @ == $duplicate)',jsonb_build_object('keep',keep_id,'duplicate',duplicate_id));
+ select coalesce(jsonb_agg(jsonb_build_object('id',id,'status',status,'equipmentId',equipment_id,'recipientOrg',recipient_org,'expiresAt',expires_at) order by id),'[]') into shares from public.aerolog_equipment_shares where owner_org=expected_org and kind=equipment_kind and equipment_id in (keep_id,duplicate_id);
+ return jsonb_build_object('records',records,'reportReferences',reports,'shareReferences',shares,'capturedAt',now());
+end;$$;
+revoke all on function public.aerolog_equipment_merge_context(uuid,uuid,text,text,text) from public,anon,authenticated;
+grant execute on function public.aerolog_equipment_merge_context(uuid,uuid,text,text,text) to service_role;

@@ -1,11 +1,15 @@
 'use client';
 import { useMemo, useState } from 'react';
+import { useApp } from './app-provider';
+import { inspectionCalendar } from '@/lib/operations/inspection-calendar';
 import { Button } from '@/components/ui/button';
 import type { Mission, Service, Flight } from '@/lib/domain/models';
 import { missionAircraft, missionOverlaps } from '@/lib/operations/assignments';
 type Entry = {
   id: string;
-  kind: 'mission' | 'service' | 'flight';
+  kind: 'mission' | 'service' | 'flight' | 'inspection';
+  targetKind?: 'asset' | 'battery';
+  targetId?: string;
   name: string;
   date: string;
   time: string;
@@ -26,14 +30,17 @@ export default function OperationsCalendar({
   missions: Mission[];
   services: Service[];
   flights: Flight[];
-  onOpen: (kind: Entry['kind'], id: string) => void;
+  onOpen: (kind: 'mission' | 'service' | 'flight' | 'asset' | 'battery', id: string) => void;
 }) {
+  const app = useApp();
+  const inspections = inspectionCalendar(app.items('inspection_plan'), app.items('inspection_event'), [...app.items('asset').map(a=>({...a,kind:'asset'})),...app.items('battery').map(b=>({...b,kind:'battery'}))],flights,today);
   const [anchor, setAnchor] = useState(today),
     [selected, setSelected] = useState(today),
     [view, setView] = useState('month'),
     [type, setType] = useState('All');
   const entries: Entry[] = useMemo(
     () => [
+      ...inspections.entries,
       ...missions.map((m) => ({
         id: m.id,
         kind: 'mission' as const,
@@ -61,7 +68,7 @@ export default function OperationsCalendar({
           status: 'Recorded',
         })),
     ],
-    [missions, services, flights],
+    [missions, services, flights, inspections.entries],
   );
   const start = new Date(
     (view === 'month' ? anchor.slice(0, 7) + '-01' : anchor) + 'T12:00:00Z',
@@ -168,6 +175,7 @@ export default function OperationsCalendar({
             <option value="mission">Missions</option>
             <option value="service">Maintenance</option>
             <option value="flight">Flight logs</option>
+            <option value="inspection">Inspections</option>
           </select>
         </div>
       </div>
@@ -178,6 +186,7 @@ export default function OperationsCalendar({
         Dates follow the organization schedule; imported flights with no date
         are excluded.
       </p>
+      <p className="fine-print">Inspection dates show calendar intervals; hours, flights or cycles may make an inspection due earlier. {inspections.withoutCalendarDate} inspection rules have no calendar interval and remain in the inspection readiness view.</p>
       <div className="calendar-grid" role="group" aria-label="Operations dates">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (
           <strong className="calendar-weekday" key={d}>
@@ -221,7 +230,7 @@ export default function OperationsCalendar({
             <button
               className="calendar-agenda-row"
               key={e.kind + e.id}
-              onClick={() => onOpen(e.kind, e.id)}
+              onClick={() => e.kind === 'inspection' ? onOpen(e.targetKind!, e.targetId!) : onOpen(e.kind, e.id)}
             >
               <span>{e.time || '—'}</span>
               <strong>{e.name}</strong>

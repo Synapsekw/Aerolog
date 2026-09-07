@@ -215,3 +215,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - New rollback report-history regression creates a typed aircraft/service source, queues and claims a report, edits the source task/cost/due date, expires the lease, and reclaims it. Original source revision, decimal cost and CSV bytes remain unchanged after recovery. Test passed; all fixtures rolled back.
 - Production build/TypeScript passed. Browser verified a populated existing local-sample aircraft report: the airframe/propeller work order appears with scheduled due-date basis and technician, and one-page history disables both paging controls. No real work orders or flight links were altered.
 - Remaining goal work includes broader end-to-end/visual checks, multi-page history browser acceptance, review of remaining adoption requirements and any gaps those checks uncover.
+
+### Inspection due dates in operations calendar — 7 September 2026
+
+- Added inspection entries/filter to the shared month/week calendar. Each calendar interval uses its latest signed rule baseline and links to the exact equipment kind/ID. Counter-based readiness status remains visible even when a calendar date lies ahead.
+- Hours/flights/cycle-only rules are counted separately instead of receiving fabricated due dates. The calendar explains that counter thresholds may make work due sooner than a date interval.
+- Focused test passed for signed-baseline reset, earlier cycle-triggered due status, meter-only omission and type-safe equipment identity. Production build/TypeScript passed. Browser verified the Inspections filter and empty-date explanation; populated inspection calendar visual acceptance remains open.
+- Goal remains active. Calendar sharing/iCal, broader PDF reports and the remaining adoption/visual acceptance requirements still require work.

@@ -4442,3 +4442,4 @@ textarea {
 .crew-matrix th, .crew-matrix td { vertical-align: top; min-width: 150px; }
 .crew-matrix small { display: block; margin-top: 5px; color: var(--muted-foreground); font-weight: 400; }
 .matrix-credential + .matrix-credential { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
+.calendar-event.inspection { color: #deb6ff; background: rgba(180, 110, 240, .12); }

@@ -257,7 +257,7 @@ export default function OperationsCalendar({
           <p>No operations for this date and filter.</p>
         )}
       </div>
-      <CalendarSharing from={days[0]} to={days[days.length-1]} />
+      <CalendarSharing key={app.organization.id} from={days[0]} to={days[days.length-1]} />
     </section>
   );
 }

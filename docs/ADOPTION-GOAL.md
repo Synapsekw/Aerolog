@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Calendar link management paging — 7 September 2026
+
+- Removed the newest-100 management cutoff. Manager listing now pages 25 links with stable created-time/ID ordering, next-page detection, refresh and loading/empty states; old links remain reachable for revocation.
+- List responses are ignored after effect cleanup and the sharing panel remounts on organization changes. New links return to the first page; expiry UI rejects fractional/invalid day values.
+- Actual API regression inserted 101 temporary already-revoked fixtures, visited every page with no duplicates or exposed token hashes, and verified invalid-page/anonymous rejection. All 101 fixtures were deleted. Production build/TypeScript and diff checks passed.
+- Inspection feeds, calendar-client/browser acceptance, cross-org equipment sharing and reviewed bulk workflows remain open. Goal active.
+
 ### Scoped revocable calendar subscriptions — 7 September 2026
 
 - Calendar managers/admins can create labeled date-range subscription links for missions, maintenance and/or flight logs with an expiry up to one year, and revoke them. Only a SHA-256 token digest is stored; the original URL is shown once. Manager UI explains bearer access, fields shared, refresh/cache limitations and local-server-only reachability.

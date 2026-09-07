@@ -4,9 +4,10 @@ import { requireUser, requireRole, adminClient, ApiError, failure } from '@/lib/
 export async function GET(request: Request) {
   try {
     const {profile}=await requireUser(request);requireRole(profile,['admin','manager']);
-    const r=await adminClient().from('aerolog_calendar_shares').select('id,label,date_from,date_to,kinds,created_at,expires_at,revoked_at').eq('organization_id',profile.organization_id).order('created_at',{ascending:false}).limit(100);
+    const page=z.coerce.number().int().min(0).max(10000).parse(new URL(request.url).searchParams.get('page') || 0);
+    const r=await adminClient().from('aerolog_calendar_shares').select('id,label,date_from,date_to,kinds,created_at,expires_at,revoked_at').eq('organization_id',profile.organization_id).order('created_at',{ascending:false}).order('id').range(page*25,page*25+25);
     if(r.error)throw new ApiError('Could not load calendar shares');
-    return Response.json({shares:r.data});
+    return Response.json({shares:r.data.slice(0,25),hasMore:r.data.length>25});
   }catch(e){return failure(e)}
 }
 export async function POST(request: Request) {

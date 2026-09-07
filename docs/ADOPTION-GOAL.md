@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Scoped revocable calendar subscriptions — 7 September 2026
+
+- Calendar managers/admins can create labeled date-range subscription links for missions, maintenance and/or flight logs with an expiry up to one year, and revoke them. Only a SHA-256 token digest is stored; the original URL is shown once. Manager UI explains bearer access, fields shared, refresh/cache limitations and local-server-only reachability.
+- Migration 039 adds private share storage and service-only management/feed RPCs with current org/role checks. Feed projects only ID/type/title/date/time/duration/status; no crew, equipment details, geometry or attachment data. Expiry, revocation and creator membership/manager-role loss stop serving the feed.
+- Rollback database regression passed minimal projection, category scope, pilot/cross-org rejection, expiry, membership revocation, explicit revocation and private RPC privileges. Live API create → unauthenticated iCalendar download → revoke → 404 passed; the QA link remains revoked. Production build/TypeScript passed.
+- Inspection subscriptions, management pagination beyond the newest 100 links, third-party calendar client acceptance and browser UI checks remain follow-ups. Cross-org equipment sharing and reviewed bulk workflows remain open. Goal active.
+
 ### Project cost filtering and exports — 7 September 2026
 
 - Financial previews and saved CSV/PDF jobs support all-project, explicit-project-ID and unallocated scopes. Ledger exports include the work order's captured project name/reference/revision; names are not used for attribution. Archived projects remain selectable for historical reports.

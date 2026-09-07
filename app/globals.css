@@ -4469,6 +4469,10 @@ textarea {
 .crew-matrix small { display: block; margin-top: 5px; color: var(--muted-foreground); font-weight: 400; }
 .matrix-credential + .matrix-credential { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
 .calendar-event.inspection { color: #deb6ff; background: rgba(180, 110, 240, .12); }
+.calendar-sharing { margin-top: 24px; border-top: 1px solid var(--border); padding-top: 16px; min-width: 0; }
+.calendar-sharing summary { cursor: pointer; font-weight: 600; }
+.calendar-sharing > * + * { margin-top: 16px; }
+.calendar-sharing .inspection-rule { overflow-wrap: anywhere; }
 @media (max-width: 650px) {
   .operations-catalog { padding: 16px; }
   .calendar-weekday { padding: 5px 0; text-align: center; font-size: 10px; }

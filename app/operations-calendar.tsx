@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { useApp } from './app-provider';
 import { inspectionCalendar } from '@/lib/operations/inspection-calendar';
 import { calendarExport } from '@/lib/operations/calendar-export';
+import CalendarSharing from './calendar-sharing';
 import { Button } from '@/components/ui/button';
 import type { Mission, Service, Flight } from '@/lib/domain/models';
 import { missionAircraft, missionOverlaps } from '@/lib/operations/assignments';
@@ -256,6 +257,7 @@ export default function OperationsCalendar({
           <p>No operations for this date and filter.</p>
         )}
       </div>
+      <CalendarSharing from={days[0]} to={days[days.length-1]} />
     </section>
   );
 }

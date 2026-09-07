@@ -139,6 +139,29 @@ export async function GET(
       line('Control reviewed: ' + (r.controlled ? 'Yes' : 'No'));
       y -= 8;
     });
+    section('Mission forms');
+    for (const form of m.forms || []) {
+      const snapshot = m.formSnapshots?.find(
+        (s: any) => s.id === form.templateId && s.revision === form.revision,
+      );
+      if (!snapshot) continue;
+      line(snapshot.name + ' / version ' + form.revision, 11, true);
+      line(snapshot.notes || '');
+      for (const field of snapshot.fields || []) {
+        const value = form.answers[field.id];
+        line(
+          field.label +
+            ': ' +
+            (value === undefined || value === ''
+              ? 'Not answered'
+              : typeof value === 'boolean'
+                ? value
+                  ? 'Checked'
+                  : 'Not checked'
+                : String(value)),
+        );
+      }
+    }
     section('Attachments');
     line(
       attachments?.length

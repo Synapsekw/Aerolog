@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { missionFormSchema } from '@/lib/operations/forms';
 const name = z.string().trim().min(1).max(160),
   id = z.string().min(1).max(100),
   note = z.string().max(12000).default('');
@@ -15,6 +16,8 @@ export const riskSchema = z.object({
   residualSeverity: numeric(1, 5).int().optional(),
 });
 export const missionSchema = z.object({
+  forms: z.array(missionFormSchema).max(20).default([]),
+  formSnapshots: z.array(z.record(z.string(), z.unknown())).max(20).default([]),
   id,
   name,
   location: name,

@@ -64,3 +64,12 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Migration 021 validates metadata and organization-scoped storage references through the existing save RPC. Archived sites cannot receive new assignments; existing assignments can be edited or cleared. A regression test caught and fixed BEFORE INSERT behavior on the save RPC's upsert.
 - DB regression fixtures rolled back. Typecheck, 42 unit tests and production build passed. Browser verified battery filters and the expanded register form; no equipment changes saved during UI QA.
 - Remaining larger adoption work includes reusable forms/documents, personnel qualifications/permissions, incidents, report jobs and the full final acceptance audit.
+
+### Versioned mission forms — 7 September 2026
+
+- Added Form templates navigation/library with manager-only create/edit/duplicate/archive. Supports required checklist checks, typed custom fields (text, number, date, choice, check) and reusable hazard/control starting points.
+- Mission preparation attaches template versions and records answers; risk templates copy suggestions into the editable assessment with controls unreviewed. Templates are never regulatory certification. Mission review and PDF include completed forms.
+- Database captures authoritative template snapshots; existing missions retain their original template after library edits. New stale selections are rejected. Required checks/answers, types, allowed choices and unknown fields are validated, with forms locked through submission/review.
+- Migration 022 applied. DB tests exercise normal mission save RPC, required-field rejection, invalid values, stale versions, snapshot forgery and submitted-answer locking, with fixtures rolled back. Unit suite now 44 tests; typecheck/production build passed. Browser verified template editor with an unsaved checklist field.
+- Migration 023 fixes catalog snapshots during INSERT ... ON CONFLICT: reviewed project/site context is preserved before both trigger phases, including archived sites. Catalog rollback regression passed for this path.
+- Goal remains active. Central document controls, qualifications/permissions, incidents, reports/jobs and remaining acceptance criteria are not yet complete.

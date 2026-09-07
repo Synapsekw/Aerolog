@@ -40,6 +40,8 @@ try {
   await write('site',{...site,name:'Later site',archived:true},3);
   await db.query("update aerolog_records set data=data || $3::jsonb where organization_id=$1 and kind='mission' and id=$2",[org,mission.id,JSON.stringify({status:'Approved',contextSnapshot:{site:{name:'Forged'}},projectId:'',siteId:''})]);
   const approved = await read(); assert.deepEqual(approved.contextSnapshot, submitted);assert.equal(approved.projectId,project.id);assert.equal(approved.siteId,site.id);
+  await db.query("insert into aerolog_records(organization_id,kind,id,data) values($1,'mission',$2,$3) on conflict(organization_id,kind,id) do update set data=excluded.data",[org,mission.id,{...approved,contextSnapshot:{}}]);
+  assert.deepEqual((await read()).contextSnapshot,submitted);
   const permission = await db.query("select has_function_privilege('authenticated','public.aerolog_catalog_write(uuid,uuid,text,jsonb,integer)','execute') allowed");assert.equal(permission.rows[0].allowed,false);
   await db.query('rollback');
   console.log('Catalog checks passed: relationships, stale revision, pilot denial, storage/site mismatch, authoritative submitted snapshots and private RPC. All fixtures rolled back.');

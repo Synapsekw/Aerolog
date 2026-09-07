@@ -13,6 +13,8 @@ import OperationsCalendar from './operations-calendar';
 import InspectionManager from './inspection-manager';
 import EquipmentPassport from './equipment-passport';
 import OperationsCatalog from './operations-catalog';
+import FormTemplateManager from './form-template-manager';
+import MissionForms from './mission-forms';
 import EquipmentMetadataFields from './equipment-metadata-fields';
 import {
   inspectionDue,
@@ -121,6 +123,7 @@ const navigation = [
   ['Projects', Package],
   ['Sites', MapIcon],
   ['Customers', Users],
+  ['Form templates', FileText],
   ['Flight logs', BookOpen],
   ['Inventory', Drone],
   ['Maintenance', Wrench],
@@ -437,6 +440,7 @@ export default function Workspace() {
     Projects: 'Customers, missions and flight activity connected.',
     Sites: 'Reusable operating areas and storage locations.',
     Customers: 'The organizations you deliver operations for.',
+    'Form templates': 'Reusable checks, risk assessments and custom forms.',
     Inspections:
       'Inspection intervals, component replacements and signed history.',
     Notifications: 'Operational changes that need your attention.',
@@ -1275,6 +1279,9 @@ export default function Workspace() {
                     )}
                   </section>
                 </>
+              )}
+              {page === 'Form templates' && (
+                <FormTemplateManager key={organization.id} />
               )}
               {['Projects', 'Sites', 'Customers'].includes(page) && (
                 <OperationsCatalog
@@ -2478,6 +2485,12 @@ export default function Workspace() {
             )}
             {step === 2 && (
               <>
+                <MissionForms
+                  mission={draft}
+                  onChange={(patch) =>
+                    setDraft((d: any) => ({ ...d, ...patch }))
+                  }
+                />
                 <div className="risk-heading">
                   <h3>Hazards and mitigation controls</h3>
                   <span>Likelihood × severity · 1–5</span>
@@ -2589,6 +2602,7 @@ export default function Workspace() {
             )}
             {step === 3 && (
               <>
+                <MissionForms mission={draft} />
                 <div className="package-cover">
                   <FileText size={35} />
                   <div>
@@ -2834,6 +2848,7 @@ export default function Workspace() {
                     </dl>
                     <h3 className="detail-heading">Operating notes</h3>
                     <p>{record.notes || 'No notes added.'}</p>
+                    <MissionForms mission={record} />
                     <h3 className="detail-heading">Risk assessment</h3>
                     {record.risks.map((r: any, i: number) => (
                       <div className="risk-summary" key={i}>

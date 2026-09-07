@@ -423,3 +423,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Lower-than-other values are flagged for inspection-baseline reconciliation. Unknown aircraft hours remain unknown; missing/fractional/negative/non-finite/out-of-range battery cycles are rejected. Changing either selected record or refreshing review clears the proposal.
 - Four focused merge/reconciliation tests and production build/TypeScript passed. No source records, counters, aliases or inspection baselines were changed. This is a proposal, not a merge execution endpoint.
 - Goal remains active. Atomic merge application must still validate operational routing, readiness and inspection baselines; full desktop/mobile acceptance remains pending.
+
+### Inspection flight identity correction — 7 September 2026
+
+- Found and corrected legacy name fallback in both inspectionMeters and the database equipment flight counter: an explicit foreign aircraft/equipment ID must not count toward a same-named target. Name fallback requires no explicit equipment identity and a unique nonblank asset name. Battery matching remains typed by ID.
+- Five inspection tests passed. Database rollback fixture verifies explicit matches, excluded foreign IDs, retained unique legacy matching, kind isolation, existing duplicate-name constraint and missing-counter blocking when corrected count is below captured baseline. Initial fixture failures were missing required flight fields and attempted duplicate name; fixtures were corrected without weakening production constraints.
+- Migration 046 applied after preview passed. Checked all existing inspection plans before/after: zero plans currently exist, so no existing baseline/count changed. Source flight records and signed inspection data were not rewritten.
+- Production build/TypeScript and diff checks passed. Merge execution and counter-baseline reconciliation remain open, as does full browser/mobile acceptance. Goal remains active.

@@ -131,12 +131,19 @@ export function inspectionMeters(
   const eq = equipment.find(
     (a) => a.kind === plan.targetKind && a.id === plan.targetId,
   );
+  const uniqueLegacyName =
+    !!eq?.name?.trim() &&
+    equipment.filter((a) => a.kind === 'asset' && a.name === eq.name).length ===
+      1;
   const count = flights.filter((f) =>
     plan.targetKind === 'battery'
       ? f.battery === plan.targetId || f.batteryIds?.includes(plan.targetId)
       : f.aircraftId === plan.targetId ||
         f.equipmentIds?.includes(plan.targetId) ||
-        f.aircraft === eq?.name,
+        (!f.aircraftId &&
+          !f.equipmentIds?.length &&
+          uniqueLegacyName &&
+          f.aircraft === eq.name),
   ).length;
   return {
     hours: eq?.hours ?? null,

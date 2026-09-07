@@ -94,3 +94,34 @@ test('empty inspection intervals are rejected', () => {
     false,
   );
 });
+
+test('inspection flight meters use explicit IDs before unique legacy names', async () => {
+  const { inspectionMeters } = await import('../lib/operations/inspections');
+  const target = {
+    ...plan,
+    targetKind: 'asset' as const,
+    targetId: 'a',
+    capturedFlightCount: 0,
+  };
+  const equipment = [{ kind: 'asset', id: 'a', name: 'Aircraft', hours: 100 }];
+  const flights = [
+    { id: 'exact', aircraftId: 'a' },
+    { id: 'equipment', equipmentIds: ['a'] },
+    { id: 'legacy', aircraft: 'Aircraft' },
+    { id: 'wrong', aircraftId: 'other', aircraft: 'Aircraft' },
+    { id: 'wrong-extra', equipmentIds: ['other'], aircraft: 'Aircraft' },
+  ];
+  assert.equal(inspectionMeters(target, equipment, flights).flights, 203);
+  equipment.push({ kind: 'asset', id: 'other', name: 'Aircraft', hours: 0 });
+  assert.equal(inspectionMeters(target, equipment, flights).flights, 202);
+  assert.equal(
+    inspectionMeters({ ...target, capturedFlightCount: 3 }, equipment, flights)
+      .flights,
+    null,
+  );
+  assert.equal(
+    inspectionMeters({ ...target, targetKind: 'battery' }, equipment, flights)
+      .flights,
+    200,
+  );
+});

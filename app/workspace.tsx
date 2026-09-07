@@ -16,6 +16,7 @@ import OperationsCatalog from './operations-catalog';
 import FormTemplateManager from './form-template-manager';
 import IncidentManager from './incident-manager';
 import DocumentRegister from './document-register';
+import ReportCenter from './report-center';
 import MissionDocuments from './mission-documents';
 import CrewCredentials from './crew-credentials';
 import MissionForms from './mission-forms';
@@ -129,6 +130,7 @@ const navigation = [
   ['Customers', Users],
   ['Form templates', FileText],
   ['Documents', FileText],
+  ['Reports', BookOpen],
   ['Flight logs', BookOpen],
   ['Inventory', Drone],
   ['Maintenance', Wrench],
@@ -440,6 +442,7 @@ export default function Workspace() {
     Crew: 'The people behind your operations.',
     Incidents: 'Report, investigate and follow through.',
     Documents: 'Versioned evidence, expiry and review.',
+    Reports: 'Traceable flight totals across your organization.',
     Integrations: 'Connected services and flight-log import.',
     'Audit trail': 'An accountable history of operational decisions.',
     Settings: 'Workspace policies, access and local configuration.',
@@ -1288,6 +1291,7 @@ export default function Workspace() {
                   </section>
                 </>
               )}
+              {page === 'Reports' && <ReportCenter key={organization.id} />}
               {page === 'Documents' && (
                 <DocumentRegister key={organization.id} />
               )}

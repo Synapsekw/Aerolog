@@ -119,3 +119,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Migration 029 makes the snapshot trigger load existing mission data before either upsert phase. Drafts retain their captured kit after library edits/archive, completed history stays immutable, and equipment removal still requires unlinking the kit.
 - Expanded kit regression passed, alongside mission resource, mission form and document database regressions. All test fixtures rolled back; no operational records changed.
 - The broader goal remains active; report generation and the remaining adoption acceptance checks are not yet complete.
+
+### Shared report calculations and previews — 7 September 2026
+
+- Added Reports navigation with organization, pilot, aircraft and battery flight-ledger previews, inclusive recorded-date range, paginated rows and CSV preview downloads. Calculations retain exact seconds and source record revisions, use explicit identities before names, avoid double-counting multi-pack references, and disclose undated/unattributed records.
+- CSV includes period/entity/organization, generation time, calculation version, source IDs, hashes and revisions; text cells protect against spreadsheet formula execution. External time stays separate; battery linked flights are not labeled as charge cycles.
+- Read-only live verification reproduced Ivan's 20 flights and 29,599 seconds with 20 source references. 54 unit tests, typecheck and production build passed; browser verified the organization report preview.
+- This completes the shared calculation/preview layer only. Persisted queued report jobs, durable reproducible export artifacts and broader equipment/battery history sections remain to be implemented before the reporting deliverable is complete.

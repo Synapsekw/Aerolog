@@ -4395,3 +4395,29 @@ textarea {
 .crew-credentials label {
   overflow-wrap: anywhere;
 }
+
+.report-center {
+  display: grid;
+  gap: 20px;
+}
+.report-table-scroll {
+  overflow-x: auto;
+  min-width: 0;
+}
+.report-table-scroll table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.report-table-scroll th,
+.report-table-scroll td {
+  padding: 14px 12px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.report-table-scroll td small {
+  display: block;
+  font-size: 10px;
+  opacity: 0.65;
+  max-width: 240px;
+  overflow-wrap: anywhere;
+}

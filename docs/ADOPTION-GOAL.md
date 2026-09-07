@@ -408,3 +408,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Linked source IDs and canonical identity are displayed. Battery readings and telemetry remain separate per source, preserving counter provenance rather than summing counters.
 - Four focused identity/history tests, TypeScript, production build and diff checks passed. Actual authenticated e& bootstrap returned 792 records and zero aliases. No real equipment links or counters were changed.
 - Merge execution, canonical operational write/readiness routing, handover semantics and broader browser/mobile acceptance remain open. Browser access is still blocked by the locked Mac; goal remains active.
+
+### Recipient-controlled equipment view closure — 7 September 2026
+
+- Added an `Ended` state and recipient `End shared view` control for accepted equipment directory shares. Ending removes the live equipment projection for both parties while retaining original acceptance and the ending actor/time.
+- Owner revocation now applies only to pending/accepted shares. Terminal shares reject reopening and repeated mutations; terminal labels remain visible after expiry. Missing equipment no longer produces an object of null fields.
+- Migration 045 passed a rollback preview covering wrong-side actions, retained acceptance, expiry precedence, terminal guards, audit and existing isolation checks, then was applied. TypeScript and production build passed.
+- This records termination of a data view, not a physical return, reservation or operational handover. No real equipment sharing relationship was created or changed.
+- All 36 isolated API integration checks passed, including recipient closure, denied owner-side end, retained timestamps, removal of details and rejected reopening. Temporary records/accounts/organizations were cleaned up successfully. Goal remains active; merge execution and final browser/mobile acceptance remain unfinished.

@@ -546,6 +546,17 @@ try {
   assert.equal('notes' in offered.equipment,false);assert.equal('sourceRecord' in offered.equipment,false);
   assert.equal((await api('outsider','bootstrap')).records.length,0);
   pass('equipment sharing requires recipient acceptance and exposes only a directory projection');
+  const endable=await api('admin','equipment-shares',shareRequest);
+  await api('outsider','equipment-shares',{action:'accept',id:endable.id});
+  await api('admin','equipment-shares',{action:'end',id:endable.id},400);
+  await api('outsider','equipment-shares',{action:'end',id:endable.id});
+  const ended=(await api('outsider','equipment-shares')).shares.find(s=>s.id===endable.id);
+  assert.equal(ended.status,'Ended');assert.equal(ended.equipment,null);assert.ok(ended.ended_at);assert.ok(ended.accepted_at);
+  assert.equal((await api('admin','equipment-shares')).shares.find(s=>s.id===endable.id).availability,'Ended');
+  await api('outsider','equipment-shares',{action:'accept',id:endable.id},400);
+  await api('admin','equipment-shares',{action:'revoke',id:endable.id},400);
+  pass('recipient can end a shared view with retained acceptance history and terminal action guards');
+
   await api('technician','equipment-bulk',{items:[{kind:'asset',id:bulkAircraft.id,revision:2}],patch:{firmware:'QA shared firmware'}});
   offered=(await api('outsider','equipment-shares')).shares.find(s=>s.id===shared.id);
   assert.equal(offered.equipment.firmware,'QA shared firmware');assert.equal(offered.equipment.revision,3);

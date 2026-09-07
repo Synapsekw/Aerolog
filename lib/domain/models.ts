@@ -191,6 +191,8 @@ export const serviceSchema = z.object({
   cost: numeric(0, 1000000000).nullable().optional(),
   currency: z.string().regex(/^[A-Z]{3}$/).optional().or(z.literal('')),
   costReference: z.string().max(160).optional(),
+  projectId: z.string().max(100).optional(),
+  projectSnapshot: z.object({id:z.string(),name:z.string(),reference:z.string(),revision:z.number()}).optional(),
   due: date,
   remaining: numeric(0, 10000).default(0),
   status: z.enum(['Scheduled', 'Upcoming', 'Overdue', 'In progress', 'Completed']),

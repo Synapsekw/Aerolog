@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Explicit work-order project attribution — 7 September 2026
+
+- Maintenance work orders now offer optional project selection and display their captured project name. Unallocated organization overhead remains explicit; no equipment/flight-name guessing allocates costs.
+- Migration 038 validates active same-organization projects when assigning and stamps project ID/name/reference/revision. Retaining a previously assigned project preserves its snapshot even after rename/archive; clearing attribution removes the snapshot.
+- Rollback regression passed authoritative replacement of forged snapshots, archive/history preservation, unavailable-project rejection, unallocation and existing cost validation. Production build/TypeScript passed. No real work orders or project assignments changed.
+- Project-aware financial report filtering/export remains the next dependency; current financial outputs do not yet expose these new project fields. Sharing/bulk workflows and browser acceptance remain open. Goal active.
+
 ### Saved maintenance cost PDFs — 7 September 2026
 
 - Added PDF format to organization maintenance cost jobs. Dedicated renderer includes per-currency completed/open totals, missing-data counts and the full equipment/work-order ledger with IDs/revisions. Uses snapshot metadata and embedded font; existing flight PDF rendering stays unchanged.

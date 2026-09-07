@@ -2980,6 +2980,7 @@ export default function Workspace() {
                         ['Next interval', record.targetKind === 'battery' ? 'Managed by battery inspection plan' : record.intervalHours + ' h'],
                         ['Recorded cost', record.cost == null ? 'Not recorded' : record.currency + ' ' + record.cost],
                         ['Cost reference', record.costReference || 'Not recorded'],
+                        ['Cost project', record.projectSnapshot?.name || (record.projectId ? 'Project ' + record.projectId : 'Unallocated')],
                         ['Work started', record.startedAt ? record.startedAt + ' · ' + record.startedBy : 'Not started'],
                       ].map(([k, v]) => (
                         <div key={k}>
@@ -3368,6 +3369,8 @@ export default function Workspace() {
                 <Field label="Currency code" value={draft.currency || ''} onChange={(v) => update('currency', v.toUpperCase())} />
               </div>
               <Field label="Invoice / cost reference" value={draft.costReference || ''} onChange={(v) => update('costReference', v)} />
+              <label className="field">Cost project<select value={draft.projectId || ''} onChange={e=>update('projectId',e.target.value)}><option value="">Unallocated / organization overhead</option>{items('project').filter(p=>!p.archived || p.id===draft.projectId).map(p=><option key={p.id} value={p.id}>{p.name}{p.archived?' (archived)':''}</option>)}</select></label>
+              <p className="fine-print">Assign the work order to a project explicitly. Equipment and flight links do not allocate costs automatically.</p>
               <p className="fine-print">Leave cost blank when unknown. Use a three-letter currency code, such as AED or KWD. Zero means a recorded no-cost service.</p>
               <Note
                 label="Work instructions"

@@ -6,6 +6,7 @@ export const reportRequestSchema = z
     from: z.iso.date(),
     to: z.iso.date(),
     entityId: z.string().max(100).default(''),
+    format: z.enum(['CSV', 'PDF']).optional(),
     includeHistory: z.boolean().optional(),
   })
   .refine(r => !r.includeHistory || ['Aircraft','Battery'].includes(r.type), 'History requires an aircraft or battery report')

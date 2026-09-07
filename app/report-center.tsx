@@ -23,6 +23,7 @@ export default function ReportCenter() {
   const [type, setType] = useState('Organization'),
     [entityId, setEntityId] = useState(''),
     [includeHistory, setIncludeHistory] = useState(false),
+    [format, setFormat] = useState('CSV'),
     [from, setFrom] = useState(today.slice(0, 4) + '-01-01'),
     [to, setTo] = useState(today),
     [report, setReport] = useState<FlightReport | null>(null),
@@ -130,7 +131,8 @@ export default function ReportCenter() {
       >
         Preview report
       </Button>
-      <ReportJobs request={{ type, entityId, from, to, includeHistory: includeHistory && ['Aircraft','Battery'].includes(type) }} />
+      <label className="field">Saved export format<select value={format} onChange={e=>setFormat(e.target.value)}><option>CSV</option><option>PDF</option></select></label>
+      <ReportJobs request={{ type, entityId, from, to, format, includeHistory: includeHistory && ['Aircraft','Battery'].includes(type) }} />
       {error && <p role="alert">{error}</p>}
       {report && (
         <>

@@ -222,3 +222,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Hours/flights/cycle-only rules are counted separately instead of receiving fabricated due dates. The calendar explains that counter thresholds may make work due sooner than a date interval.
 - Focused test passed for signed-baseline reset, earlier cycle-triggered due status, meter-only omission and type-safe equipment identity. Production build/TypeScript passed. Browser verified the Inspections filter and empty-date explanation; populated inspection calendar visual acceptance remains open.
 - Goal remains active. Calendar sharing/iCal, broader PDF reports and the remaining adoption/visual acceptance requirements still require work.
+
+### Saved PDF reports — 7 September 2026
+
+- Added CSV/PDF format selection to saved report jobs. PDFs use the same frozen report calculations/history, include full flight provenance, and retain snapshot time, calculation/renderer version and page numbering. Migration 036 validates the appropriate artifact extension per requested format.
+- Added an embedded DejaVu font with its upstream license (`https://dejavu-fonts.github.io/License.html`) and the PDF fontkit adapter. Rendering stays in the local Node app. All four pages of Ivan's 20-flight QA PDF were rendered with Poppler and visually inspected for clipping, source IDs, totals and pagination.
+- Saved PDF job `45659336-aef5-4f6f-a847-8e998191ff0b` completed: 20 flights, 29,599 seconds, 22,461 bytes. Storage download hash and byte-for-byte regeneration from its frozen snapshot passed. The reusable saved-report verifier now supports both PDF and CSV.
+- Existing report-job DB regression and production build/TypeScript passed. PDF history with lengthy findings and additional scripts/languages still needs broader visual acceptance; no jurisdiction-specific compliance format is claimed.
+- Goal remains active; remaining adoption requirements and end-to-end/visual acceptance are not yet complete.

@@ -83,7 +83,7 @@ export default function ReportJobs({ request }: { request: unknown }) {
         <article className="inspection-rule" key={job.id}>
           <div className="row">
             <strong>
-              {job.request.type} · {job.request.from} → {job.request.to}
+              {job.request.format || 'CSV'} · {job.request.type} · {job.request.from} → {job.request.to}
             </strong>
             <span>{job.status}</span>
           </div>
@@ -110,7 +110,7 @@ export default function ReportJobs({ request }: { request: unknown }) {
                   }
                 }}
               >
-                Download saved CSV
+                Download saved {job.request.format || 'CSV'}
               </Button>
               <small title={job.sha256}>
                 Content SHA-256: {job.sha256?.slice(0, 16)}… · {job.attempts}{' '}

@@ -1,5 +1,6 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
+import { reportPdf } from '@/lib/reports/report-pdf';
 import { adminClient } from './supabase';
 import {
   createFlightReport,
@@ -29,14 +30,18 @@ export async function processReport(
       job.snapshot.records,
       job.snapshot.members,
     );
-    const csv = reportCsv(report, job.snapshot.organization, job.created_at),
-      bytes = Buffer.from(csv, 'utf8'),
-      sha256 = createHash('sha256').update(bytes).digest('hex');
-    const path = `${organization}/reports/${id}/${job.lease_token}.csv`;
+    const isPdf = job.request.format === 'PDF';
+    const bytes = isPdf
+      ? Buffer.from(await reportPdf(report, job.snapshot.organization, job.created_at))
+      : Buffer.from(reportCsv(report, job.snapshot.organization, job.created_at), 'utf8');
+    const sha256 = createHash('sha256').update(bytes).digest('hex');
+    const extension = isPdf ? 'pdf' : 'csv';
+    const mime = isPdf ? 'application/pdf' : 'text/csv';
+    const path = `${organization}/reports/${id}/${job.lease_token}.${extension}`;
     const uploaded = await admin.storage
       .from('aerolog-files')
       .upload(path, bytes, {
-        contentType: 'text/csv',
+        contentType: mime,
         upsert: false,
       });
     if (uploaded.error) throw Error('Report file upload failed');
@@ -47,9 +52,9 @@ export async function processReport(
         artifact: {
           id,
           path,
-          name: `aerolog-${report.request.type.toLowerCase()}-${report.request.from}-${report.request.to}.csv`,
+          name: `aerolog-${report.request.type.toLowerCase()}-${report.request.from}-${report.request.to}.${extension}`,
           size: bytes.length,
-          type: 'text/csv',
+          type: mime,
         },
         result_summary: {
           flightCount: report.flightCount,

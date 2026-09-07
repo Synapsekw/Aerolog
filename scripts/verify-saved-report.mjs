@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import pg from 'pg';
 import { createClient } from '@supabase/supabase-js';
 import { loadEnv } from './env.mjs';
+import { reportPdf } from '../lib/reports/report-pdf.ts';
 import { createFlightReport, reportCsv } from '../lib/reports/flight-report.ts';
 
 const id = process.argv[2];
@@ -36,7 +37,8 @@ try {
   assert.equal(bytes.length, attachment.size);
   assert.equal(createHash('sha256').update(bytes).digest('hex'), job.sha256);
   const report = createFlightReport(job.request, job.snapshot.records, job.snapshot.members);
-  assert.equal(bytes.toString('utf8'), reportCsv(report, job.snapshot.organization, job.created_at));
+  const reproduced = job.request.format === 'PDF' ? Buffer.from(await reportPdf(report, job.snapshot.organization, job.created_at)) : Buffer.from(reportCsv(report, job.snapshot.organization, job.created_at), 'utf8');
+  assert.ok(bytes.equals(reproduced), 'Saved bytes differ from snapshot reproduction');
   assert.equal(report.flightCount, job.summary.flightCount);
   assert.equal(report.durationSeconds, job.summary.durationSeconds);
   console.log(JSON.stringify({ id, flights: report.flightCount, seconds: report.durationSeconds,

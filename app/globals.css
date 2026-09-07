@@ -4436,3 +4436,9 @@ textarea {
   display: grid;
   gap: 12px;
 }
+
+.crew-matrix-section { display: grid; gap: 20px; min-width: 0; }
+.crew-matrix { min-width: 760px; }
+.crew-matrix th, .crew-matrix td { vertical-align: top; min-width: 150px; }
+.crew-matrix small { display: block; margin-top: 5px; color: var(--muted-foreground); font-weight: 400; }
+.matrix-credential + .matrix-credential { margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }

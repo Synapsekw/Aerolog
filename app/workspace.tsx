@@ -19,6 +19,7 @@ import DocumentRegister from './document-register';
 import ReportCenter from './report-center';
 import MissionDocuments from './mission-documents';
 import CrewCredentials from './crew-credentials';
+import CrewMatrix from './crew-matrix';
 import MissionForms from './mission-forms';
 import EquipmentMetadataFields from './equipment-metadata-fields';
 import {
@@ -1836,6 +1837,7 @@ export default function Workspace() {
                     />
                   )}
                   {page === 'Crew' && (
+                    <CrewMatrix onOpen={(id) => void open('crew', id)}>
                     <div className="crew-grid">
                       {visible.map((c) => (
                         <section className="glass crew-card" key={c.id}>
@@ -1844,9 +1846,15 @@ export default function Workspace() {
                               {c.initials}
                             </span>
                             <Status>
-                              {c.expires < date()
-                                ? 'Certificate review due'
-                                : c.status}
+                              {app.profiles.some((m) =>
+                                !m.active && (c.authUserId ? m.id === c.authUserId : m.display_name === c.name),
+                              )
+                                ? 'Inactive organization member'
+                                : !c.cert || !c.expires
+                                  ? 'Credentials not recorded'
+                                  : c.expires < date()
+                                    ? 'Certificate review due'
+                                    : c.status}
                             </Status>
                           </div>
                           <h2>{c.name}</h2>
@@ -1897,6 +1905,7 @@ export default function Workspace() {
                         </section>
                       ))}
                     </div>
+                    </CrewMatrix>
                   )}
                   {!visible.length && (
                     <Empty

@@ -58,13 +58,15 @@ export function kitAssignment(
   batteries: Battery[],
   currentAircraft: string,
   rules: { batteryMinHealth: number; batteryMaxTemperature: number },
+  currentAdditionalAircraft: string[] = [],
 ) {
   const contents = kitContents(kit, assets, batteries);
   const aircraft = kit.items
     .filter((i) => i.kind === 'asset')
     .map((i) => assets.find((a) => a.id === i.id))
     .filter((a): a is Asset => Boolean(a && a.category === 'Aircraft'));
-  const selectedAircraft = aircraft[0]?.name || currentAircraft;
+  const selectedAircraft = currentAircraft || aircraft[0]?.name || '';
+  const assignedAircraft = new Set([selectedAircraft, ...currentAdditionalAircraft, ...aircraft.map((a) => a.name)].filter(Boolean));
   const blockers: string[] = [];
   if (kit.archived) blockers.push('This kit is archived.');
   for (const item of contents) {
@@ -77,7 +79,7 @@ export function kitAssignment(
       const b = batteries.find((b) => b.id === item.id);
       if (
         b &&
-        ![selectedAircraft, ...aircraft.map((a) => a.name)].includes(b.aircraft)
+        !assignedAircraft.has(b.aircraft)
       )
         blockers.push(
           `${item.name}: not assigned to ${selectedAircraft || 'an aircraft'}`,

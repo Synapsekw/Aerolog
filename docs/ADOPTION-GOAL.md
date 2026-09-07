@@ -491,3 +491,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Acceptance review found that storage-site filtering leaked across inventory categories although search/status/page already had per-category state. Each category now retains its own storage-site selection, defaulting to all sites on its first visit. Direct Batteries navigation uses the same restore path.
 - Status options now come from the selected category's canonical equipment instead of unrelated categories and merged source records, avoiding irrelevant empty-result choices.
 - Production build, TypeScript and diff checks passed. Browser access was rechecked and the Mac remains locked; interactive switching and responsive layout acceptance are still unverified. Goal remains active with the full ledger unchanged.
+
+### Preserve aircraft when applying additional mission kits — 7 September 2026
+
+- Source review found that applying a second aircraft kit replaced the existing primary aircraft without retaining that aircraft in the additional list. Kit assignment now preserves an existing primary and adds the kit's aircraft as additional assignments; a first kit still supplies the primary when none is selected.
+- Battery-only kit compatibility now includes the mission's already selected additional aircraft. Unassigned packs still block preview. The picker explains that existing primary selection is retained.
+- Four kit unit checks passed, including the new successive-kit/spare-pack regression. Production build/TypeScript and diff checks passed. Existing database snapshot acceptance passed authoritative contents, retained versions after library edits/archive, completed history and removed-item rejection; all fixtures rolled back.
+- Full browser/mobile acceptance and the remaining goal audit are still open. No operational missions or inventory records were changed.

@@ -21,6 +21,7 @@ export default function MissionKitPicker({
         app.canonicalItems('battery'),
         draft.aircraft,
         app.organization.settings,
+        draft.additionalAircraft || [],
       )
     : null;
   return (
@@ -103,7 +104,7 @@ export default function MissionKitPicker({
             Apply kit to mission
           </Button>
           <p className="fine-print">
-            Adds these items to the mission. Availability is checked on
+            Adds these items and keeps the existing primary aircraft. Availability is checked on
             submission. The saved package retains an equipment snapshot.
           </p>
         </>

@@ -93,3 +93,22 @@ test('kit assignment maps equipment and checks battery compatibility and measure
     /measurements/,
   );
 });
+
+
+test('successive kits retain the mission primary aircraft and support packs for additional aircraft', async () => {
+  const { kitAssignment } = await import('../lib/operations/kits');
+  const aircraft = (id: string) => ({ id, name: id, category: 'Aircraft', status: 'Available', hours: 10, next: 100 } as Asset);
+  const pack = { id: 'B', model: 'Pack', status: 'Healthy', aircraft: 'Secondary', health: 95, temp: 30 } as Battery;
+  const rules = { batteryMinHealth: 80, batteryMaxTemperature: 50 };
+  const kit = kitSchema.parse({ id: 'K', name: 'Second kit', items: [{ kind: 'asset', id: 'Secondary' }, { kind: 'battery', id: 'B' }] });
+  const result = kitAssignment(kit, [aircraft('Primary'), aircraft('Secondary')], [pack], 'Primary', rules);
+  assert.equal(result.aircraft, 'Primary');
+  assert.deepEqual(result.additionalAircraft, ['Secondary']);
+  assert.deepEqual(result.blockers, []);
+  const batteriesOnly = kitSchema.parse({ id: 'Packs', name: 'Spare packs', items: [{ kind: 'battery', id: 'B' }] });
+  assert.deepEqual(kitAssignment(batteriesOnly, [], [pack], 'Primary', rules, ['Secondary']).blockers, []);
+  assert.match(kitAssignment(batteriesOnly, [], [pack], 'Primary', rules).blockers.join(' '), /not assigned/);
+  const fresh = kitAssignment(kit, [aircraft('Secondary')], [pack], '', rules);
+  assert.equal(fresh.aircraft, 'Secondary');
+  assert.deepEqual(fresh.additionalAircraft, []);
+});

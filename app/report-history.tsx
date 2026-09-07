@@ -2,13 +2,24 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import type { FlightReport } from '@/lib/reports/flight-report';
+import { maintenanceCosts } from '@/lib/reports/maintenance-costs';
 
 export default function ReportHistory({ history }: { history: NonNullable<FlightReport['history']> }) {
   const [page, setPage] = useState(0);
   const pages = Math.max(1, Math.ceil(history.rows.length / 25));
   const current = Math.min(page, pages - 1);
+  const costs = maintenanceCosts(history.rows);
   return (
     <section>
+      <h3>Maintenance costs</h3>
+      <p>Recorded work-order amounts, grouped by currency. Completed work uses completion dates; open work uses due dates. These totals do not establish payment or accounting expense.</p>
+      <div className="report-table-scroll" role="region" aria-label="Maintenance cost totals" tabIndex={0}>
+        <table><thead><tr><th scope="col">Currency</th><th scope="col">Completed work</th><th scope="col">Open work</th></tr></thead>
+          <tbody>{costs.totals.map(total => <tr key={total.currency}><th scope="row">{total.currency}</th><td>{total.completed}<small>{total.completedCount} work orders</small></td><td>{total.open}<small>{total.openCount} work orders</small></td></tr>)}</tbody>
+        </table>
+      </div>
+      {!costs.totals.length && <p>No work orders with a recorded cost and currency in this period.</p>}
+      <p className="fine-print">{costs.serviceCount} work orders · {costs.missingCost} without costs · {costs.missingCurrency} without valid currency · {costs.invalidCost} invalid amounts. Missing and invalid amounts are excluded from totals. A recorded zero remains included.</p>
       <h3>Equipment history · {history.rows.length} records</h3>
       <p>
         Completed services use completion date; open services use due date.

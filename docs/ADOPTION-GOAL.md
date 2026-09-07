@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Maintenance cost preview totals — 7 September 2026
+
+- Equipment-history report previews now aggregate recorded maintenance amounts per currency, separately for completed/open work, with work-order counts and explicit missing-cost/currency/invalid-amount counts. Recorded zero costs remain included. Totals use all filtered history rows, not only the visible page.
+- Decimal arithmetic preserves source decimal values without binary floating-point summation errors; three-decimal currencies are not rounded to two decimals. Amounts are described as recorded work-order costs, not payment or recognized expenses. Existing saved CSV/PDF renderer output is unchanged.
+- Focused tests passed for currency separation, open/completed split, exact decimal sums, zero versus missing, invalid values and exclusion of non-service events. Fixed the initial build's BigInt-literal target incompatibility using constructor syntax; production build and TypeScript then passed.
+- Broader organization/project financial reporting and saved financial summary exports remain open, alongside sharing/bulk workflows and visual acceptance. Goal remains active.
+
 ### Responsive report/calendar containment — 7 September 2026
 
 - Restricted report grid tracks and catalog panels to the available width, kept wide tables inside their scroll regions, constrained long native select labels, and allowed report pagination to wrap. Calendar agenda names now wrap and narrow weekday headings use reduced padding.

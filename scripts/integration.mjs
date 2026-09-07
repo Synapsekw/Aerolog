@@ -533,6 +533,27 @@ try {
   await api('outsider', 'files/' + attachment.id, null, 404);
   for(const file of evidenceFiles) await api('outsider','files/'+file.id,null,404);
   pass('cross-workspace records and all evidence attachments isolated');
+  const shareRequest={action:'create',kind:'asset',equipmentId:bulkAircraft.id,recipientOrg:externalOrg,expiresAt:new Date(Date.now()+86400000).toISOString()};
+  await api('pilot','equipment-shares',shareRequest,403);
+  await api('outsider','equipment-shares',{...shareRequest,recipientOrg:org},400);
+  const shared=await api('admin','equipment-shares',shareRequest);
+  let offered=(await api('outsider','equipment-shares')).shares.find(s=>s.id===shared.id);
+  assert.equal(offered.equipment,null);assert.equal(offered.status,'Pending');
+  await api('admin','equipment-shares',{action:'accept',id:shared.id},400);
+  await api('outsider','equipment-shares',{action:'accept',id:shared.id});
+  offered=(await api('outsider','equipment-shares')).shares.find(s=>s.id===shared.id);
+  assert.equal(offered.equipment.name,bulkAircraft.name);assert.equal(offered.equipment.status,'Retired');
+  assert.equal('notes' in offered.equipment,false);assert.equal('sourceRecord' in offered.equipment,false);
+  assert.equal((await api('outsider','bootstrap')).records.length,0);
+  pass('equipment sharing requires recipient acceptance and exposes only a directory projection');
+  await api('technician','equipment-bulk',{items:[{kind:'asset',id:bulkAircraft.id,revision:2}],patch:{firmware:'QA shared firmware'}});
+  offered=(await api('outsider','equipment-shares')).shares.find(s=>s.id===shared.id);
+  assert.equal(offered.equipment.firmware,'QA shared firmware');assert.equal(offered.equipment.revision,3);
+  await api('outsider','equipment-shares',{action:'revoke',id:shared.id},400);
+  await api('admin','equipment-shares',{action:'revoke',id:shared.id});
+  offered=(await api('outsider','equipment-shares')).shares.find(s=>s.id===shared.id);
+  assert.equal(offered.status,'Revoked');assert.equal(offered.equipment,null);
+  pass('equipment sharing reflects owner changes and removes access on owner revocation');
   const guestEmail = prefix.toLowerCase() + '-member@aerolog.example';
   await api(
     'pilot',
@@ -636,6 +657,8 @@ try {
       .eq('record_id', accountUser);
     await db.auth.admin.deleteUser(accountUser);
   }
+  if(org) check(await db.from('aerolog_equipment_shares').delete().eq('owner_org',org));
+  if(externalOrg) check(await db.from('aerolog_audit').delete().eq('organization_id',externalOrg));
   if (externalUser) await db.auth.admin.deleteUser(externalUser);
   if (externalOrg)
     await db.from('aerolog_organizations').delete().eq('id', externalOrg);

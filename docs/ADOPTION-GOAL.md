@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Cross-organization equipment API acceptance — 7 September 2026
+
+- Added two-org sharing flows to the isolated API integration suite. Pilot creation, offering equipment not owned by the actor and owner-side acceptance are denied; recipient details remain null until acceptance.
+- Accepted recipient sees the selected retired equipment's limited projection, not notes/source records, and its normal organization bootstrap remains empty. Owner firmware/revision changes appear on refresh; recipient cannot perform owner revocation, and owner revocation removes equipment details.
+- All 34 integration checks passed, including prior bulk edits, evidence, missions, imports/accounting and access controls. Cleanup removes temporary share rows and recipient audit data before deleting test organizations/accounts. No real sharing relationship was created.
+- Operational equipment handover, broad merge behavior and application visual acceptance remain open. Goal active.
+
 ### Cross-organization equipment directory — 7 September 2026
 
 - Added manager equipment offers targeted to an exact recipient organization ID, recipient acceptance/decline, expiry and owner revocation. Inventory/Batteries show a paged sharing panel and the organization's copyable ID; no messages are sent externally.

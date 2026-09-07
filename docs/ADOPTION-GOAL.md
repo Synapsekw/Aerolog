@@ -163,3 +163,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Added recorded-position outside-area counts with boundary-inclusive handling, reversed-ring support, and explicit rejection of missing/degenerate, polar and antimeridian-spanning inputs. Counts represent samples, not duration or every possible crossing between them. Altitude comparisons remain unavailable when reference datums cannot be reconciled.
 - 57 unit tests passed and production build/TypeScript passed. Browser verified the unlinked-mission empty state. Real imported flights were not relinked merely for testing. Populated overlay visual QA, complex/self-intersecting polygon handling and broader final acceptance remain outstanding.
 - Broader goal remains active: work-order enhancements, extended equipment/battery reporting and remaining workflow/UI checks still need completion.
+
+### Boundary comparison correctness — 7 September 2026
+
+- Boundary comparison now normalizes closed rings and consecutive duplicate positions without mutating source data, rejects self-crossings/nonadjacent touches/overlapping edges, and retains valid concave areas and straight intermediate vertices. Area calculation uses translated coordinates to reduce cancellation for small operating sites.
+- Fixed initial Mapbox bounds to include both the mission area and the recorded track; previously a present track took precedence and could leave the planned area off-screen.
+- All five focused geometry tests passed, covering edge inclusion, reversed rings, unavailable/degenerate data, closed rings, duplicate points, crossings/overlaps and concave regions. Production build/TypeScript passed. Populated overlay browser acceptance remains pending; no real mission links were changed.
+- The broader adoption goal is still incomplete, including work-order enhancements, history reports and final acceptance checks.

@@ -175,7 +175,7 @@ export default function MissionMap({
           if (disposed) return;
           setReady(true);
           draw();
-          const coords = track.length ? track : points;
+          const coords = [...latest.current, ...latestTrack.current];
           if (coords.length > 1) {
             const bounds = new mb.LngLatBounds();
             coords.forEach((p) => bounds.extend(p));

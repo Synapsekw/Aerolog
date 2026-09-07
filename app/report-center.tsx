@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { useApp } from './app-provider';
+import ReportJobs from './report-jobs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -34,12 +35,10 @@ export default function ReportCenter() {
             .items('asset')
             .filter((a) => a.category === 'Aircraft')
             .map((a) => ({ id: a.id, name: a.name }))
-        : app
-            .items('battery')
-            .map((b) => ({
-              id: b.id,
-              name: (b.sourceName || b.model) + ' · ' + (b.serial || b.id),
-            }));
+        : app.items('battery').map((b) => ({
+            id: b.id,
+            name: (b.sourceName || b.model) + ' · ' + (b.serial || b.id),
+          }));
   return (
     <section className="glass operations-catalog report-center">
       <div className="form-grid">
@@ -82,8 +81,8 @@ export default function ReportCenter() {
           <Input
             type="date"
             value={from}
-            onChange={(e) => {
-              setFrom(e.target.value);
+            onInput={(e) => {
+              setFrom(e.currentTarget.value);
               setReport(null);
             }}
           />
@@ -93,8 +92,8 @@ export default function ReportCenter() {
           <Input
             type="date"
             value={to}
-            onChange={(e) => {
-              setTo(e.target.value);
+            onInput={(e) => {
+              setTo(e.currentTarget.value);
               setReport(null);
             }}
           />
@@ -127,6 +126,7 @@ export default function ReportCenter() {
       >
         Preview report
       </Button>
+      <ReportJobs request={{ type, entityId, from, to }} />
       {error && <p role="alert">{error}</p>}
       {report && (
         <>

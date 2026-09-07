@@ -4421,3 +4421,18 @@ textarea {
   max-width: 240px;
   overflow-wrap: anywhere;
 }
+
+.report-jobs {
+  display: grid;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+}
+.report-jobs > .row {
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.report-jobs .inspection-rule {
+  display: grid;
+  gap: 12px;
+}

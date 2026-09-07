@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Organization maintenance cost report — 7 September 2026
+
+- Reports now includes an expandable organization maintenance cost preview with date filters, per-currency completed/open totals, paged work-order/equipment ledger and CSV download containing every row, source revision and cost reference. Uses the current organization's already-authorized records.
+- Preview freezes primitive source values and organization name/time. Completion timestamps use UTC dates; open jobs use due dates. Invalid/undated records and unknown costs are reported explicitly. Stable equipment kind/ID remains separate from historical display names.
+- Two focused tests passed for mixed equipment identities, date boundaries, invalid dates, all-page CSV inclusion, formula escaping and frozen values after source edits. Production build/TypeScript passed after correcting a test fixture's object typing. No operational records changed.
+- Persisted financial jobs/PDF, project financial attribution, live sharing and reviewed bulk workflows remain open. Browser acceptance remains unverified; goal active.
+
 ### Maintenance cost preview totals — 7 September 2026
 
 - Equipment-history report previews now aggregate recorded maintenance amounts per currency, separately for completed/open work, with work-order counts and explicit missing-cost/currency/invalid-amount counts. Recorded zero costs remain included. Totals use all filtered history rows, not only the visible page.

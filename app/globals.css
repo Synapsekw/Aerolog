@@ -4404,6 +4404,9 @@ textarea {
   grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
+.organization-cost-report { min-width: 0; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+.organization-cost-report summary { cursor: pointer; font-weight: 600; padding: 12px 0; }
+.organization-cost-report > * + * { margin-top: 16px; }
 .report-center > *,
 .operations-catalog .field {
   min-width: 0;

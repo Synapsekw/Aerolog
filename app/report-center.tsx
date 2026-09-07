@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useApp } from './app-provider';
 import ReportJobs from './report-jobs';
 import ReportHistory from './report-history';
+import OrganizationCostReport from './organization-cost-report';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import {
@@ -44,6 +45,7 @@ export default function ReportCenter() {
           }));
   return (
     <section className="glass operations-catalog report-center">
+      <OrganizationCostReport />
       <div className="form-grid">
         <label className="field">
           Report type

@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Reporting regression checkpoint — 7 September 2026
+
+- Full current unit suite passed: 72 tests, including calendar time handling, organization costs and maintenance decimal totals alongside existing flight/import/readiness tests.
+- Downloaded Ivan's saved CSV job `ec7100a4-d165-4dfb-9a91-92275da9e3f3` and PDF job `45659336-aef5-4f6f-a847-8e998191ff0b` through the read-only verifier. Both match stored SHA-256 and byte-for-byte regeneration from frozen snapshots: 20 flights / 29,599 seconds; CSV 8,003 bytes and PDF 22,461 bytes.
+- Report-job database regression passed idempotency, frozen sources, exclusive lease/recovery, stale-worker rejection, artifact validation and RLS. All fixtures rolled back.
+- Reviewed current report API/worker: persisted jobs still accept flight reports only. Organization financial preview/download is not yet a persisted financial job; this remains explicit open scope along with sharing, bulk workflows and visual acceptance. Goal remains active.
+
 ### Organization maintenance cost report — 7 September 2026
 
 - Reports now includes an expandable organization maintenance cost preview with date filters, per-currency completed/open totals, paged work-order/equipment ledger and CSV download containing every row, source revision and cost reference. Uses the current organization's already-authorized records.

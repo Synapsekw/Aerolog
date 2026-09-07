@@ -11,3 +11,9 @@ test('canonical equipment rejects cycles and conflicting identity mappings',()=>
  assert.throws(()=>canonicalEquipment({kind:'asset',id:'a'},[{kind:'asset',source_id:'a',canonical_id:'b'},{kind:'asset',source_id:'b',canonical_id:'a'}]),/cycle/);
  assert.throws(()=>canonicalEquipment({kind:'asset',id:'a'},[{kind:'asset',source_id:'a',canonical_id:'b'},{kind:'asset',source_id:'a',canonical_id:'c'}]),/conflicting/);
 });
+
+test('current inventory excludes merged sources while source history remains intact',async()=>{
+ const {canonicalInventory}=await import('../lib/domain/equipment-identity');
+ const records=[{id:'a'},{id:'b'},{id:'c'}],aliases:EquipmentAlias[]=[{kind:'asset',source_id:'a',canonical_id:'b'},{kind:'asset',source_id:'b',canonical_id:'c'}];
+ assert.deepEqual(canonicalInventory('asset',records,aliases),[{id:'c'}]);assert.deepEqual(canonicalInventory('battery',records,aliases),records);assert.equal(records.length,3);
+});

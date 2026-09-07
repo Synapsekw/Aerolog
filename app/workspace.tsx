@@ -344,8 +344,8 @@ export default function Workspace() {
       day: '2-digit',
     }).format(new Date());
   const missions = items('mission') as Mission[],
-    assets = items('asset') as Asset[],
-    batteries = items('battery') as BatteryModel[],
+    assets = app.canonicalItems('asset') as Asset[],
+    batteries = app.canonicalItems('battery') as BatteryModel[],
     crew = items('crew') as Crew[],
     flights = items('flight') as Flight[],
     services = items('service') as Service[];

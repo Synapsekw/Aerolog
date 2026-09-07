@@ -318,11 +318,19 @@ export default function InspectionManager({ today }: { today: string }) {
                   }}
                 >
                   <option value="asset:">Select equipment…</option>
-                  {equipment.map((e) => (
-                    <option key={e.kind + e.id} value={e.kind + ':' + e.id}>
-                      {e.name} · {e.serial || e.id}
-                    </option>
-                  ))}
+                  {equipment
+                    .filter(
+                      (e) =>
+                        !(app.equipmentAliases || []).some(
+                          (alias) =>
+                            alias.kind === e.kind && alias.source_id === e.id,
+                        ),
+                    )
+                    .map((e) => (
+                      <option key={e.kind + e.id} value={e.kind + ':' + e.id}>
+                        {e.name} · {e.serial || e.id}
+                      </option>
+                    ))}
                 </select>
               </label>
               <p>

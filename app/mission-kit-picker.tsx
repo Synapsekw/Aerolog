@@ -17,8 +17,8 @@ export default function MissionKitPicker({
   const preview = kit
     ? kitAssignment(
         kit,
-        app.items('asset'),
-        app.items('battery'),
+        app.canonicalItems('asset'),
+        app.canonicalItems('battery'),
         draft.aircraft,
         app.organization.settings,
       )
@@ -39,6 +39,18 @@ export default function MissionKitPicker({
       {kit && preview && (
         <>
           <h3>Kit contents</h3>
+          {kit.items.some((item) =>
+            (app.equipmentAliases || []).some(
+              (alias) =>
+                alias.kind === item.kind && alias.source_id === item.id,
+            ),
+          ) && (
+            <p role="alert">
+              This kit contains merged source records. Edit the kit to select
+              canonical equipment, then preview its new version before assigning
+              it.
+            </p>
+          )}
           {kitContents(kit, app.items('asset'), app.items('battery')).map(
             (i) => (
               <p key={i.kind + i.id}>

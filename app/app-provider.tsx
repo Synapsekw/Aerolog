@@ -11,7 +11,10 @@ import {
   api,
   setActiveOrganization,
 } from '@/lib/supabase-browser';
-import type { EquipmentAlias } from '@/lib/domain/equipment-identity';
+import {
+  canonicalInventory,
+  type EquipmentAlias,
+} from '@/lib/domain/equipment-identity';
 import type { Profile, RecordEnvelope, Kind } from '@/lib/domain/models';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +45,7 @@ export function useApp() {
     signOut: () => Promise<void>;
     busy: boolean;
     items: (kind: string) => any[];
+    canonicalItems: (kind: 'asset' | 'battery') => any[];
     revision: (kind: string, id: string) => number;
     status: any;
     markRead: (id: string) => Promise<void>;
@@ -351,6 +355,12 @@ export default function AppProvider({
         busy,
         items: (kind: string) =>
           store.records.filter((r) => r.kind === kind).map((r) => r.data),
+        canonicalItems: (kind: 'asset' | 'battery') =>
+          canonicalInventory(
+            kind,
+            store.records.filter((r) => r.kind === kind).map((r) => r.data),
+            store.equipmentAliases || [],
+          ),
         signOut: async () => {
           await browserClient().auth.signOut();
           setStore(null);

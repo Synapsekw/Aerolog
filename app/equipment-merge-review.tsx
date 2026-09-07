@@ -41,7 +41,13 @@ export default function EquipmentMergeReview() {
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false);
   if (!['admin', 'manager'].includes(app.profile.role)) return null;
-  const items = app.records.filter((r) => r.kind === kind);
+  const items = app.records.filter(
+    (r) =>
+      r.kind === kind &&
+      !(app.equipmentAliases || []).some(
+        (alias) => alias.kind === r.kind && alias.source_id === r.id,
+      ),
+  );
   return (
     <details className="glass equipment-bulk-editor">
       <summary>Review possible inventory duplicates</summary>

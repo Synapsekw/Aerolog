@@ -18,13 +18,13 @@ export default function KitBrowser() {
     kits = app.items('kit') as Kit[];
   const allowed = ['admin', 'manager', 'technician'].includes(app.profile.role);
   const candidates = [
-    ...assets.map((a) => ({
+    ...app.canonicalItems('asset').map((a) => ({
       kind: 'asset' as const,
       id: a.id,
       name: a.name,
       status: a.status,
     })),
-    ...batteries.map((b) => ({
+    ...app.canonicalItems('battery').map((b) => ({
       kind: 'battery' as const,
       id: b.id,
       name: b.sourceName || b.model,

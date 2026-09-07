@@ -416,3 +416,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Migration 045 passed a rollback preview covering wrong-side actions, retained acceptance, expiry precedence, terminal guards, audit and existing isolation checks, then was applied. TypeScript and production build passed.
 - This records termination of a data view, not a physical return, reservation or operational handover. No real equipment sharing relationship was created or changed.
 - All 36 isolated API integration checks passed, including recipient closure, denied owner-side end, retained timestamps, removal of details and rejected reopening. Temporary records/accounts/organizations were cleaned up successfully. Goal remains active; merge execution and final browser/mobile acceptance remain unfinished.
+
+### Evidence-based merge counter proposal — 7 September 2026
+
+- Inventory duplicate review now includes explicit source selection for the proposed hours/cycles register and a required evidence explanation. Preview retains source kind/ID/revision and never adds overlapping totals.
+- Lower-than-other values are flagged for inspection-baseline reconciliation. Unknown aircraft hours remain unknown; missing/fractional/negative/non-finite/out-of-range battery cycles are rejected. Changing either selected record or refreshing review clears the proposal.
+- Four focused merge/reconciliation tests and production build/TypeScript passed. No source records, counters, aliases or inspection baselines were changed. This is a proposal, not a merge execution endpoint.
+- Goal remains active. Atomic merge application must still validate operational routing, readiness and inspection baselines; full desktop/mobile acceptance remains pending.

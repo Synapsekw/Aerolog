@@ -1,12 +1,13 @@
 'use client';
 import Image from 'next/image';
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useApp } from './app-provider';
 import MissionMap from './mission-map';
 import FlightAnalysis from './flight-analysis';
 import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
 import TeamDirectory from './team-directory';
+import KitBrowser from './kit-browser';
 import BatteryBrowser from './battery-browser';
 import FlightGlobe from './flight-globe';
 import ImportReview from './import-review';
@@ -107,7 +108,6 @@ const navigation = [
   ['Flight logs', BookOpen],
   ['Inventory', Drone],
   ['Maintenance', Wrench],
-  ['Batteries', Battery],
   ['Crew', Users],
   ['Integrations', Plug],
   ['Audit trail', History],
@@ -313,6 +313,10 @@ export default function Workspace() {
     flights = items('flight') as Flight[],
     services = items('service') as Service[];
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
+  const [inventoryExpanded, setInventoryExpanded] = useState(true);
+  const inventoryViews = useRef<
+    Record<string, { search: string; filter: string; page: number }>
+  >({});
   const [inventoryPage, setInventoryPage] = useState(1);
   const [flightView, setFlightView] = useState('list');
   const inventoryCategories = [
@@ -390,9 +394,32 @@ export default function Workspace() {
     Integrations: 'Connected services and flight-log import.',
     'Audit trail': 'An accountable history of operational decisions.',
     Settings: 'Workspace policies, access and local configuration.',
+    Kits: 'Reusable equipment sets for mission preparation.',
     Notifications: 'Operational changes that need your attention.',
   };
+  function rememberInventory() {
+    if (page === 'Inventory' || page === 'Batteries')
+      inventoryViews.current[
+        page === 'Batteries' ? 'Battery' : inventoryCategory
+      ] = { search, filter, page: inventoryPage };
+  }
+  function navigateInventory(category: string) {
+    rememberInventory();
+    const saved = inventoryViews.current[category];
+    setInventoryCategory(category);
+    setPage(category === 'Battery' ? 'Batteries' : 'Inventory');
+    setSearch(saved?.search || '');
+    setFilter(saved?.filter || 'All');
+    setInventoryPage(saved?.page || 1);
+    setDetail(null);
+    setError('');
+  }
   function navigate(next: string) {
+    if (next === 'Inventory') {
+      navigateInventory(inventoryCategory);
+      return;
+    }
+    rememberInventory();
     setPage(next);
     setSearch('');
     setFilter('All');
@@ -637,22 +664,95 @@ export default function Workspace() {
         <SidebarContent>
           <p className="nav-label">WORKSPACE</p>
           <SidebarMenu>
-            {navigation.map(([label, Icon]) => (
-              <SidebarMenuItem key={label}>
-                <NavigationItem
-                  className="nav-item"
-                  tooltip={label}
-                  isActive={page === label}
-                  onClick={() => navigate(label)}
-                >
-                  <Icon />
-                  <span>{label}</span>
-                  {label === 'Missions' && (
-                    <b className="nav-count">{missions.length}</b>
+            {navigation.map(([label, Icon]) =>
+              label === 'Inventory' ? (
+                <SidebarMenuItem key={label}>
+                  <SidebarMenuButton
+                    className="nav-item"
+                    tooltip="Inventory"
+                    aria-expanded={inventoryExpanded}
+                    isActive={page === 'Inventory' || page === 'Batteries'}
+                    onClick={() => setInventoryExpanded(!inventoryExpanded)}
+                  >
+                    <Icon />
+                    <span>Inventory</span>
+                    <ChevronRight
+                      className={
+                        inventoryExpanded
+                          ? 'inventory-chevron expanded'
+                          : 'inventory-chevron'
+                      }
+                    />
+                  </SidebarMenuButton>
+                  {inventoryExpanded && (
+                    <SidebarMenu
+                      className="inventory-subnav"
+                      aria-label="Inventory categories"
+                    >
+                      {inventoryCategories.map(
+                        ({ key, label: title, Icon: CategoryIcon }) => (
+                          <SidebarMenuItem key={key}>
+                            <NavigationItem
+                              className="nav-item"
+                              tooltip={title}
+                              isActive={
+                                key === 'Battery'
+                                  ? page === 'Batteries'
+                                  : page === 'Inventory' &&
+                                    inventoryCategory === key
+                              }
+                              onClick={() => navigateInventory(key)}
+                            >
+                              <CategoryIcon />
+                              <span>{title}</span>
+                              <b className="nav-count">
+                                {key === 'Battery'
+                                  ? batteries.filter(
+                                      (b) => b.status !== 'Retired',
+                                    ).length
+                                  : assets.filter(
+                                      (a) =>
+                                        a.category === key &&
+                                        a.status !== 'Retired',
+                                    ).length}
+                              </b>
+                            </NavigationItem>
+                          </SidebarMenuItem>
+                        ),
+                      )}
+                      <SidebarMenuItem>
+                        <NavigationItem
+                          className="nav-item"
+                          tooltip="Kits"
+                          isActive={page === 'Kits'}
+                          onClick={() => navigate('Kits')}
+                        >
+                          <Package />
+                          <span>Kits</span>
+                        </NavigationItem>
+                      </SidebarMenuItem>
+                    </SidebarMenu>
                   )}
-                </NavigationItem>
-              </SidebarMenuItem>
-            ))}
+                </SidebarMenuItem>
+              ) : (
+                <SidebarMenuItem key={label}>
+                  <NavigationItem
+                    className="nav-item"
+                    tooltip={
+                      label === 'Settings' ? 'Organization & settings' : label
+                    }
+                    isActive={page === label}
+                    onClick={() => navigate(label)}
+                  >
+                    <Icon />
+                    <span>{label === 'Settings' ? 'Organization' : label}</span>
+                    {label === 'Missions' && (
+                      <b className="nav-count">{missions.length}</b>
+                    )}
+                  </NavigationItem>
+                </SidebarMenuItem>
+              ),
+            )}
           </SidebarMenu>
         </SidebarContent>
         <SidebarFooter>
@@ -1081,6 +1181,7 @@ export default function Workspace() {
                   </section>
                 </>
               )}
+              {page === 'Kits' && <KitBrowser key={organization.id} />}
               {kind && (
                 <>
                   {page === 'Inventory' && (
@@ -1096,12 +1197,7 @@ export default function Workspace() {
                             (inventoryCategory === key ? 'selected' : '')
                           }
                           aria-pressed={inventoryCategory === key}
-                          onClick={() => {
-                            setInventoryCategory(key);
-                            setInventoryPage(1);
-                            setFilter('All');
-                            setSearch('');
-                          }}
+                          onClick={() => navigateInventory(key)}
                         >
                           <Icon size={23} />
                           <span>

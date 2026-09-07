@@ -2,6 +2,7 @@
 import Image from 'next/image';
 import EquipmentBulkEditor from './equipment-bulk-editor';
 import EquipmentSharing from './equipment-sharing';
+import EquipmentMergeReview from './equipment-merge-review';
 import { useState, useRef } from 'react';
 import { useApp } from './app-provider';
 import MissionMap from './mission-map';
@@ -1432,6 +1433,7 @@ export default function Workspace() {
                     <section className="glass inventory-section">
                       <EquipmentBulkEditor key={organization.id} />
                       <EquipmentSharing key={'shares-'+organization.id} />
+                      <EquipmentMergeReview key={'merge-'+organization.id} />
                       <div className="panel-heading">
                         <div>
                           <h2>
@@ -1736,6 +1738,7 @@ export default function Workspace() {
                     <EquipmentBulkEditor key={organization.id} />
                   )}
                   {page === 'Batteries' && <EquipmentSharing key={organization.id} />}
+                  {page === 'Batteries' && <EquipmentMergeReview key={organization.id} />}
                   {page === 'Batteries' && (
                     <BatteryBrowser
                       batteries={visible}

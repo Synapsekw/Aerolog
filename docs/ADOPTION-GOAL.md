@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Inventory merge review foundation — 7 September 2026
+
+- Added a clearly read-only duplicate comparison on Inventory/Batteries. Managers choose two same-kind records and inspect identity/metadata/counter differences, category/serial conflicts and loaded-record dependencies before any consolidation.
+- Dependency review covers typed flight IDs (explicit identity wins over names), mission kit snapshots, services, inspection plans/events, evidence targets, documents, incidents and aircraft permissions. It preserves source records and does not sum counters or rewrite history.
+- Focused tests passed mixed-kind identity isolation, explicit-ID precedence, historical dependency coverage, serial conflicts and rejection of invalid selections; production build and final TypeScript passed.
+- No apply/delete path is exposed yet. Server-side merge planning, report/share dependencies, counter reconciliation and execution remain required before this workflow is complete. Operational handover and visual acceptance also remain open; goal active.
+
 ### Cross-organization equipment API acceptance — 7 September 2026
 
 - Added two-org sharing flows to the isolated API integration suite. Pilot creation, offering equipment not owned by the actor and owner-side acceptance are denied; recipient details remain null until acceptance.

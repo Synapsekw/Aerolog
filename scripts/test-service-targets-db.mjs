@@ -10,9 +10,18 @@ try{
  for(const [kind,id] of [['battery','QA-SERVICE-BAT'],['asset','QA-SERVICE-ASSET']]){
   const work={id:'QA-WORK-'+kind,asset:'Display name is not the identity',targetKind:kind,targetId:id,task:'QA service',due:'2026-09-07',status:'Scheduled',technician:'QA',intervalHours:100,cost:12.345,currency:'KWD'};
   await c.query("select aerolog_command('save',$1)",[{kind:'service',data:work,revision:0}]);
-  const saved=await get('service',work.id);assert.equal(saved.data.targetId,id);
+  let saved=await get('service',work.id);assert.equal(saved.data.targetId,id);
+  await c.query("select aerolog_command('save',$1)",[{kind:'service',data:{...saved.data,status:'In progress',startedBy:'Spoofed'},revision:saved.revision}]);
+  saved=await get('service',work.id);assert.ok(saved.data.startedAt);assert.notEqual(saved.data.startedBy,'Spoofed');
+  const startedAt=saved.data.startedAt;
+  await c.query('create temporary table if not exists qa_lifecycle_probe (organization_id uuid,kind text,id text,data jsonb) on commit drop');
+  if(kind==='battery') await c.query('create trigger lifecycle before insert on qa_lifecycle_probe for each row execute function public.aerolog_service_lifecycle_guard()');
+  await c.query('savepoint mission_gate');try{await c.query('insert into qa_lifecycle_probe values($1,$2,$3,$4)',[org,'mission','QA-LIFECYCLE-M',{status:'Pending approval',equipment:[id]}]);assert.fail('Work in progress not detected')}catch(e){assert.match(e.message,/work in progress/);await c.query('rollback to savepoint mission_gate')}
+
+  await c.query('savepoint lifecycle');try{await c.query("select aerolog_command('save',$1)",[{kind:'service',data:{...saved.data,status:'Scheduled'},revision:saved.revision}]);assert.fail('Started work reverted')}catch(e){assert.match(e.message,/must be signed off/);await c.query('rollback to savepoint lifecycle')}
+
   await c.query("select aerolog_command('service_complete',$1)",[{kind:'service',data:saved.data,revision:saved.revision,note:'QA findings recorded for regression only'}]);
-  const completed=await get('service',work.id);assert.equal(completed.data.status,'Completed');assert.equal(completed.data.cost,12.345);assert.ok(completed.data.signedBy);
+  const completed=await get('service',work.id);assert.equal(completed.data.status,'Completed');assert.equal(completed.data.cost,12.345);assert.ok(completed.data.signedBy);assert.equal(completed.data.startedAt,startedAt);
  }
  const battery=(await get('battery','QA-SERVICE-BAT')).data;assert.equal(battery.status,'Quarantined');assert.equal(battery.cycles,42);
  const asset=(await get('asset','QA-SERVICE-ASSET')).data;assert.equal(asset.status,'Retired');assert.equal(asset.next,150);

@@ -2983,6 +2983,7 @@ export default function Workspace() {
                         ['Next interval', record.targetKind === 'battery' ? 'Managed by battery inspection plan' : record.intervalHours + ' h'],
                         ['Recorded cost', record.cost == null ? 'Not recorded' : record.currency + ' ' + record.cost],
                         ['Cost reference', record.costReference || 'Not recorded'],
+                        ['Work started', record.startedAt ? record.startedAt + ' · ' + record.startedBy : 'Not started'],
                       ].map(([k, v]) => (
                         <div key={k}>
                           <dt>{k}</dt>
@@ -3004,6 +3005,7 @@ export default function Workspace() {
                     ) : (
                       fleet && (
                         <>
+                          {record.status !== 'In progress' && <Button variant="outline" disabled={busy} onClick={() => void save('service', 'save', {...record, status: 'In progress'})}>Start work</Button>}
                           <Note
                             label="Work completed and findings"
                             value={note}
@@ -3027,9 +3029,7 @@ export default function Workspace() {
                             </Button>
                           </div>
                           <p className="fine-print">
-                            Sign-off returns equipment to available status and
-                            advances its service threshold by the configured
-                            interval.
+                            {record.targetKind === 'battery' ? 'Sign-off records findings without changing battery condition or counters.' : 'Sign-off advances the hourly service threshold. Retired and checked-out equipment retain their status.'}
                           </p>
                         </>
                       )

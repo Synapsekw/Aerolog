@@ -185,3 +185,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Battery forms explain separate inspection/charge workflows and hide the irrelevant hourly reset field. Completion notifications distinguish battery sign-off from asset interval updates.
 - Rollback regression exercised the actual command RPC for save and signed completion of both target kinds, retained costs, missing-target rejection, unchanged battery quarantine/cycles and retained aircraft retirement. Updated cost fixtures to include required equipment counters; both DB scripts passed. Production build/TypeScript passed. Browser verified selecting a TB65 and the battery-specific form; draft closed unsaved.
 - Broader adoption goal remains active: maintenance lifecycle enhancements, extended history reports and final end-to-end/visual acceptance are still open.
+
+### Maintenance work in progress — 7 September 2026
+
+- Added Start work and an In progress status. Start actor/time are stamped server-side, preserved through edits/sign-off, and cannot be supplied as forged metadata. Started jobs cannot revert to scheduled states or change equipment targets.
+- Migration 034 also checks pending/approved mission writes for equipment referenced by an In progress work order. This gate does not retroactively revoke already approved missions; final readiness acceptance must account for changes after approval.
+- Extended rollback service regression covers actual save/start/sign-off commands, anti-spoof start stamping, rejected status reversal and retained start time. An isolated trigger probe verifies detection of active work for both asset and battery IDs. Full mission submission integration for this new gate remains to be tested. Production build/TypeScript passed.
+- Corrected the service detail sign-off explanation to match battery behavior and preserved retired/checked-out asset states. No real jobs were started or completed during testing.
+- Goal remains active; wider reports and remaining workflow/visual acceptance are still outstanding.

@@ -99,6 +99,9 @@ export const missionSchema = z.object({
   reviewedBy: z.string().optional(),
   reviewedAt: z.string().optional(),
   completedAt: z.string().optional(),
+  startedAt: z.string().optional(),
+  startedBy: z.string().optional(),
+  startedById: z.uuid().optional(),
 });
 const inventorySourceFields = {
   externalSource: z.literal('DroneLogbook').optional(),
@@ -190,13 +193,16 @@ export const serviceSchema = z.object({
   costReference: z.string().max(160).optional(),
   due: date,
   remaining: numeric(0, 10000).default(0),
-  status: z.enum(['Scheduled', 'Upcoming', 'Overdue', 'Completed']),
+  status: z.enum(['Scheduled', 'Upcoming', 'Overdue', 'In progress', 'Completed']),
   technician: name,
   notes: note,
   intervalHours: numeric(1, 10000).default(100),
   completionNotes: note.optional(),
   signedBy: z.string().optional(),
   completedAt: z.string().optional(),
+  startedAt: z.string().optional(),
+  startedBy: z.string().optional(),
+  startedById: z.uuid().optional(),
 }).refine(s => s.cost == null || Boolean(s.currency), 'A currency is required when recording a cost');
 export const batteryReadingSchema = z.object({
   serial: z.string().min(1).max(160),

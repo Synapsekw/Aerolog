@@ -81,3 +81,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Added private incident evidence upload/download, with role/ownership, organization, target/path and closed-incident guards. Equipment condition is deliberately managed separately; incident closure does not release an aircraft or battery.
 - Migration 024 applied. Database regression verifies ownership, manager closure, incomplete action rejection, reference isolation, revisions, attribution, evidence guards and private RPC; fixtures rolled back. 46 unit tests, typecheck and production build passed. Browser verified the report editor; no test incident retained.
 - Outstanding: document controls, personnel qualifications/aircraft permissions/currency, reports/jobs and full adoption acceptance audit.
+
+### Personnel aircraft permissions and qualifications — 7 September 2026
+
+- Crew profiles now explicitly select Not configured, All aircraft or Selected aircraft. Empty selected lists authorize no aircraft. No existing person was silently granted all-aircraft access.
+- Added qualifications/endorsements with issuer/reference, issue/expiry, required-for-operations setting and linked private evidence. Managers upload evidence to a saved person, then attach it to that person's qualification. Evidence cannot be borrowed from another person or organization.
+- Mission guard checks all required qualifications against the planned date and evidence, and checks primary pilots, second pilots and instructors against every mission aircraft. Existing primary-certificate and membership checks remain. Profiles without configured aircraft access need a manager's selection before future submissions/approvals.
+- Migration 025 applied. Rollback tests passed for absent policy, empty allowlist, additional aircraft, second pilot, expiry/evidence and identity isolation. Existing mission/catalog/form DB fixture tests explicitly configure test-pilot access and pass. Unit suite 48 tests; typecheck and production build passed. Browser verified the crew authorization editor without saving operational permissions.
+- Remaining personnel work: recency/currency policies and externally recorded time, unified qualifications matrix/readiness queue, and acceptance review of historical versus active crew display. Central document controls and report jobs also remain outstanding.

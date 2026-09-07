@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { missionFormSchema } from '@/lib/operations/forms';
+import { qualificationSchema } from '@/lib/operations/qualifications';
 const name = z.string().trim().min(1).max(160),
   id = z.string().min(1).max(100),
   note = z.string().max(12000).default('');
@@ -145,6 +146,14 @@ export const batterySchema = z.object({
   notes: note,
 });
 export const crewSchema = z.object({
+  aircraftPermission: z
+    .enum(['Not configured', 'All aircraft', 'Selected aircraft'])
+    .optional(),
+  authorizedAircraftIds: z
+    .array(z.string().min(1).max(100))
+    .max(200)
+    .optional(),
+  qualifications: z.array(qualificationSchema).max(100).optional(),
   id,
   name,
   initials: z.string().max(5),

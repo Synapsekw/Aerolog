@@ -8,7 +8,7 @@ try {
  const write=(t,rev=0)=>c.query('select aerolog_form_template_write($1,$2,$3,$4)',[actor,org,t,rev]);
  await write(template);
  const insert=(kind,data)=>c.query('insert into aerolog_records(organization_id,kind,id,data) values($1,$2,$3,$4)',[org,kind,data.id,data]);
- for(const id of ['QA-F-P','QA-F-O']) await insert('crew',{id,name:id,status:'Available',expires:'2099-12-31'});
+ for(const id of ['QA-F-P','QA-F-O']) await insert('crew',{id,name:id,aircraftPermission:'All aircraft',status:'Available',expires:'2099-12-31'});
  await insert('asset',{id:'QA-F-A',name:'QA-F-A',category:'Aircraft',status:'Available',hours:1,next:100,intervalHours:100});
  let mission={id:'QA-F-M',name:'Forms mission',location:'QA area',type:'Survey',status:'Draft',date:'2099-02-04',time:'10:00',durationMinutes:60,altitude:60,pilot:'QA-F-P',observer:'QA-F-O',aircraft:'QA-F-A',equipment:[],risks:[{hazard:'QA risk',likelihood:1,severity:1,controlled:true,mitigation:'QA controls'}],forms:[{templateId:template.id,revision:1,answers:{}}],formSnapshots:[{id:template.id,name:'Forged'}]};
  const save=(m,rev=0)=>c.query('select aerolog_command($1,$2)', ['save',{kind:'mission',data:m,revision:rev,_organizationId:org}]);

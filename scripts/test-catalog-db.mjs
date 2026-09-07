@@ -23,7 +23,7 @@ try {
   await reject(()=>write('project',{...project,id:'QA-CAT-BAD',customerId:'another-org-customer'}), /Related record not found/);
   await reject(()=>write('customer',{...customer,id:'QA-CAT-PILOT'},0,'a03e4339-a2e8-4726-ab1a-54c44670c023'), /manager required/);
   const insert = (kind,data) => db.query('insert into aerolog_records(organization_id,kind,id,data) values($1,$2,$3,$4)',[org,kind,data.id,data]);
-  for (const id of ['QA-CAT-PILOT','QA-CAT-OBSERVER']) await insert('crew',{id,name:id,status:'Available',expires:'2099-12-31'});
+  for (const id of ['QA-CAT-PILOT','QA-CAT-OBSERVER']) await insert('crew',{id,name:id,aircraftPermission:'All aircraft',status:'Available',expires:'2099-12-31'});
   await insert('asset',{id:'QA-CAT-A',name:'QA-CAT-A',category:'Aircraft',status:'Available',hours:1,next:100,intervalHours:100});
   const mission = {id:'QA-CAT-M',name:'Catalog snapshot test',status:'Draft',date:'2099-02-03',time:'10:00',durationMinutes:60,altitude:60,pilot:'QA-CAT-PILOT',observer:'QA-CAT-OBSERVER',aircraft:'QA-CAT-A',equipment:[],risks:[],projectId:project.id,siteId:site.id,contextSnapshot:{project:{name:'Forged'}}};
   await insert('mission',mission);

@@ -4381,3 +4381,17 @@ textarea {
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
+
+.crew-credentials {
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  margin: 20px 0;
+}
+.crew-credentials .inspection-rule {
+  display: grid;
+  gap: 12px;
+}
+.crew-credentials label {
+  overflow-wrap: anywhere;
+}

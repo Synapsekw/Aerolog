@@ -15,6 +15,7 @@ import EquipmentPassport from './equipment-passport';
 import OperationsCatalog from './operations-catalog';
 import FormTemplateManager from './form-template-manager';
 import IncidentManager from './incident-manager';
+import CrewCredentials from './crew-credentials';
 import MissionForms from './mission-forms';
 import EquipmentMetadataFields from './equipment-metadata-fields';
 import {
@@ -1839,6 +1840,10 @@ export default function Workspace() {
                           </div>
                           <h2>{c.name}</h2>
                           <p>{c.role}</p>
+                          <p className="fine-print">
+                            Aircraft access:{' '}
+                            {c.aircraftPermission || 'Not configured'}
+                          </p>
                           <div className="crew-numbers">
                             <div>
                               <b>
@@ -3139,6 +3144,7 @@ export default function Workspace() {
                         Edit crew profile
                       </Button>
                     )}
+                    <CrewCredentials person={record} />
                     <h3 className="detail-heading">Mission assignments</h3>
                     {missions
                       .filter(
@@ -3364,6 +3370,7 @@ export default function Workspace() {
                 ]}
                 onChange={(v) => update('role', v)}
               />
+              <CrewCredentials person={draft} onChange={update} />
               <Field
                 label="Certificate / qualification"
                 required

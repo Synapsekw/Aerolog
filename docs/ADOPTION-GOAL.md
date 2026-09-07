@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Calendar snapshot export — 7 September 2026
+
+- Added an iCalendar download scoped to the calendar's displayed dates and selected category, including inspection dates. Stable organization/type/record UIDs distinguish records; exported entries are private, transparent all-day reminders with original schedule text and status in the description.
+- This is explicitly a date-only snapshot, not a live subscription or timed event feed. Scoped revocable sharing, timed calendar semantics and cross-organization equipment sharing remain open.
+- Serializer follows RFC 5545 text escaping, CRLF, UTF-8 octet folding and exclusive all-day end dates. Focused tests verify category/range exclusion, year rollover, invalid dates, organization identity, Unicode and property-injection resistance. Tests, TypeScript and production build passed.
+- Browser download/visual acceptance remains unverified because the Mac was locked. No operational data changed. Goal remains active.
+
 7 September: inspected clean current worktree and active goal. Existing member removal, battery browser and globe are present. Began direct inventory navigation with per-category in-session filter restoration and active counts. Inventory parent expands/collapses independently; battery destination is singular; Organization opens existing team/settings management. Backend scope not yet implemented; no completion claim.
 
 Kit foundation added: `aerolog_save_kit` RPC and `/api/kits`, with org lock/context, fleet-role authorization, existence checks, optimistic revision and audit. Migration 015 applied. Rollback-only test created a kit and verified stale revision rejection; no test kit retained. UI supports selection/search, selected-content readiness preview, editing and archiving. Assignment/snapshots, compatibility metadata, availability checks and comprehensive permission/API tests remain open.

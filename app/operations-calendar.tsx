@@ -2,6 +2,7 @@
 import { useMemo, useState } from 'react';
 import { useApp } from './app-provider';
 import { inspectionCalendar } from '@/lib/operations/inspection-calendar';
+import { calendarExport } from '@/lib/operations/calendar-export';
 import { Button } from '@/components/ui/button';
 import type { Mission, Service, Flight } from '@/lib/domain/models';
 import { missionAircraft, missionOverlaps } from '@/lib/operations/assignments';
@@ -177,6 +178,15 @@ export default function OperationsCalendar({
             <option value="flight">Flight logs</option>
             <option value="inspection">Inspections</option>
           </select>
+          <Button variant="outline" onClick={() => {
+            const exported = calendarExport(entries, { organizationId: app.organization.id, from: days[0], through: days[days.length - 1], kind: type });
+            const url = URL.createObjectURL(new Blob([exported.content], { type: 'text/calendar;charset=utf-8' }));
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `aerolog-${type.toLowerCase()}-${days[0]}.ics`;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }}>Export dates (.ics)</Button>
         </div>
       </div>
       <p>
@@ -186,6 +196,7 @@ export default function OperationsCalendar({
         Dates follow the organization schedule; imported flights with no date
         are excluded.
       </p>
+      <p className="fine-print">Calendar export includes the displayed date range and category as all-day reminders. Scheduled times remain in each description. Downloads are snapshots and do not update automatically.</p>
       <p className="fine-print">Inspection dates show calendar intervals; hours, flights or cycles may make an inspection due earlier. {inspections.withoutCalendarDate} inspection rules have no calendar interval and remain in the inspection readiness view.</p>
       <div className="calendar-grid" role="group" aria-label="Operations dates">
         {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d) => (

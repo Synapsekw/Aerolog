@@ -1,4 +1,5 @@
 'use client';
+import FlightEquipmentProvenance from './flight-equipment-provenance';
 import Image from 'next/image';
 import EquipmentBulkEditor from './equipment-bulk-editor';
 import EquipmentSharing from './equipment-sharing';
@@ -930,6 +931,7 @@ export default function Workspace() {
                 <Status>Recorded</Status>
               </div>
 
+              <FlightEquipmentProvenance flight={record} />
               <FlightAnalysis key={record.id} flight={record} />
               <div className="detail-metrics">
                 <Stat

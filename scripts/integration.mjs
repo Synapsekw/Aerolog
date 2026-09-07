@@ -356,6 +356,7 @@ try {
     start: 95,
     end: 50,
     battery: battery.id,
+    batteryIds: [battery.id, bulkBattery.id, battery.id],
     peakTemperature: 41,
     source: 'CSV',
     importHash: prefix + '-hash',
@@ -383,6 +384,13 @@ try {
   );
   assert.equal(assetRow.data.hours, 10.167);
   pass('flight import increments usage once, duplicates roll back');
+  const imported=check(await db.from('aerolog_records').select('data').eq('organization_id',org).eq('kind','flight').eq('id',flight.id).single()).data;
+  assert.equal(imported.aircraftId,aircraft.id);assert.equal(imported.equipmentIdentitySource.aircraft,aircraft.name);
+  assert.deepEqual(imported.batteryIds,[battery.id,bulkBattery.id]);
+  const usageEvents=check(await db.from('aerolog_records').select('data').eq('organization_id',org).eq('kind','battery_event').eq('data->>flightId',flight.id));
+  assert.deepEqual(usageEvents.map(e=>e.data.battery).sort(),[battery.id,bulkBattery.id].sort());
+  pass('flight import retains incoming identity and records one usage event per distinct battery');
+
   raw = await clients.admin.rpc('aerolog_command', {
     command: 'flight_import',
     payload: {

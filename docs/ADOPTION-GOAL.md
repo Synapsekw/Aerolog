@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Merge-review API acceptance — 7 September 2026
+
+- Extended isolated integration coverage for the merge-review endpoint: pilots/technicians are denied, another organization cannot review the equipment, and identical selections are rejected.
+- Manager response contains expected mission/flight dependencies, the associated sharing relationship, serial conflict and review hash. Raw source payloads are omitted. Equipment JSON and revisions are exactly unchanged after the request.
+- All 35 integration checks passed; temporary accounts, organizations, shares and records were cleaned up. This verifies review only, not consolidation execution.
+- Actual merges/counter reconciliation, operational handover and browser acceptance remain open. Goal active.
+
 ### Authoritative merge-review context — 7 September 2026
 
 - Merge comparison now loads server context under the organization lock, with current record revisions, saved-report ID matches and equipment-sharing relationships. Browser selections are disabled while the request is pending; review displays its capture time.

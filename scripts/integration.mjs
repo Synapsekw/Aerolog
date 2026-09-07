@@ -554,6 +554,23 @@ try {
   offered=(await api('outsider','equipment-shares')).shares.find(s=>s.id===shared.id);
   assert.equal(offered.status,'Revoked');assert.equal(offered.equipment,null);
   pass('equipment sharing reflects owner changes and removes access on owner revocation');
+  const mergeRequest={kind:'asset',keepId:aircraft.id,duplicateId:bulkAircraft.id};
+  await api('pilot','equipment-merge-review',mergeRequest,403);
+  await api('technician','equipment-merge-review',mergeRequest,403);
+  await api('outsider','equipment-merge-review',mergeRequest,400);
+  await api('admin','equipment-merge-review',{...mergeRequest,duplicateId:aircraft.id},400);
+  const mergeBefore=check(await db.from('aerolog_records').select('id,revision,data').eq('organization_id',org).in('id',[aircraft.id,bulkAircraft.id]).order('id'));
+  const mergeReview=await api('manager','equipment-merge-review',mergeRequest);
+  assert.equal(mergeReview.keep.id,aircraft.id);assert.equal(mergeReview.duplicate.id,bulkAircraft.id);
+  assert.ok(mergeReview.conflicts.includes('Different recorded serial numbers'));
+  assert.ok(mergeReview.keepReferences.some(r=>r.kind==='mission'&&r.id===mission.id));
+  assert.ok(mergeReview.keepReferences.some(r=>r.kind==='flight'&&r.id===flight.id));
+  assert.ok(mergeReview.shareReferences.some(r=>r.id===shared.id));
+  assert.match(mergeReview.reviewHash,/^[a-f0-9]{64}$/);
+  assert.equal('sourceRecord' in mergeReview.keep.data,false);
+  const mergeAfter=check(await db.from('aerolog_records').select('id,revision,data').eq('organization_id',org).in('id',[aircraft.id,bulkAircraft.id]).order('id'));
+  assert.deepEqual(mergeAfter,mergeBefore);
+  pass('merge review API verifies owned identities, history/shares and read-only behavior');
   const guestEmail = prefix.toLowerCase() + '-member@aerolog.example';
   await api(
     'pilot',

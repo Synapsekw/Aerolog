@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Saved maintenance cost PDFs — 7 September 2026
+
+- Added PDF format to organization maintenance cost jobs. Dedicated renderer includes per-currency completed/open totals, missing-data counts and the full equipment/work-order ledger with IDs/revisions. Uses snapshot metadata and embedded font; existing flight PDF rendering stays unchanged.
+- Rendered and inspected all three pages of a 12-work-order fixture with long descriptions, accented names, mixed currencies and missing/zero costs. Improved word wrapping after the first render; final pages have no clipping. QA data stays in ignored local files.
+- Actual saved PDF job `43488ebd-651a-4d80-adf2-1720e436184a` completed: one existing work order, 13,847 bytes. Private storage download hash and exact snapshot regeneration passed. Request validation, production build and final TypeScript checks passed.
+- Project financial attribution, scoped sharing, reviewed bulk workflows and final application browser acceptance remain open. Goal active.
+
 ### Persisted organization cost CSV jobs — 7 September 2026
 
 - Organization maintenance costs can now be queued through the shared saved-report API/UI. Migration 037 captures service-only source snapshots for this report type. Existing org authorization, private attachments, leases, resumption and hashes apply unchanged.

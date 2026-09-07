@@ -11,13 +11,15 @@ export default function OrganizationCostReport() {
   const today = new Intl.DateTimeFormat('en-CA', { timeZone: app.organization.settings?.timezone || 'UTC', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
   const [from,setFrom] = useState(today.slice(0,4)+'-01-01'), [to,setTo] = useState(today), [error,setError] = useState(''), [page,setPage] = useState(0);
   const [snapshot,setSnapshot] = useState<{ report: ReturnType<typeof organizationCosts>; at: string; organization: string } | null>(null);
+  const [format,setFormat] = useState('CSV');
   return <details className="organization-cost-report">
     <summary>Organization maintenance costs</summary>
     <p>Review recorded work-order costs across all equipment. Completed work uses completion dates; open work uses scheduled due dates.</p>
     <div className="form-grid"><label className="field">Costs from<Input type="date" value={from} onInput={e=>{setFrom(e.currentTarget.value);setSnapshot(null)}} /></label><label className="field">Costs through<Input type="date" value={to} onInput={e=>{setTo(e.currentTarget.value);setSnapshot(null)}} /></label></div>
     <Button variant="outline" onClick={()=>{try{setSnapshot({report:organizationCosts(app.records,from,to),at:new Date().toISOString(),organization:app.organization.name});setPage(0);setError('')}catch(e){setError((e as Error).message)}}}>Preview organization costs</Button>
     {error && <p role="alert">{error}</p>}
-    <ReportJobs request={{type:'Maintenance costs',from,to,format:'CSV'}} />
+    <label className="field">Saved cost export format<select value={format} onChange={e=>setFormat(e.target.value)}><option>CSV</option><option>PDF</option></select></label>
+    <ReportJobs request={{type:'Maintenance costs',from,to,format}} />
     {snapshot && <>
       <p>{snapshot.report.serviceCount} work orders · {snapshot.report.missingCost} missing costs · {snapshot.report.missingCurrency} missing or invalid currencies · {snapshot.report.invalidCost} invalid amounts · {snapshot.report.undatedExcluded} undated excluded.</p>
       <p className="fine-print">Currencies remain separate. Missing costs are excluded; recorded zero costs are included. These are work-order amounts, not payment or recognized expense totals.</p>

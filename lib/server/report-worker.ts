@@ -1,6 +1,7 @@
 import 'server-only';
 import { createHash } from 'node:crypto';
 import { reportPdf } from '@/lib/reports/report-pdf';
+import { costPdf } from '@/lib/reports/cost-pdf';
 import { adminClient } from './supabase';
 import { reportJobRequestSchema } from '@/lib/reports/job-request';
 import { organizationCosts, organizationCostsCsv } from '@/lib/reports/organization-costs';
@@ -36,7 +37,7 @@ export async function processReport(
     );
     const isPdf = job.request.format === 'PDF';
     const bytes = costReport
-      ? Buffer.from(organizationCostsCsv(costReport, job.snapshot.organization, job.created_at), 'utf8')
+      ? isPdf ? Buffer.from(await costPdf(costReport, job.snapshot.organization, job.created_at)) : Buffer.from(organizationCostsCsv(costReport, job.snapshot.organization, job.created_at), 'utf8')
       : isPdf ? Buffer.from(await reportPdf(report!, job.snapshot.organization, job.created_at))
       : Buffer.from(reportCsv(report!, job.snapshot.organization, job.created_at), 'utf8');
     const sha256 = createHash('sha256').update(bytes).digest('hex');

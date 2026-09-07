@@ -9,6 +9,7 @@ import { loadEnv } from './env.mjs';
 import { reportPdf } from '../lib/reports/report-pdf.ts';
 import { createFlightReport, reportCsv } from '../lib/reports/flight-report.ts';
 import { organizationCosts, organizationCostsCsv } from '../lib/reports/organization-costs.ts';
+import { costPdf } from '../lib/reports/cost-pdf.ts';
 
 const id = process.argv[2];
 assert.match(id || '', /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i,
@@ -39,7 +40,8 @@ try {
   assert.equal(createHash('sha256').update(bytes).digest('hex'), job.sha256);
   if (job.request.type === 'Maintenance costs') {
     const report = organizationCosts(job.snapshot.records, job.request.from, job.request.to);
-    assert.ok(bytes.equals(Buffer.from(organizationCostsCsv(report, job.snapshot.organization, job.created_at), 'utf8')));
+    const reproduced = job.request.format === 'PDF' ? Buffer.from(await costPdf(report, job.snapshot.organization, job.created_at)) : Buffer.from(organizationCostsCsv(report, job.snapshot.organization, job.created_at), 'utf8');
+    assert.ok(bytes.equals(reproduced));
     assert.equal(report.serviceCount, job.summary.serviceCount);
     assert.deepEqual(report.totals, job.summary.totals);
     console.log(JSON.stringify({id,workOrders:report.serviceCount,bytes:bytes.length,sha256Verified:true,snapshotReproductionVerified:true}));

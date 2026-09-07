@@ -10,6 +10,12 @@ import TeamDirectory from './team-directory';
 import KitBrowser from './kit-browser';
 import MissionKitPicker from './mission-kit-picker';
 import OperationsCalendar from './operations-calendar';
+import InspectionManager from './inspection-manager';
+import {
+  inspectionDue,
+  inspectionMeters,
+  type InspectionPlan,
+} from '@/lib/operations/inspections';
 import { crewCanBeAssigned } from '@/lib/operations/assignments';
 import BatteryBrowser from './battery-browser';
 import FlightGlobe from './flight-globe';
@@ -113,6 +119,7 @@ const navigation = [
   ['Flight logs', BookOpen],
   ['Inventory', Drone],
   ['Maintenance', Wrench],
+  ['Inspections', ShieldCheck],
   ['Crew', Users],
   ['Integrations', Plug],
   ['Audit trail', History],
@@ -318,6 +325,25 @@ export default function Workspace() {
     flights = items('flight') as Flight[],
     services = items('service') as Service[];
   const assignableCrew = crew.filter((c) => crewCanBeAssigned(c, app.profiles));
+  const inspectionAlerts = (
+    items('inspection_plan') as InspectionPlan[]
+  ).flatMap((plan) =>
+    inspectionDue(
+      plan,
+      items('inspection_event'),
+      inspectionMeters(
+        plan,
+        [
+          ...assets.map((a) => ({ ...a, kind: 'asset' })),
+          ...batteries.map((b) => ({ ...b, kind: 'battery' })),
+        ],
+        flights,
+      ),
+      date(),
+    )
+      .filter((d) => d.status !== 'Within limits')
+      .map((d) => ({ ...d, plan })),
+  );
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
   const [inventoryExpanded, setInventoryExpanded] = useState(true);
   const inventoryViews = useRef<
@@ -402,6 +428,8 @@ export default function Workspace() {
     Settings: 'Workspace policies, access and local configuration.',
     Kits: 'Reusable equipment sets for mission preparation.',
     Calendar: 'Missions, maintenance and flight history in one schedule.',
+    Inspections:
+      'Inspection intervals, component replacements and signed history.',
     Notifications: 'Operational changes that need your attention.',
   };
   function rememberInventory() {
@@ -1071,6 +1099,26 @@ export default function Workspace() {
                           </div>
                         </button>
                       ))}
+                      {inspectionAlerts.slice(0, 3).map((d) => (
+                        <button
+                          className="attention-item"
+                          key={d.plan.id + d.rule.id}
+                          onClick={() => navigate('Inspections')}
+                        >
+                          <span className="attention-icon">
+                            <ShieldCheck size={18} />
+                          </span>
+                          <div>
+                            <h3>{d.plan.profileSnapshot.name}</h3>
+                            <p>
+                              {d.rule.name} · {d.status}
+                            </p>
+                            <span>
+                              Review inspection limits <ArrowRight size={13} />
+                            </span>
+                          </div>
+                        </button>
+                      ))}
                       {overdue.slice(0, 2).map((s) => (
                         <button
                           className="attention-item"
@@ -1189,6 +1237,9 @@ export default function Workspace() {
                     )}
                   </section>
                 </>
+              )}
+              {page === 'Inspections' && (
+                <InspectionManager key={organization.id} today={date()} />
               )}
               {page === 'Calendar' && (
                 <OperationsCalendar

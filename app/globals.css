@@ -4223,3 +4223,33 @@ textarea {
     gap: 3px;
   }
 }
+.inspection-manager {
+  padding: 24px;
+}
+.inspection-manager > .row {
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.inspection-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 24px;
+}
+.inspection-rule {
+  padding: 16px;
+  margin: 12px 0;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  display: grid;
+  gap: 10px;
+}
+.inspection-meters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 12px;
+}
+.inspection-form .field,
+.inspection-meters .field {
+  min-width: 0;
+}

@@ -53,3 +53,23 @@ test('enabled recency policy needs a positive requirement', () =>
     }).success,
     false,
   ));
+
+test('voided external entries keep history but never satisfy recency', () => {
+  const person = {
+    name: 'Pilot',
+    currencyPolicy: {
+      enabled: true,
+      days: 30,
+      minimumFlights: 1,
+      minimumMinutes: 10,
+      includeExternal: true,
+    },
+    externalTime: [
+      { date: '2026-09-06', flights: 100, minutes: 1000, voided: true },
+    ],
+  };
+  const result = currencySummary(person, [], '2026-09-07');
+  assert.equal(result.count, 0);
+  assert.equal(result.externalMinutes, 0);
+  assert.equal(result.met, false);
+});

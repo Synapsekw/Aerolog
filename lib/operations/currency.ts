@@ -12,6 +12,8 @@ export const currencyPolicySchema = z
     'Enabled recency policies need a flight or time minimum',
   );
 export const externalTimeSchema = z.object({
+  voided: z.boolean().optional(),
+  voidReason: z.string().max(4000).optional(),
   id: z.string().min(1).max(100),
   date: z.iso.date(),
   flights: z.number().int().min(1).max(10000),
@@ -41,8 +43,8 @@ export function currencySummary(person: any, flights: any[], date: string) {
         ? f.pilotUserId === person.authUserId
         : f.pilot === person.name),
   );
-  const external = (person.externalTime || []).filter((e: any) =>
-    within(e.date),
+  const external = (person.externalTime || []).filter(
+    (e: any) => !e.voided && within(e.date),
   );
   const localMinutes = local.reduce((n, f) => n + f.durationSeconds / 60, 0),
     externalMinutes = external.reduce((n: number, e: any) => n + e.minutes, 0),

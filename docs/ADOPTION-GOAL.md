@@ -97,3 +97,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Crew detail shows local/external contributions and whether the configured policy is met. Crew editing provides policy settings and pending external entries. No external time or policy was added to real profiles during this pass.
 - Migration 026 applied. DB checks passed for recency gating, evidence, explicit external inclusion, day boundary and immutable entries; fixtures rolled back. 50 unit tests and production build passed, including type checking. Browser verified crew recency summary.
 - Follow-up before full acceptance: support auditable void/replacement for mistaken external ledger entries; qualifications matrix/readiness queue; active-versus-historical personnel presentation. Central document controls and reports/jobs remain outstanding.
+
+### Audited external-time correction — 7 September 2026
+
+- Managers can void an external entry from crew detail with a reason. Original evidence, date, source and totals remain; the server stamps who voided it and when, and writes a before/after audit entry.
+- Voided entries no longer contribute to either external totals or recency eligibility. They cannot be restored or modified, and voiding cannot alter their original totals. A corrected replacement is entered as a new evidence-backed record.
+- Migration 027 applied. Rollback currency regression verifies void attribution, retained totals, recency recalculation, stale-revision rejection and unvoid rejection. 51 unit tests, typecheck and production build passed. No real external entries were created or voided.
+- Broader goal remains open: central document controls, reproducible report jobs, unified readiness/qualification presentation and complete acceptance audit.

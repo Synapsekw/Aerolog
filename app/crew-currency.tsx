@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useApp } from './app-provider';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import { api } from '@/lib/supabase-browser';
 import { currencySummary } from '@/lib/operations/currency';
 export default function CrewCurrency({
   person,
@@ -12,7 +13,11 @@ export default function CrewCurrency({
   onChange?: (key: string, value: any) => void;
 }) {
   const app = useApp(),
-    [entry, setEntry] = useState<any>(null);
+    [entry, setEntry] = useState<any>(null),
+    [voidId, setVoidId] = useState(''),
+    [voidReason, setVoidReason] = useState(''),
+    [voiding, setVoiding] = useState(false),
+    [error, setError] = useState('');
   const today = new Intl.DateTimeFormat('en-CA', {
     timeZone: app.organization.settings?.timezone || 'UTC',
     year: 'numeric',
@@ -96,11 +101,19 @@ export default function CrewCurrency({
         AeroLog's recorded flight totals.
       </p>
       <h3>External flight time</h3>
+      {error && <p role="alert">{error}</p>}
       {ledger.map((e: any) => (
         <article className="inspection-rule" key={e.id}>
           <strong>
             {e.date} · {e.flights} flights · {e.minutes} minutes
           </strong>
+          {e.voided && (
+            <p>
+              Voided by {e.voidedBy} · {e.voidedAt}
+              <br />
+              {e.voidReason}
+            </p>
+          )}
           <p>{e.source}</p>
           <p>{e.notes}</p>
           <small>
@@ -108,6 +121,69 @@ export default function CrewCurrency({
               ? 'Verified by ' + e.recordedBy + ' · ' + e.recordedAt
               : 'Pending save and manager verification'}
           </small>
+          {!onChange &&
+            !e.voided &&
+            ['admin', 'manager'].includes(app.profile.role) &&
+            (voidId === e.id ? (
+              <div className="inspection-rule">
+                <label className="field">
+                  Reason for voiding
+                  <textarea
+                    value={voidReason}
+                    onChange={(event) => setVoidReason(event.target.value)}
+                  />
+                </label>
+                <p>
+                  The original entry stays in the ledger and stops contributing
+                  to recency. Add a new entry with corrected totals if needed.
+                </p>
+                <div className="row">
+                  <Button
+                    variant="outline"
+                    disabled={voiding}
+                    onClick={() => setVoidId('')}
+                  >
+                    Cancel void
+                  </Button>
+                  <Button
+                    disabled={voiding || voidReason.trim().length < 10}
+                    onClick={async () => {
+                      setVoiding(true);
+                      setError('');
+                      try {
+                        await api('external-time/void', {
+                          method: 'POST',
+                          body: JSON.stringify({
+                            crewId: person.id,
+                            entryId: e.id,
+                            reason: voidReason,
+                            revision: app.revision('crew', person.id),
+                          }),
+                        });
+                        await app.refresh();
+                        setVoidId('');
+                      } catch (error) {
+                        setError((error as Error).message);
+                      } finally {
+                        setVoiding(false);
+                      }
+                    }}
+                  >
+                    {voiding ? 'Voiding…' : 'Void entry'}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setVoidId(e.id);
+                  setVoidReason('');
+                }}
+              >
+                Correct / void entry
+              </Button>
+            ))}
           {onChange && !saved.some((s: any) => s.id === e.id) && (
             <Button
               variant="ghost"

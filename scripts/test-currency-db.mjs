@@ -18,5 +18,12 @@ try {
  await reject(()=>update({externalTime:[{...entry,minutes:300}]}),/immutable/);
  await reject(()=>update({externalTime:[]}),/cannot be removed/);
  const summary=(await c.query('select aerolog_currency_summary($1,$2,$3) result',[org,{...saved,currencyPolicy:{...person.currencyPolicy,includeExternal:true}},'2026-09-06'])).rows[0].result;assert.equal(summary.count,0);
- await c.query('rollback');console.log('Currency checks passed: policy gate, verified evidence, separate external totals, explicit inclusion, date boundary and immutable ledger. Fixtures rolled back.');
+ const revision=(await c.query("select revision from aerolog_records where organization_id=$1 and kind='crew' and id=$2",[org,person.id])).rows[0].revision;
+ await c.query('select aerolog_external_time_void($1,$2,$3,$4,$5)',[org,person.id,entry.id,'Duplicate source entry discovered',revision]);
+ const voided=(await c.query("select data from aerolog_records where organization_id=$1 and kind='crew' and id=$2",[org,person.id])).rows[0].data;
+ assert.equal(voided.externalTime[0].minutes,30);assert.equal(voided.externalTime[0].voided,true);assert.ok(voided.externalTime[0].voidedBy);
+ const after=(await c.query('select aerolog_currency_summary($1,$2,$3) result',[org,voided,'2026-09-07'])).rows[0].result;assert.equal(after.count,0);assert.equal(after.met,false);
+ await reject(()=>update({externalTime:[entry]}),/immutable/);
+ await reject(()=>c.query('select aerolog_external_time_void($1,$2,$3,$4,$5)',[org,person.id,entry.id,'Duplicate source entry discovered',revision]),/record changed/);
+ await c.query('rollback');console.log('Currency checks passed: policy gate, verified evidence, separate external totals, explicit inclusion, date boundary and immutable ledger, audited void and recency recalculation. Fixtures rolled back.');
 }catch(e){await c.query('rollback');console.error(e.message);process.exitCode=1}finally{await c.end()}

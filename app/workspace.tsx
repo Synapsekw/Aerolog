@@ -14,6 +14,7 @@ import InspectionManager from './inspection-manager';
 import EquipmentPassport from './equipment-passport';
 import OperationsCatalog from './operations-catalog';
 import FormTemplateManager from './form-template-manager';
+import IncidentManager from './incident-manager';
 import MissionForms from './mission-forms';
 import EquipmentMetadataFields from './equipment-metadata-fields';
 import {
@@ -129,6 +130,7 @@ const navigation = [
   ['Maintenance', Wrench],
   ['Inspections', ShieldCheck],
   ['Crew', Users],
+  ['Incidents', ShieldCheck],
   ['Integrations', Plug],
   ['Audit trail', History],
   ['Settings', Settings],
@@ -432,6 +434,7 @@ export default function Workspace() {
     Maintenance: 'Keep your fleet ready for what’s next.',
     Batteries: 'A measured history of every power pack.',
     Crew: 'The people behind your operations.',
+    Incidents: 'Report, investigate and follow through.',
     Integrations: 'Connected services and flight-log import.',
     'Audit trail': 'An accountable history of operational decisions.',
     Settings: 'Workspace policies, access and local configuration.',
@@ -1279,6 +1282,12 @@ export default function Workspace() {
                     )}
                   </section>
                 </>
+              )}
+              {page === 'Incidents' && (
+                <IncidentManager
+                  key={organization.id}
+                  onOpen={(kind, id) => void open(kind, id)}
+                />
               )}
               {page === 'Form templates' && (
                 <FormTemplateManager key={organization.id} />

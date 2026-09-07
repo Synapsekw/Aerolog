@@ -73,3 +73,11 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Migration 022 applied. DB tests exercise normal mission save RPC, required-field rejection, invalid values, stale versions, snapshot forgery and submitted-answer locking, with fixtures rolled back. Unit suite now 44 tests; typecheck/production build passed. Browser verified template editor with an unsaved checklist field.
 - Migration 023 fixes catalog snapshots during INSERT ... ON CONFLICT: reviewed project/site context is preserved before both trigger phases, including archived sites. Catalog rollback regression passed for this path.
 - Goal remains active. Central document controls, qualifications/permissions, incidents, reports/jobs and remaining acceptance criteria are not yet complete.
+
+### Incident reporting and follow-up — 7 September 2026
+
+- Added Incidents list, filters and report/detail editor with severity, dated occurrence, narrative, damage, cause, resolution, linked flight/project/site, equipment and personnel.
+- Follow-up actions have assigned active members, due dates, completion notes and server-attributed completion. Closure requires all actions complete and a resolution. Managers investigate/close/reopen; reporters may edit their own initial reports. All changes preserve reporter identity and audit before/after state.
+- Added private incident evidence upload/download, with role/ownership, organization, target/path and closed-incident guards. Equipment condition is deliberately managed separately; incident closure does not release an aircraft or battery.
+- Migration 024 applied. Database regression verifies ownership, manager closure, incomplete action rejection, reference isolation, revisions, attribution, evidence guards and private RPC; fixtures rolled back. 46 unit tests, typecheck and production build passed. Browser verified the report editor; no test incident retained.
+- Outstanding: document controls, personnel qualifications/aircraft permissions/currency, reports/jobs and full adoption acceptance audit.

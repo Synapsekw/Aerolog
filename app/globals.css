@@ -4362,3 +4362,22 @@ textarea {
 .mission-forms .field > span {
   overflow-wrap: anywhere;
 }
+
+.incident-equipment-options {
+  display: grid;
+  gap: 10px;
+  max-height: 260px;
+  overflow: auto;
+}
+.incident-equipment-options label {
+  overflow-wrap: anywhere;
+}
+.incident-card {
+  padding: 24px;
+  text-align: left;
+  cursor: pointer;
+}
+.incident-narrative {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}

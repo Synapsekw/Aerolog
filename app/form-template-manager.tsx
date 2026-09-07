@@ -39,7 +39,10 @@ export default function FormTemplateManager() {
     setSaving(true);
     setError('');
     try {
-      const data = formTemplateSchema.parse(draft);
+      const parsed = formTemplateSchema.safeParse(draft);
+      if (!parsed.success)
+        throw new Error(parsed.error.issues.map((i) => i.message).join('. '));
+      const data = parsed.data;
       await api('form-templates', {
         method: 'POST',
         body: JSON.stringify({ data, revision }),

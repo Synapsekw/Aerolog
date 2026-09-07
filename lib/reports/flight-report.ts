@@ -1,3 +1,5 @@
+import type { EquipmentAlias } from '@/lib/domain/equipment-identity';
+import { reportEquipmentScope } from './equipment-scope';
 import { z } from 'zod';
 import { equipmentHistory } from './equipment-history';
 export const reportRequestSchema = z
@@ -9,7 +11,10 @@ export const reportRequestSchema = z
     format: z.enum(['CSV', 'PDF']).optional(),
     includeHistory: z.boolean().optional(),
   })
-  .refine(r => !r.includeHistory || ['Aircraft','Battery'].includes(r.type), 'History requires an aircraft or battery report')
+  .refine(
+    (r) => !r.includeHistory || ['Aircraft', 'Battery'].includes(r.type),
+    'History requires an aircraft or battery report',
+  )
   .refine((r) => r.from <= r.to, 'Report end date must follow the start date')
   .refine(
     (r) => r.type === 'Organization' || r.entityId.length > 0,
@@ -25,7 +30,7 @@ export type ReportRecord = {
 export type ReportMember = { id: string; display_name: string };
 export type FlightReport = {
   history?: ReturnType<typeof equipmentHistory>;
-  version: 1;
+  version: 1 | 2;
   request: ReportRequest;
   entityName: string;
   columns: string[];
@@ -42,6 +47,7 @@ export function createFlightReport(
   request: ReportRequest,
   records: ReportRecord[],
   members: ReportMember[],
+  aliases: EquipmentAlias[] = [],
 ): FlightReport {
   const input = reportRequestSchema.parse(request),
     all = records.filter((r) => r.kind === 'flight');
@@ -73,7 +79,26 @@ export function createFlightReport(
     const candidates = members.filter((m) => m.display_name === f.pilot);
     return candidates.length === 1 ? candidates[0].id : undefined;
   }
+  const equipmentScope = reportEquipmentScope(
+    input.type === 'Battery' ? 'battery' : 'asset',
+    input.entityId,
+    records,
+    aliases,
+  );
   function matches(f: Record<string, any>) {
+    if (equipmentScope.consolidated && input.type === 'Aircraft')
+      return (
+        equipmentScope.ids.has(f.aircraftId) ||
+        f.equipmentIds?.some((id: string) => equipmentScope.ids.has(id)) ||
+        (!f.aircraftId &&
+          !f.equipmentIds?.length &&
+          equipmentScope.legacyName(f.aircraft))
+      );
+    if (equipmentScope.consolidated && input.type === 'Battery')
+      return (
+        equipmentScope.ids.has(f.battery) ||
+        f.batteryIds?.some((id: string) => equipmentScope.ids.has(id))
+      );
     if (input.type === 'Pilot') return pilotId(f) === input.entityId;
     if (input.type === 'Aircraft')
       return f.aircraftId
@@ -125,8 +150,14 @@ export function createFlightReport(
     r.revision,
   ]);
   return {
-    ...(input.includeHistory ? {history: equipmentHistory(input, records)} : {}),
-    version: 1,
+    ...(input.includeHistory
+      ? { history: equipmentHistory(input, records, aliases) }
+      : {}),
+    version:
+      equipmentScope.consolidated &&
+      ['Aircraft', 'Battery'].includes(input.type)
+        ? 2
+        : 1,
     request: input,
     entityName,
     columns: [
@@ -159,6 +190,14 @@ export function createFlightReport(
       revision,
     })),
     notes: [
+      ...(equipmentScope.consolidated &&
+      ['Aircraft', 'Battery'].includes(input.type)
+        ? [
+            'Consolidated equipment family: ' +
+              [...equipmentScope.ids].sort().join('; ') +
+              '. Original flight and history identities are retained.',
+          ]
+        : []),
       'Dates are inclusive and use each flight’s recorded date. Undated flights are excluded.',
       'External flight-time entries are separate and are not included in these flight totals.',
       'Battery reports show linked flight usage; flight counts are not charge-cycle counts.',
@@ -196,10 +235,26 @@ export function reportCsv(
     [],
     report.columns,
     ...report.rows,
-    ...(report.history ? [[], ['Equipment history'], ['Undated history excluded', report.history.undatedExcluded],
-      ['History dates', 'Completed work uses completion date; other work uses due date. Timestamped readings use UTC dates. Costs remain in their original currencies. Cycle counters are not added together.'],
-      report.history.columns, ...report.history.rows,
-      [], ['History source kind','Source ID','Source revision'], ...report.history.sourceReferences.map(r=>[r.kind,r.id,r.revision])] : []),
+    ...(report.history
+      ? [
+          [],
+          ['Equipment history'],
+          ['Undated history excluded', report.history.undatedExcluded],
+          [
+            'History dates',
+            'Completed work uses completion date; other work uses due date. Timestamped readings use UTC dates. Costs remain in their original currencies. Cycle counters are not added together.',
+          ],
+          report.history.columns,
+          ...report.history.rows,
+          [],
+          ['History source kind', 'Source ID', 'Source revision'],
+          ...report.history.sourceReferences.map((r) => [
+            r.kind,
+            r.id,
+            r.revision,
+          ]),
+        ]
+      : []),
   ];
   return (
     '\uFEFF' +

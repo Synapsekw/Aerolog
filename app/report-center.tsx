@@ -122,6 +122,7 @@ export default function ReportCenter() {
               parsed.data,
               app.records as ReportRecord[],
               app.profiles,
+              app.equipmentAliases,
             );
             setReport(result);
             setPage(0);

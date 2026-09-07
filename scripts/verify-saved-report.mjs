@@ -46,7 +46,7 @@ try {
     assert.deepEqual(report.totals, job.summary.totals);
     console.log(JSON.stringify({id,workOrders:report.serviceCount,bytes:bytes.length,sha256Verified:true,snapshotReproductionVerified:true}));
   } else {
-  const report = createFlightReport(job.request, job.snapshot.records, job.snapshot.members);
+  const report = createFlightReport(job.request, job.snapshot.records, job.snapshot.members, job.snapshot.equipmentAliases);
   const reproduced = job.request.format === 'PDF' ? Buffer.from(await reportPdf(report, job.snapshot.organization, job.created_at)) : Buffer.from(reportCsv(report, job.snapshot.organization, job.created_at), 'utf8');
   assert.ok(bytes.equals(reproduced), 'Saved bytes differ from snapshot reproduction');
   assert.equal(report.flightCount, job.summary.flightCount);

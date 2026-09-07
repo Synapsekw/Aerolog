@@ -34,6 +34,7 @@ export async function processReport(
       reportRequestSchema.parse(request),
       job.snapshot.records,
       job.snapshot.members,
+      job.snapshot.equipmentAliases,
     );
     const isPdf = job.request.format === 'PDF';
     const bytes = costReport

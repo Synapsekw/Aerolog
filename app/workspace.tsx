@@ -12,6 +12,7 @@ import MissionKitPicker from './mission-kit-picker';
 import OperationsCalendar from './operations-calendar';
 import InspectionManager from './inspection-manager';
 import EquipmentPassport from './equipment-passport';
+import OperationsCatalog from './operations-catalog';
 import {
   inspectionDue,
   inspectionMeters,
@@ -116,6 +117,9 @@ const navigation = [
   ['Overview', LayoutDashboard],
   ['Missions', MapIcon],
   ['Calendar', CalendarDays],
+  ['Projects', Package],
+  ['Sites', MapIcon],
+  ['Customers', Users],
   ['Flight logs', BookOpen],
   ['Inventory', Drone],
   ['Maintenance', Wrench],
@@ -428,6 +432,9 @@ export default function Workspace() {
     Settings: 'Workspace policies, access and local configuration.',
     Kits: 'Reusable equipment sets for mission preparation.',
     Calendar: 'Missions, maintenance and flight history in one schedule.',
+    Projects: 'Customers, missions and flight activity connected.',
+    Sites: 'Reusable operating areas and storage locations.',
+    Customers: 'The organizations you deliver operations for.',
     Inspections:
       'Inspection intervals, component replacements and signed history.',
     Notifications: 'Operational changes that need your attention.',
@@ -1261,6 +1268,19 @@ export default function Workspace() {
                     )}
                   </section>
                 </>
+              )}
+              {['Projects', 'Sites', 'Customers'].includes(page) && (
+                <OperationsCatalog
+                  key={organization.id + page}
+                  kind={
+                    page === 'Projects'
+                      ? 'project'
+                      : page === 'Sites'
+                        ? 'site'
+                        : 'customer'
+                  }
+                  onMission={(id) => void open('mission', id)}
+                />
               )}
               {page === 'Inspections' && (
                 <InspectionManager key={organization.id} today={date()} />
@@ -2114,6 +2134,62 @@ export default function Workspace() {
             {step === 0 && (
               <>
                 <div className="form-grid">
+                  <label className="field">
+                    Project
+                    <select
+                      value={draft.projectId || ''}
+                      onChange={(e) =>
+                        setDraft((d: any) => ({
+                          ...d,
+                          projectId: e.target.value,
+                          siteId: '',
+                        }))
+                      }
+                    >
+                      <option value="">No project</option>
+                      {items('project')
+                        .filter((p) => !p.archived)
+                        .map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                  <label className="field">
+                    Operating site
+                    <select
+                      value={draft.siteId || ''}
+                      onChange={(e) => {
+                        const site = items('site').find(
+                          (s) => s.id === e.target.value,
+                        );
+                        setDraft((d: any) => ({
+                          ...d,
+                          siteId: e.target.value,
+                          ...(site
+                            ? { location: site.name, geometry: site.geometry }
+                            : {}),
+                        }));
+                      }}
+                    >
+                      <option value="">Enter a one-off location</option>
+                      {items('site')
+                        .filter(
+                          (s) =>
+                            !s.archived &&
+                            s.purpose !== 'Storage' &&
+                            (!s.projectId || s.projectId === draft.projectId),
+                        )
+                        .map((s) => (
+                          <option key={s.id} value={s.id}>
+                            {s.name}
+                          </option>
+                        ))}
+                    </select>
+                  </label>
+                </div>
+                <div className="form-grid">
                   <Field
                     label="Mission name"
                     value={draft.name}
@@ -2682,6 +2758,19 @@ export default function Workspace() {
                             ' · ' +
                             record.durationMinutes +
                             ' min',
+                        ],
+                        [
+                          'Customer',
+                          record.contextSnapshot?.customer?.name || 'None',
+                        ],
+                        [
+                          'Project',
+                          record.contextSnapshot?.project?.name || 'None',
+                        ],
+                        [
+                          'Operating site',
+                          record.contextSnapshot?.site?.name ||
+                            'One-off location',
                         ],
                         ['Pilot', record.pilot],
                         ['Observer', record.observer],

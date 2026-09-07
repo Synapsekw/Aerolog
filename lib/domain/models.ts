@@ -77,6 +77,9 @@ export const missionSchema = z.object({
     )
     .max(20)
     .default([]),
+  projectId: z.string().max(100).default(''),
+  siteId: z.string().max(100).default(''),
+  contextSnapshot: z.record(z.string(), z.unknown()).default({}),
   reviewNote: note.optional(),
   debrief: note.optional(),
   reviewedBy: z.string().optional(),

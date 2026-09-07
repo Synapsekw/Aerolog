@@ -75,6 +75,13 @@ export async function GET(
     line(m.id + ' | Revision ' + data.revision + ' | ' + m.status, 11);
     section(m.name);
     line('Location: ' + m.location);
+    for (const key of ['customer', 'project', 'site']) {
+      const context = m.contextSnapshot?.[key];
+      if (context)
+        line(
+          key + ': ' + context.name + ' (revision ' + context.revision + ')',
+        );
+    }
     line(
       'Date / start: ' +
         m.date +

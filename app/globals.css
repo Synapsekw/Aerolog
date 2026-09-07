@@ -4296,3 +4296,16 @@ textarea {
     padding: 16px;
   }
 }
+.operations-catalog {
+  padding: 24px;
+}
+.operations-catalog > .row {
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.operations-catalog > .row > input {
+  max-width: 400px;
+}
+.operations-catalog .kit-grid article {
+  min-width: 0;
+}

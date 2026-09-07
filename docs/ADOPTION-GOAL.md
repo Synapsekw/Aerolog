@@ -22,6 +22,13 @@ User objective: “Go ahead and implement all. run it as a goal”. Source scope
 
 ## Work log
 
+### Canonical equipment identity foundation — 7 September 2026
+
+- Added typed canonical-ID/family resolution that retains input identities, handles chains and refuses cycles/conflicting mappings. Asset and battery namespaces remain distinct.
+- Migration 044 adds immutable org-scoped identity aliases with composite source/target foreign keys, cycle checks under the org lock and authenticated read-only RLS. Original equipment rows cannot be deleted while referenced. No production alias mappings were created.
+- Unit tests passed chain/kind/source preservation and cycle/conflict rejection. Rollback DB tests passed retained source rows, chain creation, missing-target/cycle rejection, immutable mappings and authenticated read-only access. TypeScript/diff checks passed.
+- This is consolidation infrastructure, not enabled merge execution. Reader/history integration, future usage routing and explicit counter reconciliation are still needed before the apply path is exposed. Mac remains locked on browser recheck; goal active.
+
 ### Merge-review API acceptance — 7 September 2026
 
 - Extended isolated integration coverage for the merge-review endpoint: pilots/technicians are denied, another organization cannot review the equipment, and identical selections are rejected.

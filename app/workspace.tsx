@@ -7,6 +7,8 @@ import FlightAnalysis from './flight-analysis';
 import Analytics from './live-analytics';
 import OrganizationPanel from './organization-panel';
 import TeamDirectory from './team-directory';
+import BatteryBrowser from './battery-browser';
+import FlightGlobe from './flight-globe';
 import ImportReview from './import-review';
 import { duplicateMatches } from '@/lib/flight/duplicates';
 import BatteryTelemetryHistory from './battery-telemetry-history';
@@ -312,6 +314,7 @@ export default function Workspace() {
     services = items('service') as Service[];
   const [inventoryCategory, setInventoryCategory] = useState('Aircraft');
   const [inventoryPage, setInventoryPage] = useState(1);
+  const [flightView, setFlightView] = useState('list');
   const inventoryCategories = [
     { key: 'Aircraft', label: 'Aircraft', Icon: Drone },
     { key: 'Battery', label: 'Batteries', Icon: Battery },
@@ -1433,7 +1436,42 @@ export default function Workspace() {
                           Icon={Drone}
                         />
                       </div>
-                      <section className="glass">
+                      <div
+                        className="row"
+                        role="group"
+                        aria-label="Flight log view"
+                        style={{
+                          justifyContent: 'flex-start',
+                          gap: 8,
+                          marginBottom: 16,
+                        }}
+                      >
+                        <Button
+                          variant={
+                            flightView === 'list' ? 'default' : 'outline'
+                          }
+                          aria-pressed={flightView === 'list'}
+                          onClick={() => setFlightView('list')}
+                        >
+                          List view
+                        </Button>
+                        <Button
+                          variant={
+                            flightView === 'globe' ? 'default' : 'outline'
+                          }
+                          aria-pressed={flightView === 'globe'}
+                          onClick={() => setFlightView('globe')}
+                        >
+                          Globe view
+                        </Button>
+                      </div>
+                      {flightView === 'globe' && (
+                        <FlightGlobe
+                          flights={visible}
+                          onOpen={(id) => void open('flight', id)}
+                        />
+                      )}
+                      <section className="glass" hidden={flightView !== 'list'}>
                         <Table>
                           <TableHeader>
                             <TableRow>
@@ -1526,53 +1564,10 @@ export default function Workspace() {
                     </div>
                   )}
                   {page === 'Batteries' && (
-                    <>
-                      <section className="glass integration-state">
-                        <h2>Battery condition history</h2>
-                        <p>
-                          Charge cycles, measured capacity, temperature and
-                          linked flight usage are recorded over time. Predictive
-                          failure analysis will require a validated historical
-                          dataset.
-                        </p>
-                      </section>
-                      <div className="battery-grid">
-                        {visible.map((b) => (
-                          <button
-                            key={b.id}
-                            className="glass battery-card"
-                            onClick={() => void open('battery', b.id)}
-                          >
-                            <div className="row">
-                              <Battery size={24} />
-                              <Status>{b.status}</Status>
-                            </div>
-                            <h3>
-                              {b.id}
-                              <small>
-                                {b.model} · {b.aircraft}
-                              </small>
-                            </h3>
-                            <div className="capacity">
-                              <strong>
-                                {b.health ?? '—'}
-                                <span>%</span>
-                              </strong>
-                              <span>Measured health</span>
-                            </div>
-                            {b.health != null && <Progress value={b.health} />}
-                            <div className="battery-card-foot">
-                              <span>{b.cycles} cycles</span>
-                              <span>
-                                {b.temp == null ? 'Unknown' : b.temp + '°C'}{' '}
-                                latest
-                              </span>
-                              <ArrowUpRight size={16} />
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    </>
+                    <BatteryBrowser
+                      batteries={visible}
+                      onOpen={(id) => void open('battery', id)}
+                    />
                   )}
                   {page === 'Crew' && (
                     <div className="crew-grid">
@@ -2626,7 +2621,14 @@ export default function Workspace() {
                         </div>
                       ))}
                     </dl>
-                    {record.next != null && record.hours != null && <Progress value={Math.min(100,(record.hours / record.next)*100)}/>}
+                    {record.next != null && record.hours != null && (
+                      <Progress
+                        value={Math.min(
+                          100,
+                          (record.hours / record.next) * 100,
+                        )}
+                      />
+                    )}
                     <p>{record.notes}</p>
                     {fleet && (
                       <div className="action-footer">
@@ -3503,9 +3505,39 @@ export default function Workspace() {
                 options={['Active', 'Disabled']}
                 onChange={(v) => update('active', v === 'Active')}
               />
+              {draft.active && (
+                <Button
+                  type="button"
+                  variant="destructive"
+                  onClick={async () => {
+                    setError('');
+                    try {
+                      await api('accounts', {
+                        method: 'PATCH',
+                        body: JSON.stringify({
+                          id: draft.id,
+                          role: draft.role,
+                          active: false,
+                        }),
+                      });
+                      await app.refresh();
+                      setDialog('');
+                      notify(
+                        'Member removed from the organization. Flight history retained.',
+                      );
+                    } catch (e) {
+                      setError((e as Error).message);
+                    }
+                  }}
+                >
+                  Remove from organization
+                </Button>
+              )}
               <p className="fine-print">
-                Changes apply immediately to workspace access. Crew
-                qualifications are managed separately.
+                Removal revokes organization access and preserves flight
+                history. Disabled members can be restored here. Changes apply
+                immediately to workspace access. Crew qualifications are managed
+                separately.
               </p>
             </>
           )}

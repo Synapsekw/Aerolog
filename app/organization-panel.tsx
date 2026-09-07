@@ -118,29 +118,31 @@ export default function OrganizationPanel({
             flights.
           </p>
           <div className="org-pilot-totals">
-            {members.map((m) => {
-              const own = flights.filter((f) =>
-                (f as Flight & { pilotUserId?: string }).pilotUserId
-                  ? (f as Flight & { pilotUserId?: string }).pilotUserId ===
-                    m.id
-                  : f.pilot === m.display_name &&
-                    members.filter((p) => p.display_name === m.display_name)
-                      .length === 1,
-              );
-              return (
-                <div className="linked-item" key={m.id}>
-                  <span>
-                    {m.display_name}
-                    <small>
-                      {own.length} flights · {m.role}
-                    </small>
-                  </span>
-                  <strong>
-                    {hours(own.reduce((s, f) => s + f.durationSeconds, 0))} h
-                  </strong>
-                </div>
-              );
-            })}
+            {members
+              .filter((m) => m.active)
+              .map((m) => {
+                const own = flights.filter((f) =>
+                  (f as Flight & { pilotUserId?: string }).pilotUserId
+                    ? (f as Flight & { pilotUserId?: string }).pilotUserId ===
+                      m.id
+                    : f.pilot === m.display_name &&
+                      members.filter((p) => p.display_name === m.display_name)
+                        .length === 1,
+                );
+                return (
+                  <div className="linked-item" key={m.id}>
+                    <span>
+                      {m.display_name}
+                      <small>
+                        {own.length} flights · {m.role}
+                      </small>
+                    </span>
+                    <strong>
+                      {hours(own.reduce((s, f) => s + f.durationSeconds, 0))} h
+                    </strong>
+                  </div>
+                );
+              })}
           </div>
         </>
       )}

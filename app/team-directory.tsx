@@ -21,7 +21,7 @@ export default function TeamDirectory({
 }) {
   const [search, setSearch] = useState(''),
     [role, setRole] = useState('All'),
-    [status, setStatus] = useState('All'),
+    [status, setStatus] = useState('Active'),
     [page, setPage] = useState(0);
   const totals = useMemo(
     () => memberFlightTotals(members, flights),

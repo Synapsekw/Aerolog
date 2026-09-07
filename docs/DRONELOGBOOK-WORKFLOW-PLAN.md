@@ -1,0 +1,49 @@
+# DroneLogbook workflow review and AeroLog adoption plan
+
+Reviewed 7 September 2026 through the signed-in ZainTech Kuwait UI. Read-only: no records created, edited, deleted, exported, or submitted. This is a workflow comparison, not access to DroneLogbook's proprietary implementation. Preserve AeroLog's existing glass, lime/cyan, responsive UI.
+
+## What was actually inspected
+
+| Area / source page | Observed detail | AeroLog recommendation |
+| --- | --- | --- |
+| Dashboard `/dashboard.php` | Individual/organization totals; attention counts for inspections, maintenance and documents; recency windows; today's missions | Add one actionable readiness queue to our dashboard, with links to the exact blockers. Keep charts and avoid duplicate lists. |
+| Inventory navigation | Direct aircraft, batteries, equipment, kits, locations and inventory map entries; separate archive links | Collapsible Inventory group with Aircraft, Batteries, Payloads, Controllers, Accessories, Kits. Keep archives as filters. |
+| Batteries `/inventory/equipmentList.php?modeBattery=1` | Name/asset search; readiness totals; owner, aircraft, serial, firmware, capacity, flight count, hours and cycle counters | Keep new type filtering; add richer passport data only when present, with source provenance and explicit unknown values. |
+| Battery detail `/inventory/batteryDetail.php` | Separate smart cycles, initial cycles and cycles; flight hours; last-flight location; tabs for flights, maintenance, inspections, documents | Use a ledger of dated readings, distinguish device counters from imported baselines and observed use. Do not add counters together blindly. |
+| Kits `/inventory/kitList.php` | Saved mixed aircraft/equipment/battery packs and battery-only packs | Reusable mission kits, compatibility checks, availability and one-action mission assignment. Preview contents before assigning. |
+| Mission list/detail `/flight/flightPlanification.php` | Planned/completed/canceled states; approver and timestamp; project/customer; multiple operational roles; extra aircraft; attached flights; weather; documents; planned area vs actual tracks; outside-area flags | Expand mission packages with explicit flight links, multiple aircraft and role assignments. Keep our approval audit trail. Add planned-vs-flown overlay with honest coordinate/altitude limits. |
+| Skills `/skills/skillsMatrix.php` | Person-by-skill matrix and expiration indicators; this account has no populated skill columns | Add qualifications and endorsements separately from login roles. Expiry indicators and evidence attachments. Rating editor behavior not tested. |
+| Personnel detail `/profile/personDetail.php` | Multiple operational roles, org access, recency, external currency data, documents, approved UAS, incidents | Organization-scoped membership plus operational roles and qualifications; totals always preserve historical identity. External time must be labeled separately. |
+| Aircraft permissions `/inventory/dronesApprovedMatrix.php` | Per-person aircraft allowlist. Page states an empty list means unrestricted access | Adopt explicit aircraft authorization with a visible “All aircraft” / “Selected aircraft” policy, avoiding an ambiguous empty-list default. |
+| Maintenance `/maintenance/maintenanceList.php` | Scheduled/in-progress/completed/overdue, target equipment, expense, clone, resolve | Extend our work orders with calendar due dates, technician assignment and costs. Keep signed completion and audited counter updates. |
+| Inspections `/inspection/droneInspectionsList.php` | Remaining/overdue hours, flight counts and calendar days; aircraft profiles; separate part replacement concept | Reusable maintenance profiles and component intervals triggered by the earliest applicable threshold, with inspected/replaced history. |
+| Calendar `/calendar/opsCalendar.php` | Month/week, mission/flight versus maintenance/inspection, status legend, map view, timeline and iCal entry | A unified operations calendar and availability checks first; sharing/iCal later with scoped revocable access. |
+| Documents `/document/documentList.php` | Flight/pilot/org categories, templates, search; dashboard expiry and approval attention | Central document registry with expiry, approval, entity links, versioned mission snapshots. |
+| Risk templates `/document/riskAssessmentListMgmt.php` | Template library, clone control and risk/consequence/actions columns | Reusable risk/checklist templates with versioning. Existing template selection did not populate rows during this review; scoring/editor details remain unverified. |
+| Reports `/reports/reports.php` | Pilot, aircraft folio, battery/charges, inventory, maintenance, inspections, projects, missions and incident PDF categories; period/entity filters | Start with pilot logbook, aircraft history, battery usage and organization operations reports. Generation was not run. No claim of jurisdictional compliance without separately validating requirements. |
+| Generated reports `/reports/generatedReports.php` | Asynchronous jobs with actor/time/status and downloadable results, including multi-flight KML | Background export jobs and provenance; keep exact flight ID matching. |
+| Incidents `/incident/incidentList.php` | Severity/cause, personnel, aircraft, location/project, damage and narrative | Add incident records with linked flights/assets, evidence and follow-up actions. |
+| Projects `/project/projectList.php` | Customer relation, flight count, last activity, revenue and sharing indicators | Customer → project → mission → flight hierarchy; scoped sharing only after org isolation is tested. Finance is lower priority. |
+| Locations `/inventory/locationList.php` | Reusable locations, map-bounds filter, flight counts, customer/project relations and fields | Reusable sites/operating areas and location filtering in the globe. Distinguish asset storage from last observed flight position. |
+| Integrations `/flightImport/integrationsHub.php` | Distinguishes auto-sync, cloud-sync, DLB-sync and manual import; app-specific connection instructions and DJI decryption caveat | Use explicit per-source capability/status instead of a universal “DJI sync” promise. UI availability does not establish a public API that AeroLog can use. |
+
+The remaining navigation includes drone profiles, custom forms, checklist editing, bulk import/update, inventory merge, settings and archive screens. Their entry points were identified; their full editors, destructive actions and every integration were not exercised. Treat these as follow-up validation, not verified functionality.
+
+## Proposed delivery order
+
+1. **Navigation and discoverability.** Inventory child links backed by existing categories, active counts and per-category filters. Team & access becomes easy to reach under Organization. Preserve collapsed sidebar and mobile navigation. No schema migration required. Acceptance: every category opens directly and keeps its own useful filters; no duplicate Batteries destinations.
+2. **Inventory relationships.** Kits, typed battery model metadata, compatibility and storage locations; full-page passports containing history and attachments. Add org-scoped kit/item relations and immutable membership snapshots on mission assignment. Acceptance: assign one kit to a mission, detect retired/unverified or unavailable items, and retain mission history when kit contents change.
+3. **Readiness and maintenance.** Model-level inspection templates, multiple interval types, component replacements, dated battery readings and attention queue. Acceptance: earliest due threshold wins, imported baselines never double-count and missing data never implies airworthiness.
+4. **Operations planning.** Projects/sites, multi-aircraft mission assignments, calendar/resource conflicts, versioned checklists/risk templates, document expiry, planned-vs-flown overlays. Acceptance: operations manager sees the exact submitted package and all blockers, and post-approval changes require a fresh review.
+5. **Personnel and safety.** Qualifications, aircraft permissions, currency policies, incidents and follow-up actions. Acceptance: membership removal retains hours while revoking access; expired qualifications surface in mission readiness; per-org policies are explicit.
+6. **Reports and exports.** Pilot/aircraft/battery/operations reports, reproducible background export jobs. Acceptance: totals match the source ledger, org isolation holds, report provenance and date range are clear.
+
+Cross-org shared equipment, broad bulk editing/merging, financial reporting and additional cloud connectors follow after core acceptance checks. Do not copy DroneLogbook's repeated menus, crowded cards, ambiguous unrestricted-aircraft default, or imported status assumptions.
+
+## Changes completed alongside this review
+
+- Danijel is e& administrator. Danijel and Ivan are the only active members; four test memberships disabled via the existing audited access RPC. Accounts and flight records retained.
+- Settings → Team & access defaults to Active. Manage access includes explicit removal and restoration through membership status. Existing server admin, own-access and last-admin guards remain in force.
+- Batteries now have normalized type/family filtering and 24-record pages with readable pack names and serials; original source values unchanged.
+- Flight logs offer List and Mapbox Globe views. Dots use actual telemetry, KML or recorded site coordinates; selecting dots exposes matching flight links; missing locations are counted.
+- Type checking, production build and unit suite passed. Browser verified desktop globe rendering and TB100 filtering (21 results). A viewport override did not change the observed desktop dimensions, so this pass does not claim completed narrow-screen visual verification.

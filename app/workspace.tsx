@@ -2980,6 +2980,8 @@ export default function Workspace() {
                         ['Due', record.due],
                         ['Technician', record.technician],
                         ['Next interval', record.intervalHours + ' h'],
+                        ['Recorded cost', record.cost == null ? 'Not recorded' : record.currency + ' ' + record.cost],
+                        ['Cost reference', record.costReference || 'Not recorded'],
                       ].map(([k, v]) => (
                         <div key={k}>
                           <dt>{k}</dt>
@@ -3355,6 +3357,12 @@ export default function Workspace() {
                   update('intervalHours', v === '' ? null : Number(v))
                 }
               />
+              <div className="form-grid">
+                <Field label="Recorded cost" type="number" value={draft.cost ?? ''} onChange={(v) => update('cost', v === '' ? null : Number(v))} />
+                <Field label="Currency code" value={draft.currency || ''} onChange={(v) => update('currency', v.toUpperCase())} />
+              </div>
+              <Field label="Invoice / cost reference" value={draft.costReference || ''} onChange={(v) => update('costReference', v)} />
+              <p className="fine-print">Leave cost blank when unknown. Use a three-letter currency code, such as AED or KWD. Zero means a recorded no-cost service.</p>
               <Note
                 label="Work instructions"
                 value={draft.notes}

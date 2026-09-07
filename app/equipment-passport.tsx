@@ -285,6 +285,7 @@ export default function EquipmentPassport({
                 {s.task}
                 <small>
                   {s.due} · {s.technician}
+                  {s.cost != null && <> · {s.currency} {s.cost}</>}
                 </small>
               </span>
               <Status>{s.status}</Status>

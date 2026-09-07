@@ -183,6 +183,9 @@ export const serviceSchema = z.object({
   id,
   asset: name,
   task: name,
+  cost: numeric(0, 1000000000).nullable().optional(),
+  currency: z.string().regex(/^[A-Z]{3}$/).optional().or(z.literal('')),
+  costReference: z.string().max(160).optional(),
   due: date,
   remaining: numeric(0, 10000).default(0),
   status: z.enum(['Scheduled', 'Upcoming', 'Overdue', 'Completed']),
@@ -192,7 +195,7 @@ export const serviceSchema = z.object({
   completionNotes: note.optional(),
   signedBy: z.string().optional(),
   completedAt: z.string().optional(),
-});
+}).refine(s => s.cost == null || Boolean(s.currency), 'A currency is required when recording a cost');
 export const batteryReadingSchema = z.object({
   serial: z.string().min(1).max(160),
   charge: numeric(0, 100).optional(),

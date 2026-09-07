@@ -170,3 +170,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Fixed initial Mapbox bounds to include both the mission area and the recorded track; previously a present track took precedence and could leave the planned area off-screen.
 - All five focused geometry tests passed, covering edge inclusion, reversed rings, unavailable/degenerate data, closed rings, duplicate points, crossings/overlaps and concave regions. Production build/TypeScript passed. Populated overlay browser acceptance remains pending; no real mission links were changed.
 - The broader adoption goal is still incomplete, including work-order enhancements, history reports and final acceptance checks.
+
+### Maintenance cost records — 7 September 2026
+
+- Work orders now accept a recorded amount, explicit currency code and invoice/cost reference. Blank means unknown; zero is a recorded no-cost service. Decimal values are preserved without forced two-decimal rounding, including three-decimal KWD amounts.
+- Amount/currency/reference appear in work-order detail; equipment maintenance history shows recorded cost. Migration 032 adds database validation for numeric range, required currency and reference length; application schema enforces the same cost requirements.
+- Focused schema and rollback database tests passed for unknown/zero/decimal persistence, invoice reference and invalid inputs. Production build/TypeScript passed. Browser verified blank cost fields and explanatory text; no real expenses were recorded.
+- Broader maintenance acceptance remains open: lifecycle/status enhancements and fully typed battery/equipment targets need review. Extended history reporting and final adoption acceptance also remain.

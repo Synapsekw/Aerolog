@@ -112,3 +112,10 @@ Validation: 42 unit tests, typecheck and production build pass. `test-battery-re
 - Migration 028 applied. Database tests cover manager permissions, self-review policy, required files, authoritative snapshots, stale selections, approved-but-expired rejection, unrelated mission scope and version retention. All fixtures and temporary test policy changes rolled back.
 - 51 unit tests and production build/type checking passed. Browser verified document creation fields without saving a fixture document. Registered-document downloads use the existing organization-scoped signed-file endpoint.
 - Remaining goal work includes reproducible report jobs, unified readiness/qualification views, final UI and workflow acceptance (including actual upload/download round-trips), and remaining items in the adoption plan.
+
+### Kit package acceptance fix — 7 September 2026
+
+- Extended the kit snapshot regression to use `aerolog_command('save', ...)`, matching the application. This reproduced a real failure after the kit library revision changed: the INSERT phase of an upsert treated the existing mission as new.
+- Migration 029 makes the snapshot trigger load existing mission data before either upsert phase. Drafts retain their captured kit after library edits/archive, completed history stays immutable, and equipment removal still requires unlinking the kit.
+- Expanded kit regression passed, alongside mission resource, mission form and document database regressions. All test fixtures rolled back; no operational records changed.
+- The broader goal remains active; report generation and the remaining adoption acceptance checks are not yet complete.

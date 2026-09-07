@@ -12,6 +12,14 @@ let saved=await read();assert.equal(saved.kitSnapshots[0].name,'Snapshot origina
 await c.query('select aerolog_save_kit($1,1,$2)',[{...kit,name:'Changed kit'},org]);
 await c.query("update aerolog_records set data=jsonb_set(data,'{notes}','\"Changed mission notes\"') where organization_id=$1 and kind='mission' and id=$2",[org,mission.id]);
 assert.deepEqual((await read()).kitSnapshots,saved.kitSnapshots);
+await c.query('select aerolog_command($1,$2)',['save',{kind:'mission',data:{...(await read()),notes:'Saved through application RPC'},revision:1,_organizationId:org}]);
+assert.deepEqual((await read()).kitSnapshots,saved.kitSnapshots);
+await c.query('select aerolog_save_kit($1,2,$2)',[{...kit,name:'Archived kit',archived:true},org]);
+await c.query('select aerolog_command($1,$2)',['save',{kind:'mission',data:{...(await read()),notes:'Archived library retains captured kit'},revision:2,_organizationId:org}]);
+assert.deepEqual((await read()).kitSnapshots,saved.kitSnapshots);
 await c.query('savepoint removed');try{await c.query("update aerolog_records set data=jsonb_set(data,'{aircraft}','\"Removed aircraft\"') where organization_id=$1 and kind='mission' and id=$2",[org,mission.id]);assert.fail('Removed kit equipment accepted')}catch(err){assert.match(err.message,/Kit equipment removed/);await c.query('rollback to savepoint removed');}
-await c.query('rollback');console.log('Kit snapshot checks passed: authoritative contents, immutable versions, removed-item rejection. All fixtures rolled back.');
+await c.query("update aerolog_records set data=jsonb_set(data,'{status}','\"Completed\"') where organization_id=$1 and kind='mission' and id=$2",[org,mission.id]);
+await c.query("insert into aerolog_records(organization_id,kind,id,data) values($1,'mission',$2,$3) on conflict(organization_id,kind,id) do update set data=excluded.data",[org,mission.id,{...(await read()),kitSelections:[],kitSnapshots:[{name:'Forged history'}]}]);
+assert.deepEqual((await read()).kitSnapshots,saved.kitSnapshots);
+await c.query('rollback');console.log('Kit snapshot checks passed: authoritative contents, immutable versions, application upsert after library edits/archive, completed-history preservation, removed-item rejection. All fixtures rolled back.');
 }catch(err){await c.query('rollback');console.error(err.message);process.exitCode=1}finally{await c.end()}

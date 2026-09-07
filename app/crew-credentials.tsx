@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { api } from '@/lib/supabase-browser';
 import { qualificationState } from '@/lib/operations/qualifications';
+import CrewCurrency from './crew-currency';
 export default function CrewCredentials({
   person,
   onChange,
@@ -31,6 +32,7 @@ export default function CrewCredentials({
   }).format(new Date());
   return (
     <section className="crew-credentials">
+      <CrewCurrency person={person} onChange={onChange} />
       <h3>Aircraft permissions</h3>
       {onChange ? (
         <>

@@ -1,0 +1,16 @@
+.al-brand-mark { display: block; flex: none; overflow: visible; }
+.aerolog-mark-route { animation: aerolog-route-intro 1.25s cubic-bezier(.25,.7,.25,1) both; }
+.aerolog-mark-waypoint { transform-box: fill-box; transform-origin: center; animation: aerolog-waypoint-intro .5s 1s ease-out both; }
+a:hover > .al-brand-mark .aerolog-mark-waypoint,
+a:focus-visible > .al-brand-mark .aerolog-mark-waypoint { animation: aerolog-waypoint-hover .6s ease-out; }
+.al-logo > .al-brand-mark { width: 44px; height: 28px; color: #ecf0f5; }
+.al-preview-bar .al-brand-mark { width: 25px; height: 17px; color: currentColor; }
+.al-reduced .al-brand-mark * { animation: none !important; }
+@keyframes aerolog-route-intro { from { stroke-dasharray: 1; stroke-dashoffset: 1; } to { stroke-dasharray: 1; stroke-dashoffset: 0; } }
+@keyframes aerolog-waypoint-intro { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+@keyframes aerolog-waypoint-hover { 50% { transform: scale(1.35); } }
+@media (prefers-reduced-motion: reduce) { .al-brand-mark * { animation: none !important; } }
+@media (max-width: 760px) {
+  .al-logo > .al-brand-mark { width: 35px; height: 24px; }
+  .al-header .al-logo { font-size: 19px; letter-spacing: 1.6px; gap: 8px; }
+}
